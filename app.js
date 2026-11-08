@@ -316,23 +316,68 @@ function showResult(entries, alignment, transcript) {
 function renderDetails(alignment, transcript) {
   els.resultDetails.innerHTML = '';
 
+  // 1. The reciter's own words, exactly as the model heard them.
+  els.resultDetails.appendChild(heading('Aap ki tilawat — jo model ne suna'));
+  const heardWords = Array.isArray(alignment.heard) ? alignment.heard : [];
+  if (!heardWords.length) {
+    const empty = document.createElement('p');
+    empty.className = 'hint is-error';
+    empty.textContent =
+      'Model ne koi lafz nahi suna — dobara record karein ya "audio file" se upload karein.';
+    els.resultDetails.appendChild(empty);
+  } else {
+    const chips = document.createElement('div');
+    chips.className = 'heard-chips';
+    chips.lang = 'ar';
+    chips.dir = 'rtl';
+    heardWords.forEach((word, index) => {
+      const status = (alignment.heardStatus && alignment.heardStatus[index]) || 'wrong';
+      const chip = document.createElement('span');
+      chip.className = `heard-word is-${status}`;
+      chip.textContent = word;
+      chip.title =
+        status === 'extra'
+          ? 'Aya me nahi tha'
+          : status === 'correct'
+            ? 'Aya ke mutabiq sahi'
+            : status === 'close'
+              ? 'Qareeb — ek-do harf ka farq'
+              : 'Galat lafz';
+      chips.appendChild(chip);
+    });
+    els.resultDetails.appendChild(chips);
+
+    const legend = document.createElement('p');
+    legend.className = 'hint';
+    legend.textContent =
+      'Hara = sahi · Peela = qareeb · Laal = galat lafz · Laal dashed = aya me nahi tha';
+    els.resultDetails.appendChild(legend);
+  }
+
+  // 2. Mistake by mistake: aya ka lafz -> jo aapne padha.
   const problems = alignment.results.filter((result) => result.status !== WORD_STATUS.CORRECT);
+  els.resultDetails.appendChild(heading(`Ghaltiyan (${problems.length})`));
+
   if (problems.length) {
-    els.resultDetails.appendChild(heading('Ghaltiyan / dhyan dene wali jagah'));
     const list = document.createElement('ul');
     list.className = 'detail-list';
-    for (const result of alignment.results) {
-      if (result.status === WORD_STATUS.CORRECT) continue;
-      list.appendChild(detailRow(result));
-    }
+    for (const result of problems) list.appendChild(detailRow(result));
     els.resultDetails.appendChild(list);
   } else {
     const ok = document.createElement('p');
     ok.className = 'hint';
-    ok.textContent = 'Koi lafz chhoota ya galat nahi — sab match hue.';
+    ok.textContent = 'Koi lafz chhoota ya galat nahi — sab aya ke mutabiq mila.';
     els.resultDetails.appendChild(ok);
+    if (alignment.score === 100) {
+      const note = document.createElement('p');
+      note.className = 'hint';
+      note.textContent =
+        'Yaad rahe: speech model kabhi ghalat talaffuz ko bhi sahi lafz bana deta hai, is liye tajweed/makhraj ki bareek ghalti yahan nazar nahi aati — yahan lafz ka milna dikhta hai, awaz ka naap nahi.';
+      els.resultDetails.appendChild(note);
+    }
   }
 
+  // 3. Words that were said but are not in these ayaat.
   if (alignment.extras.length) {
     els.resultDetails.appendChild(heading('Aya me nahi, magar sune gaye alfaz'));
     const line = document.createElement('p');
@@ -343,7 +388,13 @@ function renderDetails(alignment, transcript) {
     els.resultDetails.appendChild(line);
   }
 
-  els.resultDetails.appendChild(heading('Model ne yeh suna'));
+  // 4. Every word pair, for whoever wants the full picture.
+  if (alignment.results.length) {
+    els.resultDetails.appendChild(allWordsTable(alignment));
+  }
+
+  // 5. Raw transcript from the model.
+  els.resultDetails.appendChild(heading('Model ka poora transcript'));
   const raw = document.createElement('p');
   raw.className = 'heard-text';
   raw.lang = 'ar';
@@ -366,27 +417,68 @@ function detailRow(result) {
   tag.className = 'tag';
   tag.textContent = tagText(result.status);
 
+  const pair = document.createElement('span');
+  pair.className = 'pair';
+
   const expected = document.createElement('span');
-  expected.className = 'ar';
+  expected.className = 'ar expected';
   expected.lang = 'ar';
   expected.dir = 'rtl';
   expected.textContent = result.expected;
 
-  li.append(tag, expected);
+  const arrow = document.createElement('span');
+  arrow.className = 'arrow';
+  arrow.textContent = '→';
 
-  if (result.heard) {
+  const heard = document.createElement('span');
+  heard.className = `ar heard${result.heard ? '' : ' muted'}`;
+  heard.lang = 'ar';
+  heard.dir = 'rtl';
+  heard.textContent = result.heard || 'nahi padha';
+
+  pair.append(expected, arrow, heard);
+  li.append(tag, pair);
+
+  return li;
+}
+
+/** Every aya word next to what the model heard for it, inside a collapsible. */
+function allWordsTable(alignment) {
+  const details = document.createElement('details');
+  details.className = 'all-words';
+
+  const summary = document.createElement('summary');
+  summary.textContent = `Saare alfaz ka muqabla (${alignment.results.length})`;
+  details.appendChild(summary);
+
+  const list = document.createElement('ul');
+  list.className = 'word-table';
+  for (const result of alignment.results) {
+    if (result.optional && !result.heard) continue; // basmala that was skipped
+    const row = document.createElement('li');
+    row.className = `wt-row is-${result.status}`;
+
+    const expected = document.createElement('span');
+    expected.className = 'ar';
+    expected.lang = 'ar';
+    expected.dir = 'rtl';
+    expected.textContent = result.expected;
+
     const arrow = document.createElement('span');
     arrow.className = 'arrow';
     arrow.textContent = '→';
+
     const heard = document.createElement('span');
-    heard.className = 'ar';
+    heard.className = `ar${result.heard ? '' : ' muted'}`;
     heard.lang = 'ar';
     heard.dir = 'rtl';
-    heard.textContent = result.heard;
-    li.append(arrow, heard);
-  }
+    heard.textContent = result.heard || '—';
 
-  return li;
+    row.append(expected, arrow, heard);
+    list.appendChild(row);
+  }
+  details.appendChild(list);
+  return details;
 }
 
 function tagText(status) {

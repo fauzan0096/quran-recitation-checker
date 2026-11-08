@@ -156,6 +156,7 @@ export function alignWords(expectedWords, heardWords) {
         expected: item.word,
         expectedNormalized: expectedNorm[index],
         heard: null,
+        heardIndex: null,
         status: item.optional ? WORD_STATUS.CORRECT : WORD_STATUS.MISSING,
         distance: null,
         similarity: null,
@@ -172,6 +173,7 @@ export function alignWords(expectedWords, heardWords) {
       expected: item.word,
       expectedNormalized: a,
       heard: heard[heardIndex],
+      heardIndex,
       status:
         statusCode === 0
           ? WORD_STATUS.CORRECT
@@ -183,6 +185,13 @@ export function alignWords(expectedWords, heardWords) {
       optional: item.optional,
     };
   });
+
+  // Every heard word with the status it earned, in the order it was said, so the
+  // UI can show the reciter's own words ("Aap ki tilawat"), extras included.
+  const heardStatus = new Array(m).fill('extra');
+  for (const result of results) {
+    if (result.heardIndex !== null) heardStatus[result.heardIndex] = result.status;
+  }
 
   const counts = { correct: 0, close: 0, wrong: 0, missing: 0, extra: extras.length };
   let gained = 0;
@@ -204,6 +213,8 @@ export function alignWords(expectedWords, heardWords) {
   return {
     results,
     extras,
+    heard,
+    heardStatus,
     counts,
     score,
     verdict: verdictFor(score, counts),

@@ -127,6 +127,15 @@ export function runSelfTest(context = {}) {
     return `extras ${alignment.extras.length}, score ${alignment.score}`;
   });
 
+  check('Har sune gaye lafz ka status milta hai', () => {
+    const alignment = alignWords(['الحمد', 'لله'], ['الحمد', 'لله', 'زيادة']);
+    assertEqual(alignment.heard.length, 3, 'heard');
+    assertEqual(alignment.heardStatus.length, 3, 'heardStatus');
+    assertEqual(alignment.heardStatus[0], WORD_STATUS.CORRECT, 'pehla lafz');
+    assertEqual(alignment.heardStatus[2], 'extra', 'zaid lafz');
+    return alignment.heardStatus.join(' ');
+  });
+
   check('Basmala chhorna ghalti nahi (optional)', () => {
     const alignment = alignWords(
       [

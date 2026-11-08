@@ -782,3 +782,131 @@ audio {
 [hidden] {
   display: none !important;
 }
+
+
+/* ---- the reciter's own words ("Aap ki tilawat") ---- */
+
+.heard-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+}
+
+.heard-chips .heard-word {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #fbfaf6;
+  font-family: 'Amiri Quran', 'Scheherazade New', 'Noto Naskh Arabic', serif;
+  font-size: 21px;
+  line-height: 1.7;
+}
+
+.heard-word.is-correct {
+  background: var(--ok-bg);
+  border-color: #b9dcc8;
+  color: var(--ok-ink);
+}
+
+.heard-word.is-close {
+  background: var(--close-bg);
+  border-color: #e4cd94;
+  color: var(--close-ink);
+}
+
+.heard-word.is-wrong,
+.heard-word.is-extra {
+  background: var(--bad-bg);
+  border-color: #e7b8b0;
+  color: var(--bad-ink);
+}
+
+.heard-word.is-extra {
+  border-style: dashed;
+  text-decoration: underline dashed;
+  text-underline-offset: 4px;
+}
+
+/* ---- mistake rows + full word table ---- */
+
+.detail .pair {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.detail .ar.heard {
+  color: var(--bad-ink);
+}
+
+.detail.is-close .ar.heard {
+  color: var(--close-ink);
+}
+
+.detail .ar.muted,
+.wt-row .ar.muted {
+  color: var(--miss-ink);
+  font-size: 16px;
+  font-family: inherit;
+}
+
+.all-words {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fbfaf6;
+  padding: 8px 10px;
+}
+
+.all-words summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.word-table {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.wt-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.wt-row .ar {
+  font-family: 'Amiri Quran', 'Scheherazade New', 'Noto Naskh Arabic', serif;
+  font-size: 19px;
+}
+
+.wt-row .arrow {
+  color: var(--muted);
+}
+
+.wt-row.is-close {
+  border-color: #e4cd94;
+  background: #fffdf5;
+}
+
+.wt-row.is-wrong {
+  border-color: #e7b8b0;
+  background: #fefaf9;
+}
+
+.wt-row.is-missing {
+  background: #f6f4ef;
+}

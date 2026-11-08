@@ -45,6 +45,19 @@ on-device.
   aur **Engine self-test** (normalisation + alignment + tajweed + Quran data ke
   16 assertions).
 
+## Nateeja kahan dikhta hai
+
+Check karne ke baad "Nateeja" panel me:
+
+1. **Aap ki tilawat** — jo lafz model ne sune, wahi order me chips ki tarah:
+   hara = aya ke mutabiq sahi, peela = qareeb, laal = galat, laal dashed = aya me nahi tha.
+2. **Ghaltiyan** — har ghalti par `aya ka lafz → jo aap ne padha`.
+3. **Aya me nahi, magar sune gaye alfaz**.
+4. **Saare alfaz ka muqabla** — poora word-by-word table (kholne ke liye click karein).
+5. **Model ka poora transcript**.
+
+Upar aya ke alfaz bhi rang wale hote hain (hara / peela / laal / cut).
+
 ## Mic kaam nahi kar raha?
 
 - Recording ab **Web Audio** se seedha hoti hai (MediaRecorder ke baghair), is liye
