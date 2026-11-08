@@ -88,6 +88,10 @@ aur nateeja **usi aya ke andar** aata hai:
 - `YunusZJ/whisper-base-ar-quran-ONNX` — behtar accuracy, ~150 MB.
 - `Sharjeelbaig/whisper-tiny-ar-quran-onnx` — chhota/tez, ~40 MB.
 
+Library **Transformers.js v4** (v4.3.2) se aati hai — yeh Quran ONNX exports
+isi version ke saath test kiye gaye hain; purana v3 in models ko load nahi kar pata
+tha. Status line me load hone ke baad version bhi likha aata hai.
+
 Base model Tarteel AI ke `tarteel-ai/whisper-base-ar-quran` ka ONNX export hai
 (Apache-2.0). Apna model add karna ho to bas `MODELS` array me repo id daal dein;
 `dtype: 'q8'` file layout (`encoder_model_quantized.onnx` /

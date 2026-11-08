@@ -6,7 +6,17 @@ import { loadQuran, isLoaded, ayaCount, getVerses } from './quran.js';
 import { normalizeArabic } from './normalize.js';
 import { alignWords, WORD_STATUS } from './align.js';
 import { tajweedHints, summariseHints } from './tajweed.js';
-import { MODELS, loadModel, transcribe, decodeToMono16k, startRecording, micSupport, micPermissionState, peakOf } from './asr.js';
+import {
+  MODELS,
+  loadModel,
+  transcribe,
+  decodeToMono16k,
+  startRecording,
+  micSupport,
+  micPermissionState,
+  peakOf,
+  libraryVersion,
+} from './asr.js';
 import { runSelfTest } from './selftest.js';
 
 const STORAGE = { model: 'qrc.modelId', selection: 'qrc.selection' };
@@ -563,7 +573,7 @@ async function handleLoadModel() {
   try {
     state.model = await loadModel(modelId, onModelProgress);
     state.modelId = modelId;
-    els.modelStatus.textContent = 'Model tayyar hai — ab audio record karein ya file chunein.';
+    els.modelStatus.textContent = `Model tayyar hai${libraryVersion() ? ` (transformers ${libraryVersion()})` : ''} — ab record karein.`;
     setProgress(100);
     try {
       localStorage.setItem(STORAGE.model, modelId);

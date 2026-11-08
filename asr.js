@@ -6,9 +6,13 @@
 // is the one-time download of the model weights, which the browser keeps in the
 // Cache API / IndexedDB and reuses afterwards.
 
+// The community Quran ONNX exports are validated against Transformers.js v4
+// (v4.3.2 was verified loading this model and running inference on iPhone
+// Safari). v3 is only kept as a last resort.
 const CDN_CANDIDATES = [
+  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4/dist/transformers.min.js',
+  'https://esm.sh/@huggingface/transformers@4',
   'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js',
-  'https://esm.sh/@huggingface/transformers@3',
 ];
 
 const TARGET_RATE = 16000;
@@ -25,6 +29,7 @@ export const MODELS = [
 ];
 
 let libPromise = null;
+let libVersion = '';
 
 async function loadLibrary() {
   if (!libPromise) {
@@ -38,6 +43,7 @@ async function loadLibrary() {
               lib.env.allowLocalModels = false;
               lib.env.useBrowserCache = true;
             }
+            libVersion = (lib.env && lib.env.version) || '';
             return lib;
           }
           errors.push(`${url}: pipeline export nahi mila`);
@@ -54,6 +60,11 @@ async function loadLibrary() {
   return libPromise;
 }
 
+/** Version of the loaded Transformers.js, for the status line. */
+export function libraryVersion() {
+  return libVersion;
+}
+
 /**
  * Create the ASR pipeline.
  * @param {string} modelId Hugging Face repo id of the ONNX Quran model.
@@ -62,6 +73,7 @@ async function loadLibrary() {
 export async function loadModel(modelId, onProgress = () => {}) {
   const lib = await loadLibrary();
   const options = {
+    device: 'wasm',
     progress_callback: (progress) => {
       try {
         onProgress(progress || {});
@@ -70,7 +82,7 @@ export async function loadModel(modelId, onProgress = () => {}) {
       }
     },
   };
-  // v3 picks the quantised ONNX files with `dtype`; v2 used `quantized`.
+  // v3/v4 pick the quantised ONNX files with `dtype`; v2 used `quantized`.
   if (lib.env && lib.env.backends) options.dtype = 'q8';
   else options.quantized = true;
 
@@ -80,16 +92,30 @@ export async function loadModel(modelId, onProgress = () => {}) {
 /** Transcribe 16 kHz mono Float32 audio and return plain text. */
 export async function transcribe(instance, audioFloat32) {
   if (!instance) throw new Error('Model load nahi hua');
-  const output = await instance(audioFloat32, {
-    language: 'ar',
-    task: 'transcribe',
-    chunk_length_s: 30,
-    stride_length_s: 5,
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(
+      () => reject(new Error('Transcribe 3 minute me mukammal nahi hua — dobara koshish karein.')),
+      180000
+    );
   });
-  const text = Array.isArray(output)
-    ? output.map((part) => (part && part.text) || '').join(' ')
-    : (output && output.text) || '';
-  return text.trim();
+  try {
+    const output = await Promise.race([
+      instance(audioFloat32, {
+        language: 'ar',
+        task: 'transcribe',
+        chunk_length_s: 30,
+        stride_length_s: 5,
+      }),
+      timeout,
+    ]);
+    const text = Array.isArray(output)
+      ? output.map((part) => (part && part.text) || '').join(' ')
+      : (output && output.text) || '';
+    return text.trim();
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 /** Decode any audio blob or file the browser understands into 16 kHz mono. */
