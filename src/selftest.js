@@ -1,0 +1,164 @@
+// Small assertions that prove the offline engine behaves. Run from the UI so a
+// non-developer can see that normalisation, alignment and the tajweed scanner
+// are working, without needing a microphone or a model.
+
+import { normalizeToWords, compareDistance } from './normalize.js';
+import { alignWords, WORD_STATUS } from './align.js';
+import { tajweedHints } from './tajweed.js';
+
+function assert(condition, message) {
+  if (!condition) throw new Error(message);
+}
+
+function assertEqual(actual, expected, label) {
+  if (actual !== expected) {
+    throw new Error(`${label}: expected ${JSON.stringify(expected)}, mila ${JSON.stringify(actual)}`);
+  }
+}
+
+/**
+ * @param {{quran?: {ayaCount: Function, getVerses: Function}}} context
+ * @returns {Array<{name: string, pass: boolean, detail: string}>}
+ */
+export function runSelfTest(context = {}) {
+  const results = [];
+  const check = (name, fn) => {
+    try {
+      const detail = fn();
+      results.push({ name, pass: true, detail: detail || 'ok' });
+    } catch (error) {
+      results.push({
+        name,
+        pass: false,
+        detail: error && error.message ? error.message : String(error),
+      });
+    }
+  };
+
+  check('Basmala normalise hoti hai', () => {
+    const words = normalizeToWords('بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ');
+    assertEqual(words.join(' '), 'بسم الله الرحمن الرحيم', 'words');
+    return words.join(' ');
+  });
+
+  check('Harakat aur wasla hatt jate hain', () => {
+    const words = normalizeToWords('ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ');
+    assertEqual(words.join(' '), 'الصراط المستقيم', 'words');
+    return words.join(' ');
+  });
+
+  check('ص / س ka farq ek edit hai', () => {
+    const distance = compareDistance('الصراط', 'السراط');
+    assertEqual(distance, 1, 'distance');
+    return 'distance = 1 (close)';
+  });
+
+  check('"ال" ke baghair bhi muqabla hota hai', () => {
+    const distance = compareDistance('الصراط', 'صراط');
+    assertEqual(distance, 0, 'distance');
+    return 'distance = 0';
+  });
+
+  check('Bilkul durust tilawat = 100', () => {
+    const expected = ['الحمد', 'لله', 'رب', 'العالمين'];
+    const alignment = alignWords(expected, expected);
+    assertEqual(alignment.score, 100, 'score');
+    assertEqual(alignment.counts.correct, 4, 'correct');
+    return `score ${alignment.score}, verdict "${alignment.verdict}"`;
+  });
+
+  check('Ek harf ka farq = "close", galat nahi', () => {
+    const alignment = alignWords(['الرحمن'], ['الرحمان']);
+    assertEqual(alignment.results[0].status, WORD_STATUS.CLOSE, 'status');
+    assert(alignment.score > 0 && alignment.score < 100, 'score should be partial');
+    return `status ${alignment.results[0].status}, score ${alignment.score}`;
+  });
+
+  check('Chhoota hua lafz "missing" banta hai', () => {
+    const alignment = alignWords(
+      ['الحمد', 'لله', 'رب', 'العالمين'],
+      ['الحمد', 'لله', 'العالمين']
+    );
+    assertEqual(alignment.counts.missing, 1, 'missing');
+    assertEqual(alignment.results[2].status, WORD_STATUS.MISSING, 'status of رب');
+    assertEqual(alignment.score, 75, 'score');
+    return `score ${alignment.score}`;
+  });
+
+  check('Zaid lafz alag se report hota hai', () => {
+    const alignment = alignWords(
+      ['الحمد', 'لله', 'رب', 'العالمين'],
+      ['الحمد', 'لله', 'رب', 'العالمين', 'زيادة']
+    );
+    assertEqual(alignment.extras.length, 1, 'extras');
+    assertEqual(alignment.score, 98, 'score');
+    return `extras ${alignment.extras.length}, score ${alignment.score}`;
+  });
+
+  check('Basmala chhorna ghalti nahi (optional)', () => {
+    const alignment = alignWords(
+      [
+        { word: 'بسم', optional: true },
+        { word: 'الله', optional: true },
+        { word: 'الحمد' },
+        { word: 'لله' },
+      ],
+      ['الحمد', 'لله']
+    );
+    assertEqual(alignment.counts.missing, 0, 'missing');
+    assertEqual(alignment.score, 100, 'score');
+    return `score ${alignment.score}`;
+  });
+
+  check('Khali audio = koi match nahi', () => {
+    const alignment = alignWords(['الحمد', 'لله'], []);
+    assertEqual(alignment.counts.missing, 2, 'missing');
+    assertEqual(alignment.score, 0, 'score');
+    return alignment.verdict;
+  });
+
+  check('Ghunnah detect hoti hai', () => {
+    const hints = tajweedHints('إِنَّ ٱللَّهَ');
+    assert(hints.some((hint) => hint.rule === 'Ghunnah'), 'Ghunnah hint nahi mila');
+    return hints.map((hint) => hint.rule).join(', ');
+  });
+
+  check('Idgham detect hota hai', () => {
+    const hints = tajweedHints('مِنْ يَوْمٍ');
+    assert(hints.some((hint) => hint.rule === 'Idgham'), 'Idgham hint nahi mila');
+    return hints.map((hint) => hint.rule).join(', ');
+  });
+
+  check('Iqlab detect hota hai', () => {
+    const hints = tajweedHints('مِنْ بَعْدِ');
+    assert(hints.some((hint) => hint.rule === 'Iqlab'), 'Iqlab hint nahi mila');
+    return hints.map((hint) => hint.rule).join(', ');
+  });
+
+  const quran = context.quran;
+  if (quran) {
+    check('Quran text poora load hua (6236 ayaat)', () => {
+      let total = 0;
+      for (let surah = 1; surah <= 114; surah += 1) total += quran.ayaCount(surah);
+      assertEqual(total, 6236, 'ayaat ka total');
+      return `${total} ayaat`;
+    });
+
+    check('Surah ki ayaat ki tadaad durust hai', () => {
+      assertEqual(quran.ayaCount(1), 7, 'Al-Fatihah');
+      assertEqual(quran.ayaCount(2), 286, 'Al-Baqarah');
+      assertEqual(quran.ayaCount(114), 6, 'An-Nas');
+      return '7 / 286 / 6';
+    });
+
+    check('Surah ki pehli aya me basmala optional hai', () => {
+      const verses = quran.getVerses(2, 1, 1);
+      assert(verses.length === 1, 'aya nahi mili');
+      assertEqual(verses[0].hasBasmala, true, 'hasBasmala');
+      assert(verses[0].optional.slice(0, 4).every(Boolean), 'basmala optional nahi hui');
+      return verses[0].words.slice(0, 5).join(' ');
+    });
+  }
+
+  return results;
+}

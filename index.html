@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#0f6b4f" />
+    <title>Quran Recitation Checker — on-device</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" lang="ar" dir="rtl">ق</span>
+        <div class="brand-text">
+          <h1>Quran Recitation Checker</h1>
+          <p class="tagline">
+            Aya chunein, mic par padhein, aur dekhein kaunsa lafz sahi tha, kaunsa chhoot gaya.
+            Poora kaam device par — koi server nahi.
+          </p>
+        </div>
+      </div>
+      <div class="badges">
+        <span class="badge">No server</span>
+        <span class="badge">On-device ASR</span>
+        <span class="badge">Offline after first load</span>
+      </div>
+    </header>
+
+    <main>
+      <section class="panel" id="range-panel">
+        <h2><span class="step">1</span> Ayaat chunein</h2>
+        <div class="row wrap">
+          <label class="field">
+            <span>Surah</span>
+            <select id="surah-select"></select>
+          </label>
+          <label class="field small">
+            <span>Aya se</span>
+            <input id="aya-from" type="number" min="1" step="1" value="1" inputmode="numeric" />
+          </label>
+          <label class="field small">
+            <span>Aya tak</span>
+            <input id="aya-to" type="number" min="1" step="1" value="7" inputmode="numeric" />
+          </label>
+          <button type="button" id="load-range" class="btn">Load</button>
+        </div>
+        <p id="range-error" class="error" hidden></p>
+      </section>
+
+      <section class="panel" id="verse-panel">
+        <div class="panel-head">
+          <h2><span class="step">2</span> Matn</h2>
+          <span id="verse-ref" class="ref"></span>
+        </div>
+        <div id="verse" class="verse" lang="ar" dir="rtl"></div>
+        <div class="legend">
+          <span class="legend-item"><span class="sw is-correct"></span> sahi</span>
+          <span class="legend-item"><span class="sw is-close"></span> qareeb</span>
+          <span class="legend-item"><span class="sw is-wrong"></span> galat lafz</span>
+          <span class="legend-item"><span class="sw is-missing"></span> chhoot gaya</span>
+        </div>
+      </section>
+
+      <section class="panel" id="audio-panel">
+        <h2><span class="step">3</span> Tilawat</h2>
+
+        <div class="row wrap">
+          <button type="button" id="record" class="btn primary">Record</button>
+          <label class="field file">
+            <span>Ya audio file</span>
+            <input id="audio-file" type="file" accept="audio/*" />
+          </label>
+        </div>
+        <p id="audio-status" class="hint">Koi audio nahi. Record dabaein ya file chunein.</p>
+        <audio id="player" controls hidden></audio>
+        <div class="mic-check">
+          <button type="button" id="mic-check" class="btn ghost small">Mic jaanch</button>
+          <span class="hint">Mic kaam nahi kar raha? Yahan asli wajah dekhein.</span>
+        </div>
+        <ul id="mic-check-output" class="diag" hidden></ul>
+
+        <div class="divider"></div>
+
+        <h3>Speech model (on-device)</h3>
+        <div class="row wrap">
+          <label class="field">
+            <span>Model</span>
+            <select id="model-select"></select>
+          </label>
+          <button type="button" id="load-model" class="btn">Model load karein</button>
+        </div>
+        <div class="progress" id="model-progress" hidden>
+          <div class="progress-bar" id="model-progress-bar"></div>
+        </div>
+        <p id="model-status" class="hint">Model load nahi hua.</p>
+        <button type="button" id="transcribe" class="btn primary wide" disabled>
+          Transcribe + check
+        </button>
+
+        <div class="divider"></div>
+
+        <h3>Ya jo padha woh haath se likh dein</h3>
+        <p class="hint">
+          Model ke baghair bhi engine test ho sakta hai: aya ka text (ya jo aapne padha) yahan
+          paste karein. Yeh bilkul offline chalega.
+        </p>
+        <textarea
+          id="transcript"
+          rows="3"
+          lang="ar"
+          dir="rtl"
+          placeholder="مثال: الحمد لله رب العالمين"
+        ></textarea>
+        <div class="row wrap">
+          <button type="button" id="fill-sample" class="btn ghost">Sample bharein</button>
+          <button type="button" id="check-text" class="btn primary">Check karein</button>
+        </div>
+      </section>
+
+      <section class="panel" id="result-panel" hidden>
+        <h2><span class="step">4</span> Nateeja</h2>
+        <div class="score-row">
+          <div id="score-value" class="score">—</div>
+          <div class="score-meta">
+            <div id="score-verdict" class="verdict"></div>
+            <div id="score-counts" class="hint"></div>
+          </div>
+        </div>
+        <div id="result-verse" class="verse" lang="ar" dir="rtl"></div>
+        <div id="result-details" class="details"></div>
+      </section>
+
+      <section class="panel" id="tajweed-panel">
+        <h2><span class="step">5</span> Tajweed hints (text se)</h2>
+        <p class="hint">
+          Yeh sirf script se nikalay gaye hints hain: kahan ghunnah, idgham, qalqalah ya madd
+          lazim hai. Audio se timing naapna is version me nahi hai.
+        </p>
+        <div id="tajweed"></div>
+      </section>
+
+      <section class="panel" id="test-panel">
+        <h2>Engine self-test</h2>
+        <p class="hint">Mic aur model ke baghair: normalisation, alignment aur tajweed scanner ki jaanch.</p>
+        <button type="button" id="run-tests" class="btn ghost">Self-test chalayein</button>
+        <ul id="test-results" class="tests"></ul>
+      </section>
+
+      <footer class="foot">
+        <p>
+          Quran text: Tanzil Project — Uthmani, Hafs (<a href="https://tanzil.net" target="_blank" rel="noreferrer">tanzil.net</a>).
+          ASR models: Tarteel AI ke Quran fine-tunes ke community ONNX exports.
+        </p>
+      </footer>
+    </main>
+
+    <div id="toast" class="toast" hidden></div>
+    <script type="module" src="src/app.js"></script>
+  </body>
+</html>

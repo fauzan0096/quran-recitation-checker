@@ -1,0 +1,95 @@
+# Quran Recitation Checker (on-device)
+
+Ayaat chunein, mic par tilawat karein, aur foran dekhein kaunsa lafz sahi tha,
+kaunsa qareeb tha, kaun galat suna gaya aur kya chhoot gaya. Poori processing
+browser (ya app) ke andar hoti hai — **koi server, koi API key, audio kabhi
+upload nahi hota**.
+
+## Kaam kaise karta hai (pipeline)
+
+1. **Text**: `data/quran-tanzil.txt` — Tanzil ka Uthmani (Hafs) text, `surah|aya|text` lines.
+2. **Audio**: microphone (`MediaRecorder`) ya file; 16 kHz mono float samples banaye jate hain.
+3. **Speech to text**: Whisper ka Quran par fine-tuned checkpoint, ONNX me export
+   hua, browser me **Transformers.js + ONNX Runtime Web (WASM)** se chalta hai.
+   Sirf model ke wazan ek dafa download hote hain, phir browser cache se load hote hain.
+4. **Normalisation** (`src/normalize.js`): harakat, madd/maddeh signs, small high
+   letters, tatweel aur waqf marks hata diye jate hain; `ٱ أ إ آ → ا`, `ى → ي`,
+   `ة → ه`, `ؤ/ئ` unify. Yeh dono taraf (Quran text aur ASR output) par lagta hai.
+5. **Word alignment** (`src/align.js`): expected alfaz aur sune gaye alfaz ka
+   Needleman–Wunsch DP. Har expected lafz ko status milta hai:
+   `correct`, `close` (1–2 harf ka farq, jaise ص/س), `wrong`, `missing`; aya me
+   na hone wale alfaz `extras` ban jate hain. Score in sab se banta hai.
+6. **Tajweed hints** (`src/tajweed.js`): script se rules detect hote hain —
+   ghunnah, qalqalah, noon sakinah/tanween ke idgham/iqlab/izhar/ikhfa, meem
+   sakinah, aur madd (maddah sign). Yeh hints hain, audio ki timing ki jaanch nahi.
+
+## Al-Siraat jaisi apps kya karti hain
+
+Public store listings ke mutabiq woh "AI tutor" hain jo recitation errors
+"highlight" karti hain — yani ASR + Quran text ke saath alignment, aur uske
+upar tajweed feedback. Implementation (on-device vs server, kaunsa model) kahin
+public nahi. Is project me wahi pipeline khud banaya gaya hai, aur poori tarah
+on-device.
+
+## Chalane ka tareeqa
+
+- Ye ek **zero-build plain web app** hai: `index.html` + ES modules, koi bundler nahi.
+- Pehli dafa model load karne ke liye internet chahiye (CDN se library aur
+  Hugging Face se model weights). Uske baad model browser cache me rehta hai.
+- Mic ke baghair test: **"Sample bharein" → "Check karein"** (engine bilkul offline),
+  aur **Engine self-test** (normalisation + alignment + tajweed + Quran data ke
+  16 assertions).
+
+## Mic kaam nahi kar raha?
+
+- **"Mic ki ijazat nahi mili"**: browser/app me microphone Allow karein. Preview ke
+  andar iframe me mic block ho sakta hai — tab tab tak "audio file" se upload karein.
+- Record dabane par button hi nahi badalta to **"Mic jaanch"** dabaein: woh secure
+  page, Microphone API, MediaRecorder, permission state aur ek 2-second asli
+  recording + decode — sab dikha deta hai.
+- Recorder khud ruk jaye (iOS par interruption/call) to app ab khud detect kar leta
+  hai, jo audio bana hai woh le leta hai aur kabhi "recording…" par atakta nahi.
+
+## Models
+
+`src/asr.js` me do options hain (dono Transformers.js ke liye ONNX):
+
+- `YunusZJ/whisper-base-ar-quran-ONNX` — behtar accuracy, ~150 MB.
+- `Sharjeelbaig/whisper-tiny-ar-quran-onnx` — chhota/tez, ~40 MB.
+
+Base model Tarteel AI ke `tarteel-ai/whisper-base-ar-quran` ka ONNX export hai
+(Apache-2.0). Apna model add karna ho to bas `MODELS` array me repo id daal dein;
+`dtype: 'q8'` file layout (`encoder_model_quantized.onnx` /
+`decoder_model_merged_quantized.onnx`) hona chahiye.
+
+## Limits (sach)
+
+- ASR ki accuracy mic, shor, aur qari ke lahje par depend karti hai. Tiny model
+  tez hai magar zyada ghaltiyan karta hai; base behtar hai.
+- `close` vs `wrong` ka faisla edit distance par hai, is liye tajweed ki bareek
+  ghaltiyan (madd ki tadaad, ghunnah ki muddat, harf ka makhraj) audio se
+  naapna is version me nahi hai — woh phoneme-level model ka kaam hai.
+- Reciter agar aya se aage/peeche chala jaye to alignment us ko extras/missing
+  ke tor par dikhata hai, jo expected behaviour hai.
+- Whisper 30-second windows me chalta hai; bara range dein to chunking hoti hai.
+
+## Apne app me kaise jorein
+
+Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
+
+- **React Native / Capacitor / Ionic**: yehi `src/*.js` files copy karein; ASR ke
+  liye `react-native-executorch`, `whisper.rn` ya ONNX Runtime Mobile.
+- **iOS (native)**: Core ML me Whisper encoder/decoder convert karein
+  (`coremltools`, ya `whisper.cpp` Ka `whisper.xcframework`), phir yehi
+  normalise/align logic Swift me port karein (DP chhota hai, ~100 lines).
+- **Android (native)**: ONNX Runtime Mobile (`onnxruntime-android`) me wahi
+  quantized encoder/decoder, ya `whisper.cpp` NDK build.
+- Alignment/tajweed ka koi bhi hissa server-side nahi hai — sirf model ka ek
+  dafa download, uske baad app offline chalti hai.
+
+## Credits
+
+- Quran text: **Tanzil Project** (tanzil.net), Uthmani Hafs — copyright notice
+  `data/quran-tanzil.txt` ke aakhir me maujood hai, usay hatayein na.
+- Quran-tuned Whisper: **Tarteel AI** (Apache-2.0), ONNX exports community se.
+- Transformers.js / ONNX Runtime Web: Hugging Face / Microsoft (Apache-2.0).
