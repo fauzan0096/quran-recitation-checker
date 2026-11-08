@@ -6,7 +6,7 @@ import { loadQuran, isLoaded, ayaCount, getVerses } from './quran.js';
 import { normalizeArabic } from './normalize.js';
 import { alignWords, WORD_STATUS } from './align.js';
 import { tajweedHints, summariseHints } from './tajweed.js';
-import { MODELS, loadModel, transcribe, decodeToMono16k, startRecording, micSupport, micPermissionState } from './asr.js';
+import { MODELS, loadModel, transcribe, decodeToMono16k, startRecording, micSupport, micPermissionState, peakOf } from './asr.js';
 import { runSelfTest } from './selftest.js';
 
 const STORAGE = { model: 'qrc.modelId', selection: 'qrc.selection' };
@@ -18,6 +18,10 @@ const state = {
   modelId: null,
   modelLoading: false,
   audioBlob: null,
+  audioUrl: null,
+  starting: false,
+  micChecking: false,
+  levelState: '',
   recording: false,
   recorder: null,
   recordingStarted: 0,
@@ -550,6 +554,14 @@ async function handleTranscribe() {
   try {
     els.modelStatus.textContent = 'Audio taiyar ho raha hai…';
     const audio = await decodeToMono16k(state.audioBlob);
+    if (audio.length < 16000 * 0.4) {
+      els.modelStatus.textContent = 'Audio bohot chhota hai — thori lambi tilawat record karein.';
+      return;
+    }
+    if (peakOf(audio) < 0.003) {
+      els.modelStatus.textContent = 'Audio khamosh hai (mic se awaaz nahi aayi) — dobara record karein.';
+      return;
+    }
     els.modelStatus.textContent = 'Transcribe ho raha hai (device par)…';
     const text = await transcribe(state.model, audio);
     els.transcript.value = text;
@@ -567,17 +579,23 @@ async function handleTranscribe() {
 // ------------------------------------------------------------------- audio
 
 async function toggleRecording() {
-  if (state.busy) return;
+  if (state.busy || state.starting || state.micChecking) return;
   if (state.recording) {
     await finishRecording(false);
     return;
   }
 
+  // Guard: a second tap while the permission prompt is open used to open a
+  // second microphone stream, and the phone then killed the first one.
+  state.starting = true;
+  els.record.disabled = true;
+  els.record.textContent = 'Mic khul raha hai…';
   setAudioStatus('Microphone ki ijazat maangi ja rahi hai…', 'info');
   try {
     state.recorder = await startRecording({ maxSeconds: 120 });
     state.recording = true;
     state.recordingStarted = Date.now();
+    state.levelState = '';
     els.record.classList.add('recording');
     els.record.textContent = 'Stop · 0:00';
     setAudioStatus('Recording… aya padhein, mukammal hone par Stop dabaein.', 'recording');
@@ -589,6 +607,9 @@ async function toggleRecording() {
     els.record.classList.remove('recording');
     els.record.textContent = 'Record';
     setAudioStatus(error.message, 'error');
+  } finally {
+    state.starting = false;
+    els.record.disabled = state.busy;
   }
 }
 
@@ -603,7 +624,7 @@ async function finishRecording(byItself) {
   els.record.textContent = 'Record';
   setAudioStatus(
     byItself
-      ? 'Recording khud ruk gayi — jo bacha hai woh taiyar kiya ja raha hai…'
+      ? 'Recording khatam ho gayi (hadd poori ya mic chhin gaya) — jo record hua woh taiyar kiya ja raha hai…'
       : 'Recording ruk gayi — audio taiyar ho raha hai…',
     'info'
   );
@@ -632,6 +653,21 @@ function startRecordingTimer() {
     const recorder = state.recorder;
     if (recorder && typeof recorder.getState === 'function' && recorder.getState() === 'inactive') {
       finishRecording(true);
+      return;
+    }
+    // Tell the person whether the mic is really hearing something.
+    const peak = recorder && typeof recorder.getPeak === 'function' ? recorder.getPeak() : -1;
+    if (peak >= 0) {
+      if (peak >= 0.01 && state.levelState !== 'ok') {
+        state.levelState = 'ok';
+        setAudioStatus('Recording… awaaz aa rahi hai. Mukammal hone par Stop dabaein.', 'recording');
+      } else if (peak < 0.002 && seconds >= 3 && state.levelState !== 'silent') {
+        state.levelState = 'silent';
+        setAudioStatus(
+          'Recording chal rahi hai magar awaaz nahi aa rahi — mic ke qareeb padhein, ya phone ka mic mute/band to nahi?',
+          'error'
+        );
+      }
     }
   }, 300);
 }
@@ -658,8 +694,9 @@ function setAudioBlob(blob, source) {
   state.audioBlob = blob;
   const kb = Math.max(1, Math.round(blob.size / 1024));
   setAudioStatus(`${source} — ${kb} KB. Ab "Transcribe + check" dabaein (pehle model load karein).`, 'ok');
-  const url = URL.createObjectURL(blob);
-  els.player.src = url;
+  if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
+  state.audioUrl = URL.createObjectURL(blob);
+  els.player.src = state.audioUrl;
   els.player.hidden = false;
   updateTranscribeButton();
 }
@@ -687,11 +724,18 @@ async function runMicCheck() {
     toast('Pehle chal rahi recording band karein, phir Mic jaanch chalayein.');
     return;
   }
+  if (state.starting || state.micChecking) return;
   els.micOutput.hidden = false;
+  state.micChecking = true;
+  els.record.disabled = true;
   if (els.micCheck) els.micCheck.disabled = true;
   try {
     await micCheckRun();
+  } catch (error) {
+    toast(`Mic jaanch me error: ${error.message}`);
   } finally {
+    state.micChecking = false;
+    els.record.disabled = state.busy;
     if (els.micCheck) els.micCheck.disabled = false;
   }
 }
@@ -751,9 +795,14 @@ async function micCheckRun() {
     return;
   }
 
+  push('Tareeqa', recorder.kind === 'webaudio' ? 'Web Audio (seedha)' : 'MediaRecorder (fallback)', true);
   await new Promise((resolve) => window.setTimeout(resolve, 2000));
+  const peak = recorder.getPeak();
   const blob = await recorder.stop();
   update('Recording (2s test)', `${blob.size} bytes`, blob.size > 0);
+  if (peak >= 0) {
+    push('Awaaz ka level', peak >= 0.01 ? 'theek' : 'bohot halka — mic ke qareeb bolein', peak >= 0.01);
+  }
 
   if (blob.size > 0) {
     try {

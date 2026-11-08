@@ -777,3 +777,8 @@ audio {
 .diag-wait > span:last-child {
   color: var(--close-ink);
 }
+
+/* The hidden attribute must win over class display rules (.diag, .toast, ...). */
+[hidden] {
+  display: none !important;
+}

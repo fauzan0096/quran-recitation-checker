@@ -142,7 +142,11 @@ export function tajweedHints(text, maxHints = 14) {
       const nextLetter = nextIndex === undefined ? null : letters[nextIndex];
       if (nextLetter) {
         const target = nextLetter.base;
-        if (IDGHAM_NOON.has(target)) {
+        const sameWord = nextLetter.wordIndex === letter.wordIndex;
+        if (noonSakinah && sameWord && (target === '\u064A' || target === '\u0648')) {
+          // دُنْيَا، صِنْوَانٌ، بُنْيَانٌ، قِنْوَانٌ: idgham needs two words (izhar mutlaq here)
+          add('Izhar', 'Isi lafz me noon ke baad ya/waw: idgham nahi, noon saaf parhein', letter);
+        } else if (IDGHAM_NOON.has(target)) {
           add('Idgham', 'Noon sakinah/tanween ke baad idgham: noon ko agli harf me mila dein', letter);
         } else if (target === BEH) {
           add('Iqlab', 'Iqlab: noon ki awaaz meem ki tarah, ghunnah ke saath', letter);

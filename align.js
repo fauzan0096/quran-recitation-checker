@@ -58,6 +58,18 @@ export function alignWords(expectedWords, heardWords) {
   const width = m + 1;
 
   const expectedNorm = expected.map((item) => normalizeArabic(item.word));
+  // Uthmani script writes some long alefs only as a small dagger mark (ٰ), e.g.
+  // الصراط / هذا / الرحمن. A recogniser may or may not spell that alef out, so
+  // such a word also gets a second form with the alef written, and the better
+  // of the two is used.
+  const expectedAlt = expected.map((item) =>
+    item.word.includes('\u0670') ? normalizeArabic(item.word.replace(/\u0670/g, '\u0627')) : null
+  );
+  const distanceOf = (i, b) => {
+    const plain = compareDistance(expectedNorm[i], b);
+    if (plain === 0 || expectedAlt[i] === null) return plain;
+    return Math.min(plain, compareDistance(expectedAlt[i], b));
+  };
   const heardNorm = heard.map((word) => normalizeArabic(word));
 
   // dp[i][j]: cheapest way to consume the first i expected and j heard words.
@@ -81,7 +93,7 @@ export function alignWords(expectedWords, heardWords) {
     for (let j = 1; j <= m; j += 1) {
       const a = expectedNorm[i - 1];
       const b = heardNorm[j - 1];
-      const distance = compareDistance(a, b);
+      const distance = distanceOf(i - 1, b);
       const longest = Math.max(a.length, b.length) || 1;
       const sim = 1 - distance / longest;
 
@@ -174,14 +186,18 @@ export function alignWords(expectedWords, heardWords) {
 
   const counts = { correct: 0, close: 0, wrong: 0, missing: 0, extra: extras.length };
   let gained = 0;
+  let counted = 0;
   for (const result of results) {
+    // A skipped optional word (basmala) is neither a mistake nor a point earned.
+    if (result.optional && result.heard === null) continue;
+    counted += 1;
     counts[result.status] += 1;
     if (result.status === WORD_STATUS.CORRECT) gained += 1;
     else if (result.status === WORD_STATUS.CLOSE) gained += 0.6;
     else if (result.status === WORD_STATUS.WRONG) gained += 0.15;
   }
 
-  let score = n ? (gained / n) * 100 : 0;
+  let score = counted ? (gained / counted) * 100 : 0;
   score -= Math.min(15, extras.length * 2);
   score = Math.max(0, Math.min(100, Math.round(score)));
 

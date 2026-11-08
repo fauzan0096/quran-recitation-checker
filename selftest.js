@@ -43,8 +43,40 @@ export function runSelfTest(context = {}) {
 
   check('Harakat aur wasla hatt jate hain', () => {
     const words = normalizeToWords('ٱلصِّرَٰطَ ٱلْمُسْتَقِيمَ');
-    assertEqual(words.join(' '), 'الصراط المستقيم', 'words');
+    assertEqual(words.join(' '), 'الصرط المستقيم', 'words');
     return words.join(' ');
+  });
+
+  check('Chhoti alif (ٰ) wale lafz ASR ki dono spelling par sahi', () => {
+    for (const heard of ['الصراط', 'الصرط']) {
+      const alignment = alignWords(['ٱلصِّرَٰطَ'], [heard]);
+      assertEqual(alignment.results[0].status, WORD_STATUS.CORRECT, `status for ${heard}`);
+    }
+    const rahman = alignWords(['ٱلرَّحْمَـٰنِ'], ['الرحمن']);
+    assertEqual(rahman.results[0].status, WORD_STATUS.CORRECT, 'الرحمن');
+    return 'الصراط / الصرط / الرحمن = sahi';
+  });
+
+  check('Basmala chhorne par score faraham nahi hota', () => {
+    const alignment = alignWords(
+      [
+        { word: 'بسم', optional: true },
+        { word: 'الله', optional: true },
+        { word: 'الحمد' },
+        { word: 'لله' },
+      ],
+      []
+    );
+    assertEqual(alignment.score, 0, 'score');
+    assertEqual(alignment.counts.correct, 0, 'correct');
+    return `score ${alignment.score}`;
+  });
+
+  check('دنيا me noon ke baad ya = izhar (idgham nahi)', () => {
+    const hints = tajweedHints('ٱلدُّنْيَا');
+    assert(!hints.some((hint) => hint.rule === 'Idgham'), 'galat Idgham hint');
+    assert(hints.some((hint) => hint.rule === 'Izhar'), 'Izhar hint nahi mila');
+    return hints.map((hint) => hint.rule).join(', ');
   });
 
   check('ص / س ka farq ek edit hai', () => {

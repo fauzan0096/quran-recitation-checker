@@ -5,21 +5,26 @@ kaunsa qareeb tha, kaun galat suna gaya aur kya chhoot gaya. Poori processing
 browser (ya app) ke andar hoti hai — **koi server, koi API key, audio kabhi
 upload nahi hota**.
 
+## Files (sab ek hi level par, koi folder nahi)
+
+`index.html`, `styles.css`, `app.js` (UI), `asr.js` (mic + model), `align.js`, `normalize.js`,
+`tajweed.js`, `quran.js`, `surahs.js`, `selftest.js`, `quran-tanzil.txt`.
+
 ## Kaam kaise karta hai (pipeline)
 
-1. **Text**: `data/quran-tanzil.txt` — Tanzil ka Uthmani (Hafs) text, `surah|aya|text` lines.
+1. **Text**: `quran-tanzil.txt` — Tanzil ka Uthmani (Hafs) text, `surah|aya|text` lines.
 2. **Audio**: microphone (`MediaRecorder`) ya file; 16 kHz mono float samples banaye jate hain.
 3. **Speech to text**: Whisper ka Quran par fine-tuned checkpoint, ONNX me export
    hua, browser me **Transformers.js + ONNX Runtime Web (WASM)** se chalta hai.
    Sirf model ke wazan ek dafa download hote hain, phir browser cache se load hote hain.
-4. **Normalisation** (`src/normalize.js`): harakat, madd/maddeh signs, small high
+4. **Normalisation** (`normalize.js`): harakat, madd/maddeh signs, small high
    letters, tatweel aur waqf marks hata diye jate hain; `ٱ أ إ آ → ا`, `ى → ي`,
    `ة → ه`, `ؤ/ئ` unify. Yeh dono taraf (Quran text aur ASR output) par lagta hai.
-5. **Word alignment** (`src/align.js`): expected alfaz aur sune gaye alfaz ka
+5. **Word alignment** (`align.js`): expected alfaz aur sune gaye alfaz ka
    Needleman–Wunsch DP. Har expected lafz ko status milta hai:
    `correct`, `close` (1–2 harf ka farq, jaise ص/س), `wrong`, `missing`; aya me
    na hone wale alfaz `extras` ban jate hain. Score in sab se banta hai.
-6. **Tajweed hints** (`src/tajweed.js`): script se rules detect hote hain —
+6. **Tajweed hints** (`tajweed.js`): script se rules detect hote hain —
    ghunnah, qalqalah, noon sakinah/tanween ke idgham/iqlab/izhar/ikhfa, meem
    sakinah, aur madd (maddah sign). Yeh hints hain, audio ki timing ki jaanch nahi.
 
@@ -42,17 +47,21 @@ on-device.
 
 ## Mic kaam nahi kar raha?
 
+- Recording ab **Web Audio** se seedha hoti hai (MediaRecorder ke baghair), is liye
+  "Record dabate hi band" wala masla (iOS, Android WebView, PWA) nahi aata. Sirf agar
+  Web Audio na ho to MediaRecorder fallback chalta hai.
+- Recording ke dauran status batata hai ke **awaaz aa rahi hai ya nahi**; 3 second tak
+  khamoshi ho to warning aati hai.
 - **"Mic ki ijazat nahi mili"**: browser/app me microphone Allow karein. Preview ke
-  andar iframe me mic block ho sakta hai — tab tab tak "audio file" se upload karein.
-- Record dabane par button hi nahi badalta to **"Mic jaanch"** dabaein: woh secure
-  page, Microphone API, MediaRecorder, permission state aur ek 2-second asli
-  recording + decode — sab dikha deta hai.
-- Recorder khud ruk jaye (iOS par interruption/call) to app ab khud detect kar leta
-  hai, jo audio bana hai woh le leta hai aur kabhi "recording…" par atakta nahi.
+  andar iframe me mic block ho sakta hai — tab tak "audio file" se upload karein.
+- **"Mic jaanch"** dabaein: secure page, API, permission, tareeqa, 2-second asli
+  recording + decode aur awaaz ka level — sab dikha deta hai.
+- Page https (ya localhost) se khulna chahiye; `index.html` ko seedha file se kholne par
+  Quran text aur mic dono kaam nahi karte.
 
 ## Models
 
-`src/asr.js` me do options hain (dono Transformers.js ke liye ONNX):
+`asr.js` me do options hain (dono Transformers.js ke liye ONNX):
 
 - `YunusZJ/whisper-base-ar-quran-ONNX` — behtar accuracy, ~150 MB.
 - `Sharjeelbaig/whisper-tiny-ar-quran-onnx` — chhota/tez, ~40 MB.
@@ -77,7 +86,7 @@ Base model Tarteel AI ke `tarteel-ai/whisper-base-ar-quran` ka ONNX export hai
 
 Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 
-- **React Native / Capacitor / Ionic**: yehi `src/*.js` files copy karein; ASR ke
+- **React Native / Capacitor / Ionic**: yehi `*.js` files copy karein; ASR ke
   liye `react-native-executorch`, `whisper.rn` ya ONNX Runtime Mobile.
 - **iOS (native)**: Core ML me Whisper encoder/decoder convert karein
   (`coremltools`, ya `whisper.cpp` Ka `whisper.xcframework`), phir yehi
@@ -90,6 +99,6 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 ## Credits
 
 - Quran text: **Tanzil Project** (tanzil.net), Uthmani Hafs — copyright notice
-  `data/quran-tanzil.txt` ke aakhir me maujood hai, usay hatayein na.
+  `quran-tanzil.txt` ke aakhir me maujood hai, usay hatayein na.
 - Quran-tuned Whisper: **Tarteel AI** (Apache-2.0), ONNX exports community se.
 - Transformers.js / ONNX Runtime Web: Hugging Face / Microsoft (Apache-2.0).

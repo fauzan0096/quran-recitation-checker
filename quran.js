@@ -11,8 +11,15 @@ const BASMALA_WORDS = ['بسم', 'الله', 'الرحمن', 'الرحيم'];
 
 let store = null;
 
-export async function loadQuran(url = 'data/quran-tanzil.txt') {
-  const response = await fetch(url);
+export async function loadQuran(url = 'quran-tanzil.txt') {
+  let response;
+  try {
+    response = await fetch(url);
+  } catch (error) {
+    throw new Error(
+      'Quran text load nahi hui. index.html ko seedha file se na kholein — GitHub Pages ya kisi local server se kholein.'
+    );
+  }
   if (!response.ok) {
     throw new Error(`Quran text load nahi hui (HTTP ${response.status})`);
   }
