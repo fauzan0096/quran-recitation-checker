@@ -1,0 +1,61 @@
+name: Unpack uploaded archive
+
+# One-off: the chat agent had no shell to unzip the archive the user uploaded to
+# the repository, so this workflow does it on the runner and commits the result.
+# It exits immediately once data/upload.txt no longer exists, and is deleted
+# again right after it has run.
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    runs-on: ubuntu-latest
+    if: github.actor != 'github-actions[bot]'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Unpack archive into the repository
+        run: |
+          set -euo pipefail
+          if [ ! -f data/upload.txt ]; then
+            echo "No data/upload.txt - nothing to unpack."
+            exit 0
+          fi
+
+          rm -rf /tmp/unpacked
+          mkdir -p /tmp/unpacked
+          unzip -q -o data/upload.txt -d /tmp/unpacked
+
+          # Flatten a single top level folder (repo-main/...).
+          count=$(ls -A /tmp/unpacked | wc -l)
+          if [ "$count" = "1" ]; then
+            first=$(ls -A /tmp/unpacked)
+            if [ -d "/tmp/unpacked/$first" ]; then
+              mv "/tmp/unpacked/$first"/* /tmp/unpacked/
+              rmdir "/tmp/unpacked/$first"
+            fi
+          fi
+
+          # Drop the previous project files, keep git metadata and workflows.
+          find . -mindepth 1 -maxdepth 1 \
+            ! -name '.git' ! -name '.github' -exec rm -rf {} +
+
+          cp -a /tmp/unpacked/. .
+          rm -f data/upload.txt
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            exit 0
+          fi
+          git commit -m "Replace project with the uploaded archive contents"
+          git push
