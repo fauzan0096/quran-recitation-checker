@@ -44,18 +44,28 @@ on-device.
 - Mic ke baghair engine test: **Engine self-test** (normalisation + alignment +
   tajweed + Quran data ke 16 assertions).
 
+## Padhna hai ya yaad se azmaish?
+
+- Ayat ka text upar khula hota hai — dekh kar padh sakte hain.
+- **"Text chhupayein"** dabaein to ayat blur ho jati hai (yaad se padhne ke liye).
+  Record rukne par text khud wapas aa jata hai aur usi par rang + natija dikhta hai.
+- Dobara **"Text dikhayein"** se kabhi bhi wapas.
+
 ## Nateeja kahan dikhta hai
 
 Koi alag "Nateeja" panel ya transcript type karne ki jagah nahi. Record khatam hote hi
-(agar model load hai) tilawat khud check ho jati hai aur nateeja **usi aya ke andar**
-aata hai:
+tilawat khud check ho jati hai (model pehle se load na ho to woh pehle download hota hai)
+aur nateeja **usi aya ke andar** aata hai:
 
 1. Aya ke alfaz rang le lete hain: hara = sahi, peela = qareeb, laal = galat,
    cut (line-through) = chhoot gaya.
 2. Har galat/qareeb lafz ke **neeche** chhote font me aap ka padha hua lafz likha
    aata hai (`padha: …` / `qareeb: …` / `chhoot gaya`).
-3. Aya ke upar ek chhoti patti: score %, verdict aur ginti (kitne sahi, qareeb, galat, chhoote).
-4. Jo alfaz aya me nahi the magar sune gaye, woh usi aya ke neeche `aya me nahi: …` ban kar aate hain.
+3. Aya ke upar ek chhoti patti: score %, verdict aur ginti.
+4. Aya ke **neeche** ghaltiyon ki list: `galat · aya ka lafz → jo aap ne padha`
+   (chooha hua lafz `nahi padha` ke saath).
+5. Agar check na ho sake (model load nahi, audio khali/khamosh, internet), to yahi
+   patti wajah likh deti hai — kuch chup nahi rehta.
 
 ## Mic kaam nahi kar raha?
 

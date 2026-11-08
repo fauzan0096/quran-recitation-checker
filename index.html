@@ -49,11 +49,19 @@
 
       <section class="panel" id="verse-panel">
         <div class="panel-head">
-          <h2><span class="step">2</span> Matn</h2>
+          <h2><span class="step">2</span> Ayaat (padhne ke liye)</h2>
           <span id="verse-ref" class="ref"></span>
+        </div>
+        <div class="row wrap verse-actions">
+          <button type="button" id="toggle-verse" class="btn ghost small">Text chhupayein</button>
+          <span class="hint">
+            Dekh kar padhna hai to text khula rakhein; yaad se azmaish ke liye chhupa dein — Record
+            rukne par text aur natija dono khud dikh jate hain.
+          </span>
         </div>
         <div id="verse-status" class="verse-status" hidden></div>
         <div id="verse" class="verse" lang="ar" dir="rtl"></div>
+        <div id="verse-details" class="verse-details" hidden></div>
         <div class="legend">
           <span class="legend-item"><span class="sw is-correct"></span> sahi</span>
           <span class="legend-item"><span class="sw is-close"></span> qareeb</span>

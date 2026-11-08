@@ -1032,3 +1032,108 @@ audio {
   font-family: 'Amiri Quran', 'Scheherazade New', 'Noto Naskh Arabic', serif;
   font-size: 18px;
 }
+
+
+/* ---- reading / memorising mode ---- */
+
+.verse-actions {
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.verse-actions .hint {
+  margin: 0;
+  flex: 1 1 220px;
+}
+
+.verse.is-hidden {
+  filter: blur(7px);
+  opacity: 0.6;
+  user-select: none;
+  pointer-events: none;
+}
+
+
+/* ---- mistakes spelled out under the aya ---- */
+
+.verse-details {
+  margin-top: 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfaf6;
+  padding: 10px 12px;
+}
+
+.verse-details h4 {
+  margin: 0 0 8px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.mistake-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.mistake {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 7px 10px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: #fff;
+}
+
+.mistake .tag {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-radius: 999px;
+  padding: 2px 8px;
+  background: var(--bad-bg);
+  color: var(--bad-ink);
+}
+
+.mistake.is-close .tag {
+  background: var(--close-bg);
+  color: var(--close-ink);
+}
+
+.mistake.is-missing .tag {
+  background: var(--miss-bg);
+  color: var(--miss-ink);
+}
+
+.mistake .aya-word,
+.mistake .spoken-word {
+  font-family: 'Amiri Quran', 'Scheherazade New', 'Noto Naskh Arabic', serif;
+  font-size: 21px;
+}
+
+.mistake .spoken-word {
+  color: var(--bad-ink);
+  font-weight: 600;
+}
+
+.mistake.is-close .spoken-word {
+  color: var(--close-ink);
+}
+
+.mistake .spoken-word.muted {
+  color: var(--miss-ink);
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.mistake .arrow {
+  color: var(--muted);
+}

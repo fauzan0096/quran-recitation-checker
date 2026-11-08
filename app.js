@@ -14,6 +14,7 @@ const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 
 const state = {
   verses: [],
+  textHidden: false,
   model: null,
   modelId: null,
   modelLoading: false,
@@ -42,6 +43,7 @@ function init() {
   fillModelSelection();
   wireEvents();
   updateTranscribeButton();
+  if (els.verse) els.verse.textContent = 'Quran text load ho raha hai…';
   loadQuran()
     .then(() => {
       els.error.textContent = '';
@@ -51,6 +53,10 @@ function init() {
     .catch((error) => {
       els.error.textContent = error.message;
       els.error.hidden = false;
+      if (els.verse) {
+        els.verse.textContent =
+          'Quran text load nahi hua. Page dobara kholein ya internet check karein.';
+      }
     });
 }
 
@@ -62,6 +68,8 @@ function cacheElements() {
   els.error = byId('range-error');
   els.ref = byId('verse-ref');
   els.verse = byId('verse');
+  els.verseDetails = byId('verse-details');
+  els.toggleVerse = byId('toggle-verse');
   els.record = byId('record');
   els.file = byId('audio-file');
   els.audioStatus = byId('audio-status');
@@ -160,6 +168,25 @@ function loadAya() {
   renderTajweed();
   hideResult();
   persistSelection();
+}
+
+/** Blur the aya so it can be recited from memory, or show it again. */
+function setTextHidden(hidden) {
+  state.textHidden = Boolean(hidden);
+  if (els.verse) els.verse.classList.toggle('is-hidden', state.textHidden);
+  if (els.toggleVerse) {
+    els.toggleVerse.textContent = state.textHidden ? 'Text dikhayein' : 'Text chhupayein';
+    els.toggleVerse.setAttribute('aria-pressed', String(state.textHidden));
+  }
+}
+
+function toggleTextHidden() {
+  setTextHidden(!state.textHidden);
+  toast(
+    state.textHidden
+      ? 'Text chhup gaya — yaad se padhein, Record rukne par text aur natija dikh jayenge.'
+      : 'Text dikh raha hai — dekh kar padhein.'
+  );
 }
 
 function flatten(verses) {
@@ -317,11 +344,36 @@ function hideResult() {
   els.verseStatus.hidden = true;
   els.verseStatus.className = 'verse-status';
   els.verseStatus.innerHTML = '';
+  if (els.verseDetails) {
+    els.verseDetails.hidden = true;
+    els.verseDetails.innerHTML = '';
+  }
+}
+
+/** Say, right above the aya, why a check could not run. */
+function showVerseNotice(message) {
+  if (!els.verseStatus) return;
+  els.verseStatus.hidden = false;
+  els.verseStatus.className = 'verse-status bad';
+  els.verseStatus.innerHTML = '';
+
+  const text = document.createElement('span');
+  text.className = 'vs-verdict';
+  text.textContent = message;
+  els.verseStatus.appendChild(text);
+
+  if (els.verseDetails) {
+    els.verseDetails.hidden = true;
+    els.verseDetails.innerHTML = '';
+  }
+  els.verse.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
 /** Score + verdict above the aya, with the aya itself coloured word by word. */
 function showResult(entries, alignment) {
   if (!els.verseStatus) return;
+  // Whatever mode the reciter chose, the answered aya is shown with its colours.
+  setTextHidden(false);
   els.verseStatus.hidden = false;
   els.verseStatus.className = `verse-status ${scoreClass(alignment.score)}`;
   els.verseStatus.innerHTML = '';
@@ -354,7 +406,65 @@ function showResult(entries, alignment) {
   els.verseStatus.append(score, verdict, summary, hint);
 
   renderVerse(els.verse, entries, alignment.results, alignment.extras);
+  renderMistakes(alignment);
   els.verse.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+/** The mistakes spelled out under the aya: aya ka lafz -> jo aapne padha. */
+function renderMistakes(alignment) {
+  if (!els.verseDetails) return;
+  els.verseDetails.hidden = false;
+  els.verseDetails.innerHTML = '';
+
+  const problems = alignment.results.filter((result) => result.status !== WORD_STATUS.CORRECT);
+  const head = document.createElement('h4');
+  head.textContent = problems.length
+    ? `Ghaltiyan (${problems.length}) — aya ka lafz → jo aap ne padha`
+    : 'Ghaltiyan (0)';
+  els.verseDetails.appendChild(head);
+
+  if (!problems.length) {
+    const ok = document.createElement('p');
+    ok.className = 'hint';
+    ok.textContent =
+      alignment.score === 100
+        ? 'Model ne har lafz aya ke mutabiq suna. Yaad rahe: speech model kabhi ghalat talaffuz ko bhi sahi lafz bana deta hai, is liye tajweed/makhraj ki bareek ghalti yahan nahi pakdi jati.'
+        : 'Lafz ke mutabiq koi ghalti nahi mili.';
+    els.verseDetails.appendChild(ok);
+    return;
+  }
+
+  const list = document.createElement('ul');
+  list.className = 'mistake-list';
+  for (const result of problems) {
+    const row = document.createElement('li');
+    row.className = `mistake is-${result.status}`;
+
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent =
+      result.status === WORD_STATUS.CLOSE
+        ? 'qareeb'
+        : result.status === WORD_STATUS.MISSING
+          ? 'chhoot gaya'
+          : 'galat';
+
+    const expected = document.createElement('span');
+    expected.className = 'aya-word';
+    expected.textContent = result.expected;
+
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = '→';
+
+    const heard = document.createElement('span');
+    heard.className = result.heard ? 'spoken-word' : 'spoken-word muted';
+    heard.textContent = result.heard || 'nahi padha';
+
+    row.append(tag, expected, arrow, heard);
+    list.appendChild(row);
+  }
+  els.verseDetails.appendChild(list);
 }
 
 /** Short label under a word that was not read exactly right. */
@@ -435,11 +545,11 @@ function fillModelSelection() {
 }
 
 async function handleLoadModel() {
-  if (state.busy) return;
+  if (state.busy) return false;
   const modelId = els.modelSelect.value;
   if (state.model && state.modelId === modelId) {
     toast('Yeh model pehle se load hai.');
-    return;
+    return true;
   }
 
   state.modelLoading = true;
@@ -460,11 +570,14 @@ async function handleLoadModel() {
     } catch (error) {
       console.warn('model id persist failed', error);
     }
+    return true;
   } catch (error) {
     state.model = null;
     state.modelId = null;
     els.modelStatus.textContent = `Model load fail: ${error.message}`;
     els.modelProgress.hidden = true;
+    showVerseNotice(`Model load nahi hua (${error.message}) — internet check karein, phir dobara koshish karein.`);
+    return false;
   } finally {
     state.modelLoading = false;
     els.loadModel.disabled = false;
@@ -496,6 +609,9 @@ function setProgress(percent) {
 async function handleTranscribe() {
   if (state.busy) return;
   if (!state.model) {
+    showVerseNotice(
+      'Model load nahi hai, is liye tilawat check nahi ho saki. Neeche "Model load karein" dabaein, phir dobara record karein.'
+    );
     toast('Pehle model load karein.');
     return;
   }
@@ -510,10 +626,14 @@ async function handleTranscribe() {
     const audio = await decodeToMono16k(state.audioBlob);
     if (audio.length < 16000 * 0.4) {
       els.modelStatus.textContent = 'Audio bohot chhota hai — thori lambi tilawat record karein.';
+      showVerseNotice('Audio bohot chhota hai — poora aya record karein.');
       return;
     }
     if (peakOf(audio) < 0.003) {
       els.modelStatus.textContent = 'Audio khamosh hai (mic se awaaz nahi aayi) — dobara record karein.';
+      showVerseNotice(
+        'Audio khamosh hai — mic se awaaz nahi aayi. Dobara record karein, ya "Mic jaanch" se mic test karein.'
+      );
       return;
     }
     els.modelStatus.textContent = 'Transcribe ho raha hai (device par)…';
@@ -522,8 +642,10 @@ async function handleTranscribe() {
       ? 'Transcribe mukammal.'
       : 'Kuch sunai nahi diya — dobara record karein.';
     if (text) checkTranscript(text);
+    else showVerseNotice('Kuch sunai nahi diya — dobara record karein ya zara zor se padhein.');
   } catch (error) {
     els.modelStatus.textContent = `Transcribe fail: ${error.message}`;
+    showVerseNotice(`Check nahi ho saka: ${error.message}`);
   } finally {
     setBusy(false);
   }
@@ -653,10 +775,15 @@ function setAudioBlob(blob, source) {
   updateTranscribeButton();
 
   if (!state.model) {
-    setAudioStatus(
-      `${source} — ${kb} KB. Ab pehle "Model load karein", phir "Transcribe + check".`,
-      'ok'
-    );
+    if (state.modelLoading) {
+      setAudioStatus(`${source} — ${kb} KB. Model load ho raha hai, phir khud check hoga.`, 'info');
+      return;
+    }
+    // No model yet: load the selected one, then check the recording by itself.
+    setAudioStatus(`${source} — ${kb} KB. Model load ho raha hai, phir khud check hoga…`, 'info');
+    handleLoadModel().then((loaded) => {
+      if (loaded && state.model && state.audioBlob && !state.busy) handleTranscribe();
+    });
     return;
   }
   if (state.modelLoading || state.busy) {
@@ -827,6 +954,9 @@ function wireEvents() {
     handleTranscribe();
   });
   els.runTests.addEventListener('click', () => runEngineTests());
+  if (els.toggleVerse) {
+    els.toggleVerse.addEventListener('click', () => toggleTextHidden());
+  }
   if (els.micCheck) {
     els.micCheck.addEventListener('click', () => {
       runMicCheck();
