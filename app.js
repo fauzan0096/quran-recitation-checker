@@ -74,15 +74,7 @@ function cacheElements() {
   els.modelProgressBar = byId('model-progress-bar');
   els.modelStatus = byId('model-status');
   els.transcribe = byId('transcribe');
-  els.transcript = byId('transcript');
-  els.fillSample = byId('fill-sample');
-  els.checkText = byId('check-text');
-  els.resultPanel = byId('result-panel');
-  els.scoreValue = byId('score-value');
-  els.scoreVerdict = byId('score-verdict');
-  els.scoreCounts = byId('score-counts');
-  els.resultVerse = byId('result-verse');
-  els.resultDetails = byId('result-details');
+  els.verseStatus = byId('verse-status');
   els.tajweed = byId('tajweed');
   els.runTests = byId('run-tests');
   els.testResults = byId('test-results');
@@ -164,7 +156,7 @@ function loadAya() {
   els.ref.textContent = `${surahName(surah)} — aya ${from === to ? from : `${from}–${to}`}`;
 
   const entries = flatten(verses);
-  renderVerse(els.verse, entries, null);
+  renderVerse(els.verse, entries, null, []);
   renderTajweed();
   hideResult();
   persistSelection();
@@ -187,18 +179,17 @@ function flatten(verses) {
 
 // ------------------------------------------------------------------ render
 
-function renderVerse(target, entries, results) {
+function renderVerse(target, entries, results, extras = []) {
   target.innerHTML = '';
   const groups = [];
-  for (let i = 0; i < entries.length; i += 1) {
-    const entry = entries[i];
+  entries.forEach((entry, index) => {
     let group = groups[groups.length - 1];
     if (!group || group.surah !== entry.surah || group.aya !== entry.aya) {
       group = { surah: entry.surah, aya: entry.aya, items: [] };
       groups.push(group);
     }
-    group.items.push({ entry, result: results ? results[i] : null });
-  }
+    group.items.push({ entry, index, result: results ? results[index] : null });
+  });
 
   for (const group of groups) {
     const line = document.createElement('div');
@@ -212,14 +203,46 @@ function renderVerse(target, entries, results) {
     }
 
     for (const item of group.items) {
-      const span = document.createElement('span');
-      span.className = 'w';
-      span.textContent = item.entry.word;
-      if (item.result) {
-        span.classList.add(`is-${item.result.status}`);
-        span.title = describeResult(item.result);
+      const result = item.result;
+      if (!result) {
+        line.appendChild(wordSpan(item.entry.word, null));
+        continue;
       }
-      line.appendChild(span);
+      if (result.status === WORD_STATUS.CORRECT) {
+        line.appendChild(wordSpan(item.entry.word, WORD_STATUS.CORRECT));
+        continue;
+      }
+      // Word that was not read exactly right: keep it in the aya and put what
+      // the reciter actually said right under it.
+      const wrap = document.createElement('span');
+      wrap.className = `w-wrap is-${result.status}`;
+      wrap.title = describeResult(result);
+      wrap.appendChild(wordSpan(item.entry.word, result.status));
+
+      const note = document.createElement('span');
+      note.className = 'w-note';
+      note.textContent = noteFor(result);
+      wrap.appendChild(note);
+      line.appendChild(wrap);
+    }
+
+    const firstIndex = group.items[0].index;
+    const lastIndex = group.items[group.items.length - 1].index;
+    const groupExtras = extras.filter(
+      (extra) => extra.afterIndex >= firstIndex - 1 && extra.afterIndex <= lastIndex
+    );
+    if (groupExtras.length) {
+      const extraLine = document.createElement('div');
+      extraLine.className = 'extra-line';
+      const label = document.createElement('span');
+      label.className = 'extra-label';
+      label.textContent = 'aya me nahi:';
+      const words = document.createElement('span');
+      words.lang = 'ar';
+      words.dir = 'rtl';
+      words.textContent = groupExtras.map((extra) => extra.heard).join(' ');
+      extraLine.append(label, words);
+      line.appendChild(extraLine);
     }
 
     const num = document.createElement('span');
@@ -229,6 +252,13 @@ function renderVerse(target, entries, results) {
 
     target.appendChild(line);
   }
+}
+
+function wordSpan(word, status) {
+  const span = document.createElement('span');
+  span.className = status ? `w is-${status}` : 'w';
+  span.textContent = word;
+  return span;
 }
 
 function renderTajweed() {
@@ -283,20 +313,26 @@ function renderTajweed() {
 }
 
 function hideResult() {
-  els.resultPanel.hidden = true;
-  els.scoreValue.textContent = '—';
-  els.scoreValue.className = 'score';
-  els.scoreVerdict.textContent = '';
-  els.scoreCounts.textContent = '';
-  els.resultVerse.innerHTML = '';
-  els.resultDetails.innerHTML = '';
+  if (!els.verseStatus) return;
+  els.verseStatus.hidden = true;
+  els.verseStatus.className = 'verse-status';
+  els.verseStatus.innerHTML = '';
 }
 
-function showResult(entries, alignment, transcript) {
-  els.resultPanel.hidden = false;
-  els.scoreValue.textContent = String(alignment.score);
-  els.scoreValue.className = `score ${scoreClass(alignment.score)}`;
-  els.scoreVerdict.textContent = alignment.verdict;
+/** Score + verdict above the aya, with the aya itself coloured word by word. */
+function showResult(entries, alignment) {
+  if (!els.verseStatus) return;
+  els.verseStatus.hidden = false;
+  els.verseStatus.className = `verse-status ${scoreClass(alignment.score)}`;
+  els.verseStatus.innerHTML = '';
+
+  const score = document.createElement('span');
+  score.className = 'vs-score';
+  score.textContent = `${alignment.score}%`;
+
+  const verdict = document.createElement('span');
+  verdict.className = 'vs-verdict';
+  verdict.textContent = alignment.verdict;
 
   const counts = alignment.counts;
   const parts = [
@@ -306,193 +342,26 @@ function showResult(entries, alignment, transcript) {
     counts.missing ? `${counts.missing} chhoote` : '',
     counts.extra ? `${counts.extra} zaid` : '',
   ].filter(Boolean);
-  els.scoreCounts.textContent = parts.join(' · ');
+  const summary = document.createElement('span');
+  summary.className = 'vs-counts';
+  summary.textContent = parts.join(' · ');
 
-  renderVerse(els.resultVerse, entries, alignment.results);
-  renderDetails(alignment, transcript);
-  els.resultPanel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const hint = document.createElement('span');
+  hint.className = 'vs-hint';
+  hint.textContent =
+    'Hara = sahi, peela = qareeb, laal = galat, cut = chhoot gaya. Galat lafz ke neeche aap ka padha hua lafz likha hai.';
+
+  els.verseStatus.append(score, verdict, summary, hint);
+
+  renderVerse(els.verse, entries, alignment.results, alignment.extras);
+  els.verse.scrollIntoView({ behavior: 'smooth', block: 'center' });
 }
 
-function renderDetails(alignment, transcript) {
-  els.resultDetails.innerHTML = '';
-
-  // 1. The reciter's own words, exactly as the model heard them.
-  els.resultDetails.appendChild(heading('Aap ki tilawat — jo model ne suna'));
-  const heardWords = Array.isArray(alignment.heard) ? alignment.heard : [];
-  if (!heardWords.length) {
-    const empty = document.createElement('p');
-    empty.className = 'hint is-error';
-    empty.textContent =
-      'Model ne koi lafz nahi suna — dobara record karein ya "audio file" se upload karein.';
-    els.resultDetails.appendChild(empty);
-  } else {
-    const chips = document.createElement('div');
-    chips.className = 'heard-chips';
-    chips.lang = 'ar';
-    chips.dir = 'rtl';
-    heardWords.forEach((word, index) => {
-      const status = (alignment.heardStatus && alignment.heardStatus[index]) || 'wrong';
-      const chip = document.createElement('span');
-      chip.className = `heard-word is-${status}`;
-      chip.textContent = word;
-      chip.title =
-        status === 'extra'
-          ? 'Aya me nahi tha'
-          : status === 'correct'
-            ? 'Aya ke mutabiq sahi'
-            : status === 'close'
-              ? 'Qareeb — ek-do harf ka farq'
-              : 'Galat lafz';
-      chips.appendChild(chip);
-    });
-    els.resultDetails.appendChild(chips);
-
-    const legend = document.createElement('p');
-    legend.className = 'hint';
-    legend.textContent =
-      'Hara = sahi · Peela = qareeb · Laal = galat lafz · Laal dashed = aya me nahi tha';
-    els.resultDetails.appendChild(legend);
-  }
-
-  // 2. Mistake by mistake: aya ka lafz -> jo aapne padha.
-  const problems = alignment.results.filter((result) => result.status !== WORD_STATUS.CORRECT);
-  els.resultDetails.appendChild(heading(`Ghaltiyan (${problems.length})`));
-
-  if (problems.length) {
-    const list = document.createElement('ul');
-    list.className = 'detail-list';
-    for (const result of problems) list.appendChild(detailRow(result));
-    els.resultDetails.appendChild(list);
-  } else {
-    const ok = document.createElement('p');
-    ok.className = 'hint';
-    ok.textContent = 'Koi lafz chhoota ya galat nahi — sab aya ke mutabiq mila.';
-    els.resultDetails.appendChild(ok);
-    if (alignment.score === 100) {
-      const note = document.createElement('p');
-      note.className = 'hint';
-      note.textContent =
-        'Yaad rahe: speech model kabhi ghalat talaffuz ko bhi sahi lafz bana deta hai, is liye tajweed/makhraj ki bareek ghalti yahan nazar nahi aati — yahan lafz ka milna dikhta hai, awaz ka naap nahi.';
-      els.resultDetails.appendChild(note);
-    }
-  }
-
-  // 3. Words that were said but are not in these ayaat.
-  if (alignment.extras.length) {
-    els.resultDetails.appendChild(heading('Aya me nahi, magar sune gaye alfaz'));
-    const line = document.createElement('p');
-    line.className = 'heard-text';
-    line.lang = 'ar';
-    line.dir = 'rtl';
-    line.textContent = alignment.extras.map((extra) => extra.heard).join(' ');
-    els.resultDetails.appendChild(line);
-  }
-
-  // 4. Every word pair, for whoever wants the full picture.
-  if (alignment.results.length) {
-    els.resultDetails.appendChild(allWordsTable(alignment));
-  }
-
-  // 5. Raw transcript from the model.
-  els.resultDetails.appendChild(heading('Model ka poora transcript'));
-  const raw = document.createElement('p');
-  raw.className = 'heard-text';
-  raw.lang = 'ar';
-  raw.dir = 'rtl';
-  raw.textContent = transcript || '(khali)';
-  els.resultDetails.appendChild(raw);
-}
-
-function heading(text) {
-  const h = document.createElement('h4');
-  h.textContent = text;
-  return h;
-}
-
-function detailRow(result) {
-  const li = document.createElement('li');
-  li.className = `detail is-${result.status}`;
-
-  const tag = document.createElement('span');
-  tag.className = 'tag';
-  tag.textContent = tagText(result.status);
-
-  const pair = document.createElement('span');
-  pair.className = 'pair';
-
-  const expected = document.createElement('span');
-  expected.className = 'ar expected';
-  expected.lang = 'ar';
-  expected.dir = 'rtl';
-  expected.textContent = result.expected;
-
-  const arrow = document.createElement('span');
-  arrow.className = 'arrow';
-  arrow.textContent = '→';
-
-  const heard = document.createElement('span');
-  heard.className = `ar heard${result.heard ? '' : ' muted'}`;
-  heard.lang = 'ar';
-  heard.dir = 'rtl';
-  heard.textContent = result.heard || 'nahi padha';
-
-  pair.append(expected, arrow, heard);
-  li.append(tag, pair);
-
-  return li;
-}
-
-/** Every aya word next to what the model heard for it, inside a collapsible. */
-function allWordsTable(alignment) {
-  const details = document.createElement('details');
-  details.className = 'all-words';
-
-  const summary = document.createElement('summary');
-  summary.textContent = `Saare alfaz ka muqabla (${alignment.results.length})`;
-  details.appendChild(summary);
-
-  const list = document.createElement('ul');
-  list.className = 'word-table';
-  for (const result of alignment.results) {
-    if (result.optional && !result.heard) continue; // basmala that was skipped
-    const row = document.createElement('li');
-    row.className = `wt-row is-${result.status}`;
-
-    const expected = document.createElement('span');
-    expected.className = 'ar';
-    expected.lang = 'ar';
-    expected.dir = 'rtl';
-    expected.textContent = result.expected;
-
-    const arrow = document.createElement('span');
-    arrow.className = 'arrow';
-    arrow.textContent = '→';
-
-    const heard = document.createElement('span');
-    heard.className = `ar${result.heard ? '' : ' muted'}`;
-    heard.lang = 'ar';
-    heard.dir = 'rtl';
-    heard.textContent = result.heard || '—';
-
-    row.append(expected, arrow, heard);
-    list.appendChild(row);
-  }
-  details.appendChild(list);
-  return details;
-}
-
-function tagText(status) {
-  if (status === WORD_STATUS.CLOSE) return 'qareeb';
-  if (status === WORD_STATUS.WRONG) return 'galat';
-  if (status === WORD_STATUS.MISSING) return 'chhoot gaya';
-  return 'sahi';
-}
-
-function describeResult(result) {
-  if (result.status === WORD_STATUS.CLOSE) return `Qareeb — suna gaya: ${result.heard}`;
-  if (result.status === WORD_STATUS.WRONG) return `Galat — suna gaya: ${result.heard}`;
-  if (result.status === WORD_STATUS.MISSING) return 'Chhoot gaya';
-  return 'Sahi';
+/** Short label under a word that was not read exactly right. */
+function noteFor(result) {
+  if (result.status === WORD_STATUS.MISSING || !result.heard) return 'chhoot gaya';
+  if (result.status === WORD_STATUS.CLOSE) return `qareeb: ${result.heard}`;
+  return `padha: ${result.heard}`;
 }
 
 function scoreClass(score) {
@@ -507,10 +376,17 @@ function toArabicDigits(value) {
 
 // ----------------------------------------------------------------- checking
 
-function checkTranscript() {
-  const raw = els.transcript.value.trim();
-  if (!raw) {
-    toast('Pehle transcribe karein ya jo padha woh likh dein.');
+function describeResult(result) {
+  if (result.status === WORD_STATUS.CLOSE) return `Qareeb — suna gaya: ${result.heard}`;
+  if (result.status === WORD_STATUS.WRONG) return `Galat — suna gaya: ${result.heard}`;
+  if (result.status === WORD_STATUS.MISSING) return 'Chhoot gaya';
+  return 'Sahi';
+}
+
+function checkTranscript(raw) {
+  const text = String(raw || '').trim();
+  if (!text) {
+    toast('Kuch sunai nahi diya — dobara record karein.');
     return null;
   }
   const entries = flatten(state.verses);
@@ -518,13 +394,13 @@ function checkTranscript() {
     toast('Pehle ayaat load karein.');
     return null;
   }
-  const heard = raw
+  const heard = text
     .split(/\s+/)
     .map((word) => word.trim())
     .filter((word) => normalizeArabic(word).length > 0);
 
   if (!heard.length) {
-    toast('Text me koi Arabic lafz nahi mila.');
+    toast('Model ne koi Arabic lafz nahi suna.');
     return null;
   }
 
@@ -532,22 +408,8 @@ function checkTranscript() {
     entries.map((entry) => ({ word: entry.word, optional: entry.optional })),
     heard
   );
-  showResult(entries, alignment, raw);
+  showResult(entries, alignment);
   return alignment;
-}
-
-function fillSample() {
-  const entries = flatten(state.verses);
-  const words = entries.map((entry) => normalizeArabic(entry.word)).filter(Boolean);
-  if (!words.length) {
-    toast('Pehle ayaat load karein.');
-    return;
-  }
-  const sample = words.slice();
-  if (sample.length > 3) sample.splice(Math.min(2, sample.length - 2), 1);
-  if (sample.length > 1) sample[sample.length - 1] = sample[0];
-  els.transcript.value = sample.join(' ');
-  toast('Sample bhar diya — "Check karein" dabaein.');
 }
 
 // -------------------------------------------------------------------- model
@@ -656,11 +518,10 @@ async function handleTranscribe() {
     }
     els.modelStatus.textContent = 'Transcribe ho raha hai (device par)…';
     const text = await transcribe(state.model, audio);
-    els.transcript.value = text;
     els.modelStatus.textContent = text
       ? 'Transcribe mukammal.'
       : 'Kuch sunai nahi diya — dobara record karein.';
-    if (text) checkTranscript();
+    if (text) checkTranscript(text);
   } catch (error) {
     els.modelStatus.textContent = `Transcribe fail: ${error.message}`;
   } finally {
@@ -785,12 +646,26 @@ function setAudioStatus(message, kind = 'info') {
 function setAudioBlob(blob, source) {
   state.audioBlob = blob;
   const kb = Math.max(1, Math.round(blob.size / 1024));
-  setAudioStatus(`${source} — ${kb} KB. Ab "Transcribe + check" dabaein (pehle model load karein).`, 'ok');
   if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
   state.audioUrl = URL.createObjectURL(blob);
   els.player.src = state.audioUrl;
   els.player.hidden = false;
   updateTranscribeButton();
+
+  if (!state.model) {
+    setAudioStatus(
+      `${source} — ${kb} KB. Ab pehle "Model load karein", phir "Transcribe + check".`,
+      'ok'
+    );
+    return;
+  }
+  if (state.modelLoading || state.busy) {
+    setAudioStatus(`${source} — ${kb} KB. Tayyar hai.`, 'ok');
+    return;
+  }
+  // Model is ready: transcribe and show the result on the aya without an extra tap.
+  setAudioStatus(`${source} — ${kb} KB. Transcribe ho raha hai…`, 'ok');
+  handleTranscribe();
 }
 
 function updateTranscribeButton() {
@@ -802,8 +677,6 @@ function setBusy(busy) {
   state.busy = busy;
   els.loadModel.disabled = busy || state.modelLoading;
   els.record.disabled = busy;
-  els.checkText.disabled = busy;
-  els.fillSample.disabled = busy;
   els.load.disabled = busy;
   updateTranscribeButton();
 }
@@ -953,8 +826,6 @@ function wireEvents() {
   els.transcribe.addEventListener('click', () => {
     handleTranscribe();
   });
-  els.checkText.addEventListener('click', () => checkTranscript());
-  els.fillSample.addEventListener('click', () => fillSample());
   els.runTests.addEventListener('click', () => runEngineTests());
   if (els.micCheck) {
     els.micCheck.addEventListener('click', () => {

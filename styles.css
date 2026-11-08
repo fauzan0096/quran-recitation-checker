@@ -910,3 +910,125 @@ audio {
 .wt-row.is-missing {
   background: #f6f4ef;
 }
+
+
+/* ---- result shown on the aya itself ---- */
+
+.verse-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fbfaf6;
+  padding: 10px 12px;
+  margin-bottom: 12px;
+}
+
+.verse-status.good {
+  background: var(--ok-bg);
+  border-color: #b9dcc8;
+}
+
+.verse-status.mid {
+  background: var(--close-bg);
+  border-color: #e4cd94;
+}
+
+.verse-status.bad {
+  background: var(--bad-bg);
+  border-color: #e7b8b0;
+}
+
+.vs-score {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.verse-status.good .vs-score {
+  color: var(--ok-ink);
+}
+
+.verse-status.mid .vs-score {
+  color: var(--close-ink);
+}
+
+.verse-status.bad .vs-score {
+  color: var(--bad-ink);
+}
+
+.vs-verdict {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.vs-counts {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.vs-hint {
+  flex: 1 1 100%;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* a word plus what was heard under it */
+
+.w-wrap {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  vertical-align: top;
+  line-height: 1.4;
+  margin: 0 1px 4px;
+  max-width: 10em;
+}
+
+.w-wrap .w {
+  margin: 0;
+}
+
+.w-note {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 11px;
+  line-height: 1.35;
+  color: var(--bad-ink);
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 6px;
+  padding: 1px 5px;
+  margin-top: 1px;
+  white-space: nowrap;
+  direction: ltr;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.w-wrap.is-close .w-note {
+  color: var(--close-ink);
+}
+
+.w-wrap.is-missing .w-note {
+  color: var(--miss-ink);
+  font-family: inherit;
+}
+
+.extra-line {
+  display: block;
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--bad-ink);
+}
+
+.extra-label {
+  font-weight: 600;
+  margin-inline-end: 6px;
+}
+
+.extra-line span[lang='ar'] {
+  font-family: 'Amiri Quran', 'Scheherazade New', 'Noto Naskh Arabic', serif;
+  font-size: 18px;
+}

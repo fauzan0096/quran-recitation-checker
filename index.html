@@ -52,6 +52,7 @@
           <h2><span class="step">2</span> Matn</h2>
           <span id="verse-ref" class="ref"></span>
         </div>
+        <div id="verse-status" class="verse-status" hidden></div>
         <div id="verse" class="verse" lang="ar" dir="rtl"></div>
         <div class="legend">
           <span class="legend-item"><span class="sw is-correct"></span> sahi</span>
@@ -96,42 +97,14 @@
         <button type="button" id="transcribe" class="btn primary wide" disabled>
           Transcribe + check
         </button>
-
-        <div class="divider"></div>
-
-        <h3>Ya jo padha woh haath se likh dein</h3>
         <p class="hint">
-          Model ke baghair bhi engine test ho sakta hai: aya ka text (ya jo aapne padha) yahan
-          paste karein. Yeh bilkul offline chalega.
+          Recording khatam hote hi khud check ho jata hai — nateeja usi aya ke alfaaz par rang
+          aur ghalat lafz ke neeche aap ke padhe hue lafz ki soorat me aata hai.
         </p>
-        <textarea
-          id="transcript"
-          rows="3"
-          lang="ar"
-          dir="rtl"
-          placeholder="مثال: الحمد لله رب العالمين"
-        ></textarea>
-        <div class="row wrap">
-          <button type="button" id="fill-sample" class="btn ghost">Sample bharein</button>
-          <button type="button" id="check-text" class="btn primary">Check karein</button>
-        </div>
-      </section>
-
-      <section class="panel" id="result-panel" hidden>
-        <h2><span class="step">4</span> Nateeja</h2>
-        <div class="score-row">
-          <div id="score-value" class="score">—</div>
-          <div class="score-meta">
-            <div id="score-verdict" class="verdict"></div>
-            <div id="score-counts" class="hint"></div>
-          </div>
-        </div>
-        <div id="result-verse" class="verse" lang="ar" dir="rtl"></div>
-        <div id="result-details" class="details"></div>
       </section>
 
       <section class="panel" id="tajweed-panel">
-        <h2><span class="step">5</span> Tajweed hints (text se)</h2>
+        <h2><span class="step">4</span> Tajweed hints (text se)</h2>
         <p class="hint">
           Yeh sirf script se nikalay gaye hints hain: kahan ghunnah, idgham, qalqalah ya madd
           lazim hai. Audio se timing naapna is version me nahi hai.

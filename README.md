@@ -13,7 +13,7 @@ upload nahi hota**.
 ## Kaam kaise karta hai (pipeline)
 
 1. **Text**: `quran-tanzil.txt` — Tanzil ka Uthmani (Hafs) text, `surah|aya|text` lines.
-2. **Audio**: microphone (`MediaRecorder`) ya file; 16 kHz mono float samples banaye jate hain.
+2. **Audio**: microphone (Web Audio PCM -> WAV; MediaRecorder sirf fallback), phir 16 kHz mono samples.
 3. **Speech to text**: Whisper ka Quran par fine-tuned checkpoint, ONNX me export
    hua, browser me **Transformers.js + ONNX Runtime Web (WASM)** se chalta hai.
    Sirf model ke wazan ek dafa download hote hain, phir browser cache se load hote hain.
@@ -41,22 +41,21 @@ on-device.
 - Ye ek **zero-build plain web app** hai: `index.html` + ES modules, koi bundler nahi.
 - Pehli dafa model load karne ke liye internet chahiye (CDN se library aur
   Hugging Face se model weights). Uske baad model browser cache me rehta hai.
-- Mic ke baghair test: **"Sample bharein" → "Check karein"** (engine bilkul offline),
-  aur **Engine self-test** (normalisation + alignment + tajweed + Quran data ke
-  16 assertions).
+- Mic ke baghair engine test: **Engine self-test** (normalisation + alignment +
+  tajweed + Quran data ke 16 assertions).
 
 ## Nateeja kahan dikhta hai
 
-Check karne ke baad "Nateeja" panel me:
+Koi alag "Nateeja" panel ya transcript type karne ki jagah nahi. Record khatam hote hi
+(agar model load hai) tilawat khud check ho jati hai aur nateeja **usi aya ke andar**
+aata hai:
 
-1. **Aap ki tilawat** — jo lafz model ne sune, wahi order me chips ki tarah:
-   hara = aya ke mutabiq sahi, peela = qareeb, laal = galat, laal dashed = aya me nahi tha.
-2. **Ghaltiyan** — har ghalti par `aya ka lafz → jo aap ne padha`.
-3. **Aya me nahi, magar sune gaye alfaz**.
-4. **Saare alfaz ka muqabla** — poora word-by-word table (kholne ke liye click karein).
-5. **Model ka poora transcript**.
-
-Upar aya ke alfaz bhi rang wale hote hain (hara / peela / laal / cut).
+1. Aya ke alfaz rang le lete hain: hara = sahi, peela = qareeb, laal = galat,
+   cut (line-through) = chhoot gaya.
+2. Har galat/qareeb lafz ke **neeche** chhote font me aap ka padha hua lafz likha
+   aata hai (`padha: …` / `qareeb: …` / `chhoot gaya`).
+3. Aya ke upar ek chhoti patti: score %, verdict aur ginti (kitne sahi, qareeb, galat, chhoote).
+4. Jo alfaz aya me nahi the magar sune gaye, woh usi aya ke neeche `aya me nahi: …` ban kar aate hain.
 
 ## Mic kaam nahi kar raha?
 
