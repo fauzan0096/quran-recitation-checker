@@ -1446,3 +1446,131 @@ body.has-overlay {
   border-top: 1px dashed var(--line);
   margin: 16px 0;
 }
+
+
+
+/* ------------------------------------------------------- marks/progress */
+
+.aya-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.chip {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 5px 12px;
+  min-height: 30px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.chip[data-mark='ok'] {
+  background: var(--ok-bg);
+  border-color: #b9dcc8;
+  color: var(--ok-ink);
+}
+
+.chip[data-mark='redo'] {
+  background: var(--close-bg);
+  border-color: #e4cd94;
+  color: var(--close-ink);
+}
+
+.star-btn {
+  font-size: 17px;
+  line-height: 1;
+  color: var(--muted);
+}
+
+.star-btn.is-on {
+  color: var(--gold);
+  border-color: var(--gold);
+}
+
+.mini-score {
+  margin-inline-start: auto;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.progress-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin: 10px 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: #fbf5ea;
+}
+
+.stat strong {
+  font-size: 17px;
+  color: var(--green-dark);
+}
+
+.stat span {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.jump-block {
+  margin-top: 12px;
+}
+
+.jump-block h4 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.jump-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.jump-btn {
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--green-dark);
+  cursor: pointer;
+}
+
+#progress-reset {
+  margin-top: 12px;
+}
+
+body[data-theme='dark'] .stat {
+  background: #1d1416;
+}
+
+body[data-theme='dark'] .chip[data-mark='ok'] {
+  border-color: #2c6b52;
+}
+
+body[data-theme='dark'] .chip[data-mark='redo'] {
+  border-color: #6a5620;
+}

@@ -79,6 +79,22 @@ on-device.
 - List ke neeche **A− / A+** se text ka size (18–44px) aur **− / +** se harf ki
   motai (300–800; patla / aam / mota / bohot mota). Dono settings yaad rehti hain.
 
+## Yaad-dasht (bookmark / progress)
+
+- Har aya ke neeche ek chhoti patti hai: **✓ Yaad hai** / **↺ Dobara** / **＋ Nishan**.
+  Tap karne par nishan badalta hai (none → ✓ → ↺ → none), aur jo chunein woh
+  `localStorage['tc.progress']` me yaad rehta hai. Card ke oopar **★** se woh aya
+  bookmark ho jati hai.
+- Record ke baad aya ka **score khud save** ho jata hai (`97%` aya ke neeche dikhta
+  hai), aur us din ko practice counted kiya jata hai.
+- **Settings → Meri yaad-dasht**: lagataar din (streak), check ki hui ayaat, ausat
+  score, aur ✓ / ↺ / ★ ki alag alag list — kisi bhi entry par tap karein to wahi aya
+  khulti hai. **"Yaad-dasht mita dein"** se sab saaf.
+- Surah picker ke saath **↩ 2:255** jaisa chip = jahan aakhri bar the, wahin se shuru;
+  tap karne par wahi aya flash ho kar khulti hai.
+- Sab kuch sirf is device par (localStorage) — koi account nahi, koi server nahi.
+- Mushaf page par kisi aya ko select karein to usi bar me ★ aur ✓/↺ bhi mil jate hain.
+
 ## Zubaan, splash aur khush aamdeed
 
 - Teen zubanein: **Roman Urdu**, **اردو** aur **English** — Settings → *Zubaan*, ya

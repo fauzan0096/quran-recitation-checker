@@ -62,6 +62,9 @@
             <span data-i18n="tab.surah">Surah</span>
             <select id="surah-select"></select>
           </label>
+          <button type="button" id="resume-aya" class="btn ghost small" title="Pichhli jagah" hidden>
+            ↩
+          </button>
         </div>
 
         <div class="picker" id="picker-page" hidden>
@@ -138,6 +141,18 @@
             <option value="ur">اردو</option>
             <option value="en">English</option>
           </select>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="progress.heading">Meri yaad-dasht</h3>
+          <p class="hint" data-i18n="progress.hint">
+            Har aya par ★ (bookmark) ya ✓ / ↺ ka nishan lagayein — sab kuch isi phone par rehta hai.
+          </p>
+          <div class="progress-stats" id="progress-stats"></div>
+          <div id="progress-lists"></div>
+          <button type="button" id="progress-reset" class="btn ghost small" data-i18n="progress.reset">
+            Yaad-dasht mita dein
+          </button>
         </div>
 
         <div class="card" id="install-card">

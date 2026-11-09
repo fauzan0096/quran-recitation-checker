@@ -36,6 +36,19 @@ import {
 } from './asr.js';
 import { runSelfTest } from './selftest.js';
 import { LANGUAGES, initLanguage, getLanguage, setLanguage, t } from './i18n.js';
+import {
+  clearAll,
+  cycleMark,
+  isStarred,
+  listOf,
+  markOf,
+  resumeKey,
+  scoreOf,
+  setResume,
+  setScore,
+  stats,
+  toggleStar,
+} from './progress.js';
 
 const STORAGE = {
   selection: 'tc.selection',
@@ -166,6 +179,7 @@ async function changeLanguage(value) {
   els.toggleText.textContent = state.textHidden ? t('text.show') : t('text.hide');
   applyReading(false);
   renderTajweed();
+  renderProgress();
   if (!isLoaded()) return;
   if (state.mode === 'search') {
     els.listTitle.textContent = t('list.searchTitle');
@@ -189,6 +203,7 @@ function cacheElements() {
     'mic-check', 'mic-check-output', 'player', 'tajweed', 'run-tests',
     'test-results', 'toast',
     'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
+    'resume-aya', 'progress-stats', 'progress-lists', 'progress-reset',
   ];
   for (const id of ids) {
     const name = id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -446,6 +461,7 @@ function verseOf(key) {
 
 function renderList() {
   els.ayaList.innerHTML = '';
+  renderResume();
   if (state.mode === 'page') {
     renderMushafPage();
     updateRecordButtons();
@@ -489,7 +505,7 @@ function ayaCard(verse) {
   share.textContent = '↗';
   share.addEventListener('click', () => shareAya(verse));
 
-  head.append(badge, share);
+  head.append(badge, starButton(key), share);
 
   const text = document.createElement('div');
   text.className = 'aya-text';
@@ -520,7 +536,7 @@ function ayaCard(verse) {
 
   card.append(head);
   if (verse.basmala) card.appendChild(basmalaLine(verse.basmala));
-  card.append(text, status, result, actions);
+  card.append(text, ayaMeta(key), status, result, actions);
   return card;
 }
 
@@ -538,7 +554,82 @@ function idOf(key) {
   return key.replace(/[^a-zA-Z0-9]/g, '-');
 }
 
-// ------------------------------------------------------------ mushaf page
+// -------------------------------------------------------------- aya marks
+
+/** ★ bookmark toggle for one aya. */
+function starButton(key) {
+  const star = document.createElement('button');
+  star.type = 'button';
+  star.className = 'icon-btn small star-btn';
+  star.title = t('mark.star');
+  star.setAttribute('aria-label', t('mark.star'));
+  const paint = () => {
+    const on = isStarred(key);
+    star.textContent = on ? '★' : '☆';
+    star.classList.toggle('is-on', on);
+    star.setAttribute('aria-pressed', String(on));
+  };
+  paint();
+  star.addEventListener('click', () => {
+    toggleStar(key);
+    paint();
+    renderProgress();
+  });
+  return star;
+}
+
+/** ✓ memorised / ↺ redo / ＋ unmarked — tap to cycle. */
+function markChip(key) {
+  const chip = document.createElement('button');
+  chip.type = 'button';
+  chip.className = 'chip mark-chip';
+  const paint = () => {
+    const mark = markOf(key);
+    chip.dataset.mark = mark;
+    chip.textContent =
+      mark === 'ok'
+        ? `✓ ${t('mark.ok')}`
+        : mark === 'redo'
+          ? `↺ ${t('mark.redo')}`
+          : `＋ ${t('mark.none')}`;
+    chip.setAttribute('aria-pressed', String(mark !== 'none'));
+  };
+  paint();
+  chip.addEventListener('click', () => {
+    cycleMark(key);
+    paint();
+    renderProgress();
+  });
+  return chip;
+}
+
+/** Mark chip + last score, under an aya's text. */
+function ayaMeta(key) {
+  const row = document.createElement('div');
+  row.className = 'aya-meta';
+  row.appendChild(markChip(key));
+  const score = scoreOf(key);
+  if (typeof score === 'number') {
+    const mini = document.createElement('span');
+    mini.className = 'mini-score';
+    mini.title = t('progress.average');
+    mini.textContent = `${score}%`;
+    row.appendChild(mini);
+  }
+  return row;
+}
+
+/** The "back where you were" chip in the surah picker. */
+function renderResume() {
+  if (!els.resumeAya) return;
+  const key = resumeKey();
+  els.resumeAya.hidden = !key;
+  els.resumeAya.textContent = key ? `↩ ${key}` : '';
+  els.resumeAya.title = t('progress.resume');
+  els.resumeAya.setAttribute('aria-label', t('progress.resume'));
+}
+
+// ------------------------------------------------------------- mushaf page
 
 function renderMushafPage() {
   const page = document.createElement('div');
@@ -583,7 +674,7 @@ function renderMushafPage() {
       status.className = 'aya-status';
       status.dataset.role = 'status';
 
-      bar.append(label, record, share, clear, status);
+      bar.append(label, record, starButton(key), markChip(key), share, clear, status);
       page.appendChild(bar);
     }
   }
@@ -614,6 +705,7 @@ function renderMushafPage() {
 
     seg.addEventListener('click', () => {
       state.selectedKey = state.selectedKey === key ? null : key;
+      if (state.selectedKey) setResume(state.selectedKey);
       renderList();
     });
 
@@ -1008,8 +1100,12 @@ async function checkTarget(id, keys, blob) {
     });
     verses.forEach((verse, vi) => {
       const prefix = (verse.prefixWords || []).length;
-      state.results.set(keyOf(verse.surah, verse.aya), summarise(slices[vi].slice(prefix), []));
+      const key = keyOf(verse.surah, verse.aya);
+      const summary = summarise(slices[vi].slice(prefix), []);
+      state.results.set(key, summary);
+      setScore(key, summary.score);
     });
+    if (verses.length) setResume(keyOf(verses[0].surah, verses[0].aya));
 
     state.pageAlignment =
       verses.length > 1 ? summarise(alignment.results, alignment.extras) : null;
@@ -1212,6 +1308,8 @@ async function jumpToAya(surah, aya) {
   applyMode();
   await showList();
 
+  setResume(keyOf(state.surah, aya));
+
   const index = state.verses.findIndex((verse) => verse.aya === aya);
   if (index < 0) return;
   state.visible = Math.max(CHUNK, index + 1);
@@ -1234,11 +1332,81 @@ function openSettings() {
     els.modelStatus.textContent = t('model.status');
   }
   renderTajweed();
+  renderProgress();
 }
 
 function closeSettings() {
   els.viewSettings.hidden = true;
   els.viewReader.hidden = false;
+}
+
+// --------------------------------------------------------------- progress
+
+/** Stats + the starred / memorised / redo lists in Settings. */
+function renderProgress() {
+  if (!els.progressStats || !els.progressLists) return;
+  const s = stats();
+
+  els.progressStats.innerHTML = '';
+  const cells = [
+    [t('progress.streak'), t('progress.days', { count: s.streak })],
+    [t('progress.checked'), String(s.checked)],
+    [t('progress.average'), `${s.average}%`],
+    [t('progress.okCount'), String(s.ok)],
+    [t('progress.redoCount'), String(s.redo)],
+    [t('progress.starCount'), String(s.star)],
+  ];
+  for (const [label, value] of cells) {
+    const cell = document.createElement('div');
+    cell.className = 'stat';
+    const strong = document.createElement('strong');
+    strong.textContent = value;
+    const span = document.createElement('span');
+    span.textContent = label;
+    cell.append(strong, span);
+    els.progressStats.appendChild(cell);
+  }
+
+  els.progressLists.innerHTML = '';
+  const groups = [
+    ['ok', t('progress.okList')],
+    ['redo', t('progress.redoList')],
+    ['star', t('progress.starList')],
+  ];
+  for (const [kind, title] of groups) {
+    const keys = listOf(kind);
+    if (!keys.length) continue;
+    const block = document.createElement('div');
+    block.className = 'jump-block';
+    const heading = document.createElement('h4');
+    heading.textContent = `${title} (${keys.length})`;
+    const list = document.createElement('div');
+    list.className = 'jump-list';
+    for (const key of keys.slice(0, 60)) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'jump-btn';
+      button.textContent = key;
+      button.addEventListener('click', () => goToKey(key));
+      list.appendChild(button);
+    }
+    block.append(heading, list);
+    els.progressLists.appendChild(block);
+  }
+  if (!els.progressLists.children.length) {
+    const empty = document.createElement('p');
+    empty.className = 'hint';
+    empty.textContent = t('progress.empty');
+    els.progressLists.appendChild(empty);
+  }
+}
+
+/** Jump to an aya from the progress lists or the resume chip. */
+async function goToKey(key) {
+  const [surah, aya] = key.split(':').map(Number);
+  if (!surah || !aya) return;
+  closeSettings();
+  await jumpToAya(surah, aya);
 }
 
 function setTextHidden(hidden) {
@@ -1521,6 +1689,24 @@ function wireEvents() {
   }
   if (els.langSelect) {
     els.langSelect.addEventListener('change', () => changeLanguage(els.langSelect.value));
+  }
+
+  if (els.resumeAya) {
+    els.resumeAya.addEventListener('click', () => {
+      const key = resumeKey();
+      if (key) goToKey(key);
+    });
+  }
+
+  if (els.progressReset) {
+    els.progressReset.addEventListener('click', () => {
+      if (!window.confirm(t('progress.resetAsk'))) return;
+      clearAll();
+      renderProgress();
+      renderList();
+      renderResume();
+      toast(t('progress.cleared'));
+    });
   }
 }
 
