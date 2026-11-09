@@ -33,6 +33,7 @@ import {
   micPermissionState,
   peakOf,
   libraryVersion,
+  modelCacheInfo,
 } from './asr.js';
 import { runSelfTest } from './selftest.js';
 import { mountTasbeeh } from './tasbeeh.js';
@@ -209,6 +210,7 @@ function cacheElements() {
     'toggle-text', 'list-title', 'global-status', 'range-error', 'aya-list',
     'list-footer', 'load-more', 'share-app', 'model-select', 'load-model',
     'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
+    'model-cache',
     'mic-check', 'mic-check-output', 'player', 'tajweed', 'run-tests',
     'test-results', 'toast',
     'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
@@ -1202,6 +1204,7 @@ async function handleLoadModel() {
       console.warn('model id persist failed', error);
     }
     setGlobalStatus('');
+    renderModelCache();
     return true;
   } catch (error) {
     state.model = null;
@@ -1235,6 +1238,22 @@ function onModelProgress(progress) {
 
 function setProgress(percent) {
   els.modelProgressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
+}
+
+/** Show how much of the model the browser already keeps on the phone. */
+async function renderModelCache() {
+  if (!els.modelCache) return;
+  const info = await modelCacheInfo();
+  if (!info || !info.files) {
+    els.modelCache.textContent = t('model.cacheNone');
+    els.modelCache.hidden = false;
+    return;
+  }
+  const mb = info.bytes ? Math.round(info.bytes / 1048576) : 0;
+  els.modelCache.textContent = mb
+    ? t('model.cacheReady', { size: `${mb} MB` })
+    : t('model.cacheFiles', { count: info.files });
+  els.modelCache.hidden = false;
 }
 
 // ----------------------------------------------------------------- search
@@ -1391,6 +1410,7 @@ function openSettings() {
   }
   renderTajweed();
   renderProgress();
+  renderModelCache();
 }
 
 function closeSettings() {

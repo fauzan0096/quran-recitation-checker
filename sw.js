@@ -5,7 +5,7 @@
 // the phone on the next load, with the cached copy as the offline fallback.
 // CDN / model / Quran.com requests are left to the network.
 
-const CACHE = 'bayyin-v18';
+const CACHE = 'bayyin-v19';
 const SHELL = [
   './',
   'index.html',
@@ -65,8 +65,15 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
+      // Only this app's own old shells may go. The speech model lives in
+      // Transformers.js's "transformers-cache" and must survive every app
+      // update, otherwise the phone downloads ~105 MB again for nothing.
       .then((keys) =>
-        Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
+        Promise.all(
+          keys
+            .filter((key) => key.startsWith('bayyin-') && key !== CACHE)
+            .map((key) => caches.delete(key))
+        )
       )
       .then(() => self.clients.claim())
   );

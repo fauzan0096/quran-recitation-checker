@@ -78,6 +78,11 @@ const DICT = {
     'model.done': 'Download mukammal: {file}',
     'model.loadFail': 'Model load fail: {message}',
     'model.newOne': 'Naya model — "Model load karein" dabaein.',
+    'model.cacheReady':
+      'Model device par mehfooz hai ({size}) — app update ke baad dobara download nahi hoga.',
+    'model.cacheFiles': 'Model cache me {count} files mehfooz hain.',
+    'model.cacheNone':
+      'Model abhi download nahi hua — pehli recording par aayega, phir mehfooz rahega.',
     'audio.heading': 'Audio',
     'audio.file': 'Recording ki jagah file chunein',
     'audio.loaded': 'Audio file lagi hai.',
@@ -324,6 +329,11 @@ const DICT = {
     'model.done': 'ڈاؤن لوڈ مکمل: {file}',
     'model.loadFail': 'ماڈل لوڈ نہیں ہوا: {message}',
     'model.newOne': 'نیا ماڈل — "ماڈل لوڈ کریں" دبائیں۔',
+    'model.cacheReady':
+      'ماڈل ڈیوائس پر محفوظ ہے ({size}) — ایپ اپ ڈیٹ کے بعد دوبارہ ڈاؤن لوڈ نہیں ہوگا۔',
+    'model.cacheFiles': 'ماڈل کیشے میں {count} فائلیں محفوظ ہیں۔',
+    'model.cacheNone':
+      'ماڈل ابھی ڈاؤن لوڈ نہیں ہوا — پہلی ریکارڈنگ پر آئے گا، پھر محفوظ رہے گا۔',
     'audio.heading': 'آڈیو',
     'audio.file': 'ریکارڈنگ کی جگہ فائل چنیں',
     'audio.loaded': 'آڈیو فائل لگ گئی۔',
@@ -567,6 +577,11 @@ const DICT = {
     'model.done': 'Downloaded: {file}',
     'model.loadFail': 'The model did not load: {message}',
     'model.newOne': 'New model — tap "Load model".',
+    'model.cacheReady':
+      'The model is saved on this device ({size}) — an app update will not download it again.',
+    'model.cacheFiles': 'The model cache holds {count} files.',
+    'model.cacheNone':
+      'The model is not downloaded yet — it arrives on the first recording and stays after that.',
     'audio.heading': 'Audio',
     'audio.file': 'Choose a file instead of recording',
     'audio.loaded': 'The audio file is loaded.',

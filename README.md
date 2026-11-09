@@ -186,6 +186,17 @@ aur nateeja **usi aya ke andar** aata hai:
 
 ## Models
 
+Model ke wazan **browser ke `transformers-cache`** me rehte hain, aur app ka service
+worker ab **sirf apne purane `bayyin-*` caches** hataata hai — is liye app ka naya
+version aane par 105 MB dobara download **nahi** hota. Pehle service worker har cache
+delete kar deta tha (model samet), wahi wajah thi ke har update par poora model phir
+se aata tha.
+
+Model khud tabhi badalta hai jab Hugging Face par us ke files badlein — aur tab bhi
+sirf **badle hue files** naye hote hain, baqi cache se chalte hain (URLs same rehte
+hain). Settings → Speech model me app dikhati hai ke model device par kitne MB
+mehfooz hai.
+
 `asr.js` me do options hain (dono Transformers.js ke liye ONNX, same Tarteel
 Quran fine-tune ke base se):
 

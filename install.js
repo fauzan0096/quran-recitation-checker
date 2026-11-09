@@ -53,6 +53,11 @@ import { t } from './i18n.js';
   });
 
   document.addEventListener('DOMContentLoaded', () => {
+    // Ask the browser to keep what we store (the app shell and the ~105 MB model
+    // weights) instead of letting storage pressure throw it away.
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(() => {});
+    }
     const button = document.getElementById('install-app');
     if (button) {
       button.addEventListener('click', () => openInstall());
