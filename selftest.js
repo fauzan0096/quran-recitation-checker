@@ -95,6 +95,12 @@ export function runSelfTest(context = {}) {
     return 'distance = 0';
   });
 
+  check('Sune mein milte harf (ص/س) "close" hote hain, "sahi" nahi', () => {
+    const alignment = alignWords(['السراط'], ['الصراط']);
+    assertEqual(alignment.results[0].status, WORD_STATUS.CLOSE, 'status');
+    return `status ${alignment.results[0].status}`;
+  });
+
   check('Bilkul durust tilawat = 100', () => {
     const expected = ['الحمد', 'لله', 'رب', 'العالمين'];
     const alignment = alignWords(expected, expected);

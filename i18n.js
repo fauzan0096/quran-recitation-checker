@@ -216,6 +216,8 @@ const DICT = {
     'status.preparing': 'Audio taiyar ho raha hai…',
     'status.transcribing': 'Transcribe ho raha hai (device par)…',
     'status.nothing': 'Kuch sunai nahi diya — dobara padhein.',
+    'status.unclear':
+      'Awaaz saaf nahi thi — khamosh jagah par, mic ke qareeb dobara padhein.',
     'status.short': 'Audio bohot chhota hai — poora padhein.',
     'status.silent': 'Audio khamosh hai — mic ke qareeb padhein.',
     'status.empty': 'Recording khali rahi — dobara koshish karein.',
@@ -458,6 +460,7 @@ const DICT = {
     'status.silentAlert': 'آواز نہیں آ رہی — مائیک کے قریب پڑھیں۔',
     'status.preparing': 'آڈیو تیار ہو رہی ہے…',
     'status.nothing': 'کچھ سنائی نہیں دیا — دوبارہ پڑھیں۔',
+    'status.unclear': 'آواز واضح نہیں تھی — خاموش جگہ پر، مائیک کے قریب دوبارہ پڑھیں۔',
     'status.short': 'آڈیو بہت مختصر ہے — پوری پڑھیں۔',
     'status.silent': 'آڈیو خاموش ہے — مائیک کے قریب پڑھیں۔',
     'status.empty': 'ریکارڈنگ خالی رہی — دوبارہ کوشش کریں۔',
@@ -701,6 +704,8 @@ const DICT = {
     'status.preparing': 'Preparing the audio…',
     'status.transcribing': 'Transcribing (on device)…',
     'status.nothing': 'Nothing was heard — please recite again.',
+    'status.unclear':
+      'The audio was not clear — record again in a quiet place, closer to the mic.',
     'status.short': 'Audio is too short — recite the whole aya.',
     'status.silent': 'The audio is silent — move closer to the microphone.',
     'status.empty': 'The recording was empty — please try again.',

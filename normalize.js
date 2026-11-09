@@ -88,9 +88,38 @@ function stripArticle(word) {
   return word;
 }
 
+// Letters a reciter (and a recogniser) routinely swap because they share a
+// sound or a makhraj. Mapping them to one form lets "close" catch a real
+// near-miss instead of calling it wrong.
+const PHONETIC_MAP = [
+  [/[\u0635\u0633]/g, '\u0633'], // ص س
+  [/[\u0637\u062A]/g, '\u062A'], // ط ت
+  [/[\u0630\u0632\u0638]/g, '\u0632'], // ذ ز ظ
+  [/[\u062B\u0633]/g, '\u0633'], // ث س
+  [/[\u062D\u0647]/g, '\u0647'], // ح ه
+  [/[\u0642\u0643]/g, '\u0643'], // ق ك
+];
+
+/** A sound-alike form of a bare word (one letter for one letter). */
+export function phoneticForm(word) {
+  let s = word;
+  for (const [re, to] of PHONETIC_MAP) s = s.replace(re, to);
+  return s;
+}
+
+// A conjunction or preposition written as one letter is often merged or dropped
+// by the recogniser ("wa" + word, "bi" + word), so the same word may come back
+// without its first letter.
+function stripPrefix(word) {
+  if (word.length >= 4 && /^[\u0648\u0641\u0628\u0644\u0643]/.test(word)) return word.slice(1);
+  return word;
+}
+
 /**
  * Distance used for judging "close enough": the best of the plain edit
  * distance and the distance with the definite article removed on both sides.
+ * A distance of 0 here means the same word, so it must stay strict — the
+ * sound-alike comparison below is only used to soften "wrong" into "close".
  */
 export function compareDistance(a, b) {
   if (a === b) return 0;
@@ -99,6 +128,25 @@ export function compareDistance(a, b) {
   const b2 = stripArticle(b);
   if (a2 !== a || b2 !== b) {
     const alt = levenshtein(a2, b2);
+    if (alt < best) best = alt;
+  }
+  return best;
+}
+
+/**
+ * How different two words sound — sound-alike letters and a dropped one-letter
+ * prefix count for less here. Only ever used to decide "close", never to turn
+ * a word into "correct": a mispronounced letter must still be visible.
+ */
+export function phoneticDistance(a, b) {
+  if (a === b) return 0;
+  const pa = phoneticForm(stripArticle(a));
+  const pb = phoneticForm(stripArticle(b));
+  let best = levenshtein(pa, pb);
+  const preA = stripPrefix(pa);
+  const preB = stripPrefix(pb);
+  if (preA !== pa || preB !== pb) {
+    const alt = levenshtein(preA, preB);
     if (alt < best) best = alt;
   }
   return best;

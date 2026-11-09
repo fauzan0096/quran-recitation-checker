@@ -315,3 +315,27 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   `quran-tanzil.txt` ke aakhir me maujood hai, usay hatayein na.
 - Quran-tuned Whisper: **Tarteel AI** (Apache-2.0), ONNX exports community se.
 - Transformers.js / ONNX Runtime Web: Hugging Face / Microsoft (Apache-2.0).
+
+
+## Check ki accuracy kaise barhti hai
+
+- **Audio ki safai (khud app karti hai):** recording ke shuru aur aakhir ki khamoshi
+  kaat di jati hai, awaaz ka level barabar (peak ~0.92) kiya jata hai, aur mic par
+  browser ki noise-suppression / echo-cancellation **band** hai — Whisper ko saaf,
+  bina chhere hue audio par behtar nateeja milta hai.
+- **Lafz ka muqabla:** ص/س، ت/ط، ذ/ز/ظ، ث/س، ح/ه، ق/ك ko ek hi awaaz mana jata hai.
+  Aise lafz **"qareeb"** dikhte hain, **"sahi" nahi** — taake ghalti chhupe na.
+- **"ال" aur ek-harf prefix** (و/ف/ب/ل/ك) ki kami-beshi chalti hai, kyunki ASR aise hi
+  likhta hai.
+- **Lambe lafz** (8+ harf) par ek extra chhot (2 ki jagah 3 edits tak) bhi "qareeb".
+- **Kharab audio ki pehchan:** agar ASR ne poore text ka 30% se kam suna, to app
+  "aawaz saaf nahi thi — dobara padhein" kehti hai, har lafz "chhoot gaya" nahi.
+- **Self-test** me ek test isi baat ka hai ke ص/س "close" ho, "sahi" na ho.
+
+**Aap kya kar sakte hain:** khamosh kamre me, mic se 15–20 cm, poori aya padh kar
+phir rukein; Settings me **base model** chunein (tiny se behtar); headphones ka mic
+aam tor par behtar hota hai.
+
+**Bare levers (aage ka kaam):** bara/behtar Quran-tuned model, phoneme-level tajweed
+check, ya server par bara model — magar aakhri wale se "on-device, audio upload nahi"
+ka wada khatam ho jata hai.

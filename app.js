@@ -1106,6 +1106,13 @@ async function checkTarget(id, keys, blob) {
       .map((word) => word.trim())
       .filter((word) => normalizeArabic(word).length > 0);
 
+    // A recogniser that caught only a fraction of a real aya heard bad audio,
+    // not a reciter who forgot half the page. Say so instead of marking every
+    // word missing.
+    if (expected.length >= 6 && heard.length && heard.length < expected.length * 0.3) {
+      throw new Error(t('status.unclear'));
+    }
+
     const alignment = alignWords(expected, heard);
 
     // Store a per-aya slice so each aya shows its own mistakes.
