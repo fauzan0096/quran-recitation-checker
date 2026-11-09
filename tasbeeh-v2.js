@@ -103,7 +103,7 @@ function beep(freq, ms, gain = 0.06, delay = 0) {
 }
 
 const RING_R = 92;
-const BEADS = 100;
+const BEADS = 33;
 const PRESET_TARGETS = [33, 99, 100];
 
 export function mountTasbeeh(root) {
@@ -181,7 +181,7 @@ export function mountTasbeeh(root) {
     let beads = '';
     for (let i = 0; i < BEADS; i += 1) {
       const a = ((360 / BEADS) * i - 90) * (Math.PI / 180);
-      beads += `<circle class="tsb-bead" cx="${(100 + RING_R * Math.cos(a)).toFixed(1)}" cy="${(100 + RING_R * Math.sin(a)).toFixed(1)}" r="2.7"></circle>`;
+      beads += `<circle class="tsb-bead" cx="${(100 + RING_R * Math.cos(a)).toFixed(1)}" cy="${(100 + RING_R * Math.sin(a)).toFixed(1)}" r="5.2"></circle>`;
     }
     dial.innerHTML = `<svg class="tsb-svg" viewBox="0 0 200 200" aria-hidden="true">${beads}</svg>
       <span class="tsb-core"><span class="tsb-count">0</span><span class="tsb-of"></span><span class="tsb-hint"></span></span>`;

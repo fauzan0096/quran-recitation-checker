@@ -61,7 +61,7 @@ main {
   content: '';
   position: absolute;
   inset: 0;
-  background-image: var(--star);
+  background-image: repeating-radial-gradient(circle at 100% -40%, rgba(240, 193, 147, 0.13) 0 1px, transparent 1px 20px);
   pointer-events: none;
 }
 .app-bar::after {
@@ -119,7 +119,7 @@ body[data-theme='dark'] .app-bar {
   border-radius: 22px;
   color: #fff6eb;
   background:
-    var(--star),
+    repeating-linear-gradient(135deg, rgba(240, 193, 147, 0.08) 0 2px, transparent 2px 15px),
     radial-gradient(420px 220px at 90% 0%, rgba(240, 193, 147, 0.22), transparent 70%),
     linear-gradient(135deg, #4a1622, #6b2233 70%, #7d2a3d);
   box-shadow: 0 14px 34px rgba(74, 22, 34, 0.3);
@@ -653,15 +653,18 @@ body[data-theme='dark'] .dua-note summary {
 body {
   background-color: var(--paper);
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cg fill='none' stroke='%236b2233' stroke-opacity='.07' stroke-width='1.2'%3E%3Crect x='22' y='22' width='44' height='44'/%3E%3Crect x='22' y='22' width='44' height='44' transform='rotate(45 44 44)'/%3E%3Ccircle cx='44' cy='44' r='9'/%3E%3C/g%3E%3C/svg%3E"),
-    radial-gradient(520px 360px at 100% 0%, rgba(176, 122, 60, 0.16), transparent 70%),
-    radial-gradient(480px 360px at 0% 100%, rgba(107, 34, 51, 0.1), transparent 70%);
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' viewBox='0 0 360 360'%3E%3Cg fill='none' stroke='%23b07a3c' stroke-opacity='.16' stroke-width='1.2'%3E%3Ccircle cx='360' cy='0' r='60'/%3E%3Ccircle cx='360' cy='0' r='100'/%3E%3Ccircle cx='360' cy='0' r='140'/%3E%3Ccircle cx='360' cy='0' r='180'/%3E%3Ccircle cx='360' cy='0' r='220'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cg fill='none' stroke='%236b2233' stroke-opacity='.1' stroke-width='1.2'%3E%3Cpath d='M0 300 Q0 150 150 150 Q300 150 300 300'/%3E%3Cpath d='M30 300 Q30 180 150 180 Q270 180 270 300'/%3E%3Cpath d='M60 300 Q60 210 150 210 Q240 210 240 300'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(520px 360px at 100% 0%, rgba(176, 122, 60, 0.12), transparent 70%);
+  background-repeat: no-repeat;
+  background-position: right top, left bottom, 0 0;
   background-attachment: fixed;
 }
 body[data-theme='dark'] {
   background-image:
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='88' viewBox='0 0 88 88'%3E%3Cg fill='none' stroke='%23f0c193' stroke-opacity='.06' stroke-width='1.2'%3E%3Crect x='22' y='22' width='44' height='44'/%3E%3Crect x='22' y='22' width='44' height='44' transform='rotate(45 44 44)'/%3E%3Ccircle cx='44' cy='44' r='9'/%3E%3C/g%3E%3C/svg%3E"),
-    radial-gradient(520px 360px at 100% 0%, rgba(176, 122, 60, 0.12), transparent 70%);
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='360' height='360' viewBox='0 0 360 360'%3E%3Cg fill='none' stroke='%23f0c193' stroke-opacity='.1' stroke-width='1.2'%3E%3Ccircle cx='360' cy='0' r='60'/%3E%3Ccircle cx='360' cy='0' r='100'/%3E%3Ccircle cx='360' cy='0' r='140'/%3E%3Ccircle cx='360' cy='0' r='180'/%3E%3Ccircle cx='360' cy='0' r='220'/%3E%3C/g%3E%3C/svg%3E"),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Cg fill='none' stroke='%23f0c193' stroke-opacity='.07' stroke-width='1.2'%3E%3Cpath d='M0 300 Q0 150 150 150 Q300 150 300 300'/%3E%3Cpath d='M30 300 Q30 180 150 180 Q270 180 270 300'/%3E%3Cpath d='M60 300 Q60 210 150 210 Q240 210 240 300'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(520px 360px at 100% 0%, rgba(176, 122, 60, 0.1), transparent 70%);
 }
 
 /* --------------------------------------------------------------- calendar */
@@ -722,7 +725,7 @@ body[data-theme='dark'] {
   border-radius: 26px;
   color: #fff6eb;
   background:
-    var(--star),
+    repeating-conic-gradient(from 0deg at 50% 42%, rgba(240, 193, 147, 0.07) 0 5deg, transparent 5deg 15deg),
     radial-gradient(420px 300px at 50% 18%, rgba(176, 122, 60, 0.24), transparent 70%),
     linear-gradient(170deg, #5a1b2a 0%, #3c1019 55%, #2a0b12 100%);
   border: 1px solid rgba(240, 193, 147, 0.45);
@@ -990,4 +993,65 @@ body[data-theme='dark'] {
 .tsb-stats span {
   font-size: 12px;
   color: rgba(255, 246, 235, 0.65);
+}
+
+/* ---------------------------------------------------- Noor: one colour */
+.noor-sheet {
+  background: linear-gradient(165deg, #5a1b2a 0%, #4a1622 55%, #3a111b 100%);
+  border-color: rgba(240, 193, 147, 0.5);
+  color: #fff6eb;
+}
+.noor-sheet::before {
+  border-color: rgba(240, 193, 147, 0.28);
+}
+.noor-sheet .daily-card,
+.noor-sheet .daily-card.is-ayah,
+.noor-sheet .daily-card.is-hadith,
+.noor-sheet .daily-card.is-sunnah {
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.noor-sheet .daily-card + .daily-card::before {
+  background: #4a1622;
+  color: #f0c193;
+}
+.noor-sheet .daily-label {
+  color: #f0c193 !important;
+}
+.noor-sheet .daily-arabic,
+.noor-sheet .daily-text {
+  color: #fff6eb !important;
+}
+.noor-sheet .daily-ref {
+  color: #f6d4a8 !important;
+  background: rgba(240, 193, 147, 0.14) !important;
+  border-color: rgba(240, 193, 147, 0.45) !important;
+}
+.noor-share {
+  background: linear-gradient(180deg, #f6d4a8, #d8a66b);
+  color: #3a1119;
+  border: 0;
+}
+
+/* tasbeeh fit on small screens */
+.tsb-wrap {
+  width: min(100%, 340px);
+}
+.tsb-tiles {
+  gap: 6px;
+}
+.tsb-tile {
+  min-width: 0;
+  padding: 10px 0 8px;
+}
+.tsb-tile-l {
+  font-size: 10.5px;
+}
+.tsb-tgt {
+  min-width: 54px;
+  padding: 12px 12px;
+  font-size: 17px;
+}
+.tsb-bead {
+  stroke-width: 0.8;
 }
