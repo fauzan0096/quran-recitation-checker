@@ -173,7 +173,7 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
   raat ke liye alag mahogany dark theme.
 - Icon: `icon-source.png` (mushaf + mihrab arch + tick, burgundy/copper) hi asli
   source hai. Usi se `icon-512.png`, `icon-192.png`, `icon-maskable-512.png`
-  (Android), `apple-touch-icon.png` (180×180, iPhone), `favicon.ico` /
+  (Android), `apple-touch-icon-180.png` (180×180, iPhone), `favicon.ico` /
   `favicon-32.png` aur `icon.svg` / `icon-maskable.svg` bane hain. Header ka
   logo aur install banner bhi yehi icon dikhate hain.
 - App ka naam **Bayyin (بيّن)** hai. Play Store par "Qirat Check" ya "Harf Mizan"
