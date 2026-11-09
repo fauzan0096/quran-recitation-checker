@@ -280,6 +280,8 @@ function verseOf(key) {
 
 function renderAyaText(target, verse, alignment) {
   target.innerHTML = '';
+  const space = () => target.appendChild(document.createTextNode(' '));
+
   verse.words.forEach((word, i) => {
     const result = alignment ? alignment.results[i] : null;
     if (!result || result.status === WORD_STATUS.CORRECT) {
@@ -287,6 +289,7 @@ function renderAyaText(target, verse, alignment) {
       span.className = result ? 'w is-correct' : 'w';
       span.textContent = word;
       target.appendChild(span);
+      space();
       return;
     }
     const wrap = document.createElement('span');
@@ -299,6 +302,7 @@ function renderAyaText(target, verse, alignment) {
     note.textContent = noteFor(result);
     wrap.append(span, note);
     target.appendChild(wrap);
+    space();
   });
 
   if (alignment && alignment.extras.length) {
