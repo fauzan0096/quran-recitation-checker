@@ -41,11 +41,12 @@ on-device.
 - Ye ek **zero-build plain web app** hai: `index.html` + ES modules, koi bundler nahi.
 - Pehli dafa model load karne ke liye internet chahiye (CDN se library aur
   Hugging Face se model weights). Uske baad model browser cache me rehta hai.
-- Interface jaan boojh kar chhota hai: surah/aya chunein, aya dikhti hai, aur neeche
-  **sirf ek Record button**. Model download, audio file, mic jaanch, tajweed hints
-  aur self-test sab **Settings / Advanced** ke peeche hain.
-- Mic ke baghair engine test: **Engine self-test** (normalisation + alignment +
-  tajweed + Quran data ke 16 assertions).
+- Reader do tarah se khulta hai: **Surah** (poori surah aya-ba-aya) aur
+  **Mushaf page** (604 pages ka page-wise data `quran-pages.xml` se). Har aya apne
+  card me hoti hai aur usi ke neeche apna **Record** button hota hai.
+- Settings ek alag page hai (gear icon): share, model, audio/mic, tajweed hints,
+  self-test, about/privacy aur licenses.
+- Mic ke baghair engine test: **Settings → Engine self-test**.
 
 ## Ek waqt me ek aya
 

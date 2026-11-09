@@ -3,215 +3,191 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0f6b4f" />
-    <title>Quran Recitation Checker — on-device</title>
+    <meta name="theme-color" content="#0d5c45" />
+    <title>Tilawat Check — Quran Recitation</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="app-header">
+    <header class="app-bar">
       <div class="brand">
         <span class="brand-mark" lang="ar" dir="rtl">ق</span>
         <div class="brand-text">
-          <h1>Quran Recitation Checker</h1>
-          <p class="tagline">Aya padhein, Record dabaein — sahi/ghalat wahin dikh jayega.</p>
+          <h1>Tilawat Check</h1>
+          <p class="tagline">Aya padhein · Record dabaein · ghalti wahin dekhein</p>
         </div>
       </div>
+      <button type="button" id="open-settings" class="icon-btn" aria-label="Settings" title="Settings">
+        ⚙
+      </button>
     </header>
 
     <main>
-      <section class="panel" id="range-panel">
-        <div class="row wrap">
+      <section id="view-reader">
+        <div class="tabs" role="tablist">
+          <button type="button" id="tab-surah" class="tab is-active" data-mode="surah">Surah</button>
+          <button type="button" id="tab-page" class="tab" data-mode="page">Mushaf page</button>
+        </div>
+
+        <div class="picker" id="picker-surah">
           <label class="field">
             <span>Surah</span>
             <select id="surah-select"></select>
           </label>
+        </div>
+
+        <div class="picker" id="picker-page" hidden>
+          <button type="button" id="page-prev" class="btn ghost small">◀</button>
           <label class="field small">
-            <span>Aya</span>
-            <input id="aya-number" type="number" min="1" step="1" value="1" inputmode="numeric" />
+            <span>Page</span>
+            <input id="page-number" type="number" min="1" max="604" step="1" value="1" inputmode="numeric" />
           </label>
-          <button type="button" id="prev-aya" class="btn ghost small">◀</button>
-          <button type="button" id="next-aya" class="btn ghost small">▶</button>
-          <button type="button" id="load-range" class="btn">Load</button>
+          <button type="button" id="page-next" class="btn ghost small">▶</button>
+          <span id="page-total" class="hint"></span>
         </div>
-        <p id="aya-count-hint" class="hint"></p>
+
+        <div class="toolbar">
+          <span id="list-title" class="list-title"></span>
+          <button type="button" id="toggle-text" class="btn ghost small">Text chhupayein</button>
+        </div>
+
+        <div id="global-status" class="global-status" hidden></div>
         <p id="range-error" class="error" hidden></p>
-      </section>
 
-      <section class="panel" id="verse-panel">
-        <div class="panel-head">
-          <span id="verse-ref" class="ref"></span>
-        </div>
-        <div id="verse-status" class="verse-status" hidden></div>
-        <div id="verse" class="verse" lang="ar" dir="rtl"></div>
-        <div id="verse-details" class="verse-details" hidden></div>
-        <div class="legend">
-          <span class="legend-item"><span class="sw is-correct"></span> sahi</span>
-          <span class="legend-item"><span class="sw is-close"></span> qareeb</span>
-          <span class="legend-item"><span class="sw is-wrong"></span> galat</span>
-          <span class="legend-item"><span class="sw is-missing"></span> chhoot gaya</span>
+        <div id="aya-list" class="aya-list"></div>
+
+        <div id="list-footer" class="list-footer" hidden>
+          <button type="button" id="load-more" class="btn ghost">Aur ayaat dikhayein</button>
         </div>
       </section>
 
-      <section class="panel" id="audio-panel">
-        <button type="button" id="record" class="btn primary record-button">Record</button>
-        <p id="audio-status" class="hint">Record dabaein.</p>
-        <div class="progress" id="model-progress" hidden>
-          <div class="progress-bar" id="model-progress-bar"></div>
+      <section id="view-settings" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-settings" class="btn ghost small">◀ Wapas</button>
+          <h2>Settings</h2>
         </div>
-        <p id="model-status" class="hint"></p>
-        <audio id="player" controls hidden></audio>
-      </section>
 
-      <details class="settings" id="advanced">
-        <summary>Settings / Advanced</summary>
+        <div class="card">
+          <h3>App share karein</h3>
+          <p class="hint">Doston ko yeh app bhejein — bas is link se khul jati hai.</p>
+          <button type="button" id="share-app" class="btn primary">Share app</button>
+        </div>
 
-        <div class="settings-body">
-          <h3>Padhne ka tareeqa</h3>
-          <button type="button" id="toggle-verse" class="btn ghost small">Text chhupayein</button>
-          <span class="hint">Yaad se azmaish ke liye aya ka text chhupa dein.</span>
-
+        <div class="card">
           <h3>Speech model (on-device)</h3>
-          <div class="row wrap">
-            <label class="field">
-              <span>Model</span>
-              <select id="model-select"></select>
-            </label>
-            <button type="button" id="load-model" class="btn">Model load karein</button>
+          <p class="hint">
+            Pehli dafa ~105 MB download hota hai, phir browser cache se chalta hai. Internet sirf
+            download ke liye chahiye.
+          </p>
+          <label class="field">
+            <span>Model</span>
+            <select id="model-select"></select>
+          </label>
+          <button type="button" id="load-model" class="btn">Model load karein</button>
+          <div class="progress" id="model-progress" hidden>
+            <div class="progress-bar" id="model-progress-bar"></div>
           </div>
-          <button type="button" id="transcribe" class="btn primary wide" disabled>
-            Dobara check karein
-          </button>
+          <p id="model-status" class="hint"></p>
+        </div>
 
-          <h3>Audio file</h3>
+        <div class="card">
+          <h3>Audio</h3>
           <label class="field file">
             <span>Recording ki jagah file chunein</span>
             <input id="audio-file" type="file" accept="audio/*" />
           </label>
-
-          <h3>Mic jaanch</h3>
           <button type="button" id="mic-check" class="btn ghost small">Mic jaanch</button>
           <ul id="mic-check-output" class="diag" hidden></ul>
+          <audio id="player" controls hidden></audio>
+        </div>
 
-          <h3>Tajweed hints (text se)</h3>
+        <div class="card">
+          <h3>Tajweed hints (script se)</h3>
           <div id="tajweed"></div>
+        </div>
 
+        <div class="card">
           <h3>Engine self-test</h3>
           <button type="button" id="run-tests" class="btn ghost small">Self-test chalayein</button>
           <ul id="test-results" class="tests"></ul>
         </div>
-      </details>
 
-      <details class="settings" id="licenses">
-        <summary>Licenses / Open source</summary>
-        <div class="settings-body licenses">
-          <h3>Quran text — Tanzil Project</h3>
-          <p>
-            Tanzil Quran Text (Uthmani, Version 1.1)<br />
-            Copyright (C) 2007-2026 Tanzil Project<br />
-            License: Creative Commons Attribution 3.0
-          </p>
-          <p>
-            This copy of the Quran text is carefully produced, highly verified and continuously
-            monitored by a group of specialists at Tanzil Project.
-          </p>
-          <p><strong>TERMS OF USE:</strong></p>
-          <ul>
-            <li>
-              Permission is granted to copy and distribute verbatim copies of this text, but
-              CHANGING IT IS NOT ALLOWED.
-            </li>
-            <li>
-              This Quran text can be used in any website or application, provided that its source
-              (Tanzil Project) is clearly indicated, and a link is made to
-              <a href="https://tanzil.net" target="_blank" rel="noreferrer">tanzil.net</a> to enable
-              users to keep track of changes.
-            </li>
-            <li>
-              This copyright notice shall be included in all verbatim copies of the text, and shall
-              be reproduced appropriately in all files derived from or containing substantial
-              portion of this text.
-            </li>
-          </ul>
-          <p>
-            Please check updates at
-            <a href="https://tanzil.net/updates/" target="_blank" rel="noreferrer"
-              >tanzil.net/updates</a
-            >. License text:
-            <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noreferrer"
-              >Creative Commons Attribution 3.0</a
-            >.
-          </p>
+        <details class="card">
+          <summary>About &amp; privacy</summary>
+          <div class="prose">
+            <p>
+              <strong>Tilawat Check</strong> aap ki tilawat ko aya ke Uthmani text se mila kar
+              batata hai kaunsa lafz sahi, qareeb, galat ya chhoot gaya.
+            </p>
+            <p>
+              Sab kuch <strong>aap ke phone par</strong> chalta hai. Na koi server, na account, na
+              audio upload. Mic ka audio sirf usi waqt memory me rehta hai jab tak check na ho jaye.
+            </p>
+            <p>
+              App koi personal data collect nahi karti. Settings aur chuni hui surah/aya sirf aap ke
+              browser (local storage) me mehfooz hoti hai.
+            </p>
+          </div>
+        </details>
 
-          <h3>Quran-tuned Whisper models</h3>
-          <p>
-            Base fine-tune: <code>tarteel-ai/whisper-base-ar-quran</code> and
-            <code>tarteel-ai/whisper-tiny-ar-quran</code> — Copyright Tarteel AI, Apache License
-            2.0.
-          </p>
-          <p>
-            ONNX exports used by this app: <code>nael239/tasme3-whisper-base-ar-quran-web</code> and
-            <code>Sharjeelbaig/whisper-tiny-ar-quran-onnx</code> — Apache License 2.0.
-          </p>
-          <p>
-            Licensed under the Apache License, Version 2.0; you may obtain a copy of the License at
-            <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noreferrer"
-              >apache.org/licenses/LICENSE-2.0</a
-            >. Unless required by applicable law or agreed to in writing, software distributed
-            under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
-            OF ANY KIND, either express or implied.
-          </p>
+        <details class="card">
+          <summary>Licenses / Open source</summary>
+          <div class="prose">
+            <p>
+              <strong>Quran text — Tanzil Project</strong><br />
+              Tanzil Quran Text (Uthmani, Version 1.1). Copyright (C) 2007-2026 Tanzil Project.
+              License: Creative Commons Attribution 3.0.
+            </p>
+            <ul>
+              <li>
+                Permission is granted to copy and distribute verbatim copies of this text, but
+                CHANGING IT IS NOT ALLOWED.
+              </li>
+              <li>
+                This Quran text can be used in any website or application, provided that its source
+                (Tanzil Project) is clearly indicated, and a link is made to
+                <a href="https://tanzil.net" target="_blank" rel="noreferrer">tanzil.net</a> to
+                enable users to keep track of changes.
+              </li>
+              <li>
+                This copyright notice shall be included in all verbatim copies of the text, and
+                shall be reproduced appropriately in all files derived from or containing
+                substantial portion of this text.
+              </li>
+            </ul>
+            <p>
+              Mushaf page data: Tanzil Quran metadata (CC-BY). Updates:
+              <a href="https://tanzil.net/updates/" target="_blank" rel="noreferrer"
+                >tanzil.net/updates</a
+              >.
+            </p>
 
-          <h3>Whisper</h3>
-          <p>
-            Speech recognition model architecture and weights by OpenAI
-            (<a href="https://github.com/openai/whisper" target="_blank" rel="noreferrer">whisper</a>),
-            MIT License.
-          </p>
+            <p>
+              <strong>Quran-tuned Whisper</strong> — <code>tarteel-ai/whisper-base-ar-quran</code>,
+              <code>tarteel-ai/whisper-tiny-ar-quran</code> (Tarteel AI) aur unke ONNX exports
+              (<code>nael239/tasme3-whisper-base-ar-quran-web</code>,
+              <code>Sharjeelbaig/whisper-tiny-ar-quran-onnx</code>): Apache License 2.0 —
+              <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noreferrer"
+                >apache.org/licenses/LICENSE-2.0</a
+              >. Distributed on an "AS IS" BASIS, without warranties.
+            </p>
 
-          <h3>Transformers.js</h3>
-          <p>
-            &copy; Hugging Face, Apache License 2.0 —
-            <a href="https://github.com/huggingface/transformers.js" target="_blank" rel="noreferrer"
-              >transformers.js</a
-            >.
-          </p>
+            <p>
+              <strong>Whisper</strong> (OpenAI) — MIT. <strong>Transformers.js</strong> (Hugging
+              Face) — Apache-2.0. <strong>ONNX Runtime</strong> (Microsoft) — MIT.
+            </p>
 
-          <h3>ONNX Runtime Web</h3>
-          <p>
-            &copy; Microsoft Corporation, MIT License —
-            <a href="https://github.com/microsoft/onnxruntime" target="_blank" rel="noreferrer"
-              >onnxruntime</a
-            >.
-          </p>
-
-          <h3>MIT License (Whisper, ONNX Runtime)</h3>
-          <p>
-            Permission is hereby granted, free of charge, to any person obtaining a copy of this
-            software and associated documentation files (the "Software"), to deal in the Software
-            without restriction, including without limitation the rights to use, copy, modify,
-            merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
-            permit persons to whom the Software is furnished to do so, subject to the following
-            conditions: the above copyright notice and this permission notice shall be included in
-            all copies or substantial portions of the Software.
-          </p>
-          <p>
-            THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED,
-            INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR
-            PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-            LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT
-            OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
-            OTHER DEALINGS IN THE SOFTWARE.
-          </p>
-        </div>
-      </details>
-
-      <footer class="foot">
-        <p>
-          Quran text: Tanzil Project — Uthmani, Hafs
-          (<a href="https://tanzil.net" target="_blank" rel="noreferrer">tanzil.net</a>).
-          ASR: Tarteel AI ke Quran fine-tunes ke community ONNX exports.
-        </p>
-      </footer>
+            <p>
+              MIT License: Permission is hereby granted, free of charge, to any person obtaining a
+              copy of this software and associated documentation files (the "Software"), to deal in
+              the Software without restriction, including without limitation the rights to use,
+              copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+              Software, subject to the condition that the above copyright notice and this permission
+              notice are included in all copies or substantial portions of the Software. THE
+              SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+            </p>
+          </div>
+        </details>
+      </section>
     </main>
 
     <div id="toast" class="toast" hidden></div>

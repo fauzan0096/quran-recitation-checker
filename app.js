@@ -1,11 +1,15 @@
-// UI wiring: pick ayaat, record or load audio, run the on-device model, align
-// the transcript with the Uthmani words and show where the recitation slipped.
+// Tilawat Check — Quran reader with a Record button under every aya.
+//
+// Everything runs on the device: Web Audio for recording, a Quran-tuned
+// Whisper ONNX model through Transformers.js (WASM), and a word alignment
+// against the Uthmani text of the aya being recited.
 
 import { SURAHS, surahName } from './surahs.js';
 import { loadQuran, isLoaded, ayaCount, getVerses } from './quran.js';
-import { normalizeArabic } from './normalize.js';
+import { loadPages, pageTotal, pageAyahs } from './quran-pages.js';
 import { alignWords, WORD_STATUS } from './align.js';
-import { tajweedHints, summariseHints } from './tajweed.js';
+import { tajweedHints } from './tajweed.js';
+import { normalizeArabic } from './normalize.js';
 import {
   MODELS,
   loadModel,
@@ -19,25 +23,28 @@ import {
 } from './asr.js';
 import { runSelfTest } from './selftest.js';
 
-const STORAGE = { model: 'qrc.modelId', selection: 'qrc.selection' };
+const STORAGE = { selection: 'tc.selection', model: 'tc.modelId', hidden: 'tc.textHidden' };
+const CHUNK = 25;
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 
 const state = {
+  mode: 'surah',
+  surah: 1,
+  page: 1,
   verses: [],
+  visible: CHUNK,
+  results: new Map(),
   textHidden: false,
   model: null,
   modelId: null,
   modelLoading: false,
-  audioBlob: null,
-  audioUrl: null,
-  starting: false,
-  micChecking: false,
-  levelState: '',
-  recording: false,
   recorder: null,
+  recordingKey: null,
   recordingStarted: 0,
-  recordingTimer: null,
-  busy: false,
+  timer: null,
+  levelState: '',
+  busyKey: null,
+  micChecking: false,
 };
 
 const els = {};
@@ -45,528 +52,59 @@ let toastTimer = null;
 
 init();
 
-function init() {
+async function init() {
   cacheElements();
   fillSurahs();
   fillModels();
   restoreSelection();
-  fillModelSelection();
   wireEvents();
-  if (els.modelStatus) {
-    els.modelStatus.textContent =
-      'Pehli dafa Record dabane par model download hoga (~105 MB), phir har aya khud check hogi.';
+  setGlobalStatus('');
+
+  try {
+    await loadQuran();
+  } catch (error) {
+    showError('Quran text load nahi hua — page dobara kholein ya internet check karein.');
+    return;
   }
-  updateTranscribeButton();
-  if (els.verse) els.verse.textContent = 'Quran text load ho raha hai…';
-  loadQuran()
-    .then(() => {
-      els.error.textContent = '';
-      els.error.hidden = true;
-      loadAya();
-    })
-    .catch((error) => {
-      els.error.textContent = error.message;
-      els.error.hidden = false;
-      if (els.verse) {
-        els.verse.textContent =
-          'Quran text load nahi hua. Page dobara kholein ya internet check karein.';
-      }
-    });
+  try {
+    await loadPages();
+    els.pageTotal.textContent = `${pageTotal()} pages`;
+  } catch (error) {
+    console.warn('page data failed', error);
+    els.pageTotal.textContent = 'page data nahi mila';
+  }
+  await showList();
 }
 
 function cacheElements() {
-  els.select = byId('surah-select');
-  els.aya = byId('aya-number');
-  els.prev = byId('prev-aya');
-  els.next = byId('next-aya');
-  els.countHint = byId('aya-count-hint');
-  els.load = byId('load-range');
-  els.error = byId('range-error');
-  els.ref = byId('verse-ref');
-  els.verse = byId('verse');
-  els.verseDetails = byId('verse-details');
-  els.toggleVerse = byId('toggle-verse');
-  els.record = byId('record');
-  els.file = byId('audio-file');
-  els.audioStatus = byId('audio-status');
-  els.micCheck = byId('mic-check');
-  els.micOutput = byId('mic-check-output');
-  els.player = byId('player');
-  els.modelSelect = byId('model-select');
-  els.loadModel = byId('load-model');
-  els.modelProgress = byId('model-progress');
-  els.modelProgressBar = byId('model-progress-bar');
-  els.modelStatus = byId('model-status');
-  els.transcribe = byId('transcribe');
-  els.verseStatus = byId('verse-status');
-  els.tajweed = byId('tajweed');
-  els.runTests = byId('run-tests');
-  els.testResults = byId('test-results');
-  els.toast = byId('toast');
+  const ids = [
+    'open-settings', 'close-settings', 'view-reader', 'view-settings',
+    'tab-surah', 'tab-page', 'picker-surah', 'picker-page', 'surah-select',
+    'page-prev', 'page-next', 'page-number', 'page-total',
+    'toggle-text', 'list-title', 'global-status', 'range-error', 'aya-list',
+    'list-footer', 'load-more', 'share-app', 'model-select', 'load-model',
+    'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
+    'mic-check', 'mic-check-output', 'player', 'tajweed', 'run-tests',
+    'test-results', 'toast',
+  ];
+  for (const id of ids) {
+    const name = id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+    els[name] = document.getElementById(id);
+  }
 }
 
-function byId(id) {
-  return document.getElementById(id);
-}
-
-// ---------------------------------------------------------------- selection
+// ------------------------------------------------------------------ setup
 
 function fillSurahs() {
-  els.select.innerHTML = '';
+  els.surahSelect.innerHTML = '';
   for (const surah of SURAHS) {
     const option = document.createElement('option');
     option.value = String(surah.n);
     option.textContent = `${surah.n}. ${surah.latin} — ${surah.arabic}`;
-    els.select.appendChild(option);
+    els.surahSelect.appendChild(option);
   }
-  els.select.value = '1';
+  els.surahSelect.value = '1';
 }
-
-function restoreSelection() {
-  try {
-    const stored = JSON.parse(localStorage.getItem(STORAGE.selection) || 'null');
-    if (stored && Number.isInteger(stored.surah)) {
-      els.select.value = String(Math.min(114, Math.max(1, stored.surah)));
-      els.aya.value = String(Math.max(1, stored.aya || 1));
-    }
-  } catch (error) {
-    console.warn('selection restore failed', error);
-  }
-}
-
-function persistSelection() {
-  try {
-    localStorage.setItem(
-      STORAGE.selection,
-      JSON.stringify({
-        surah: Number(els.select.value),
-        aya: Number(els.aya.value),
-      })
-    );
-  } catch (error) {
-    console.warn('selection persist failed', error);
-  }
-}
-
-function clamp(value, min, max) {
-  const n = Number.parseInt(value, 10);
-  if (Number.isNaN(n)) return min;
-  return Math.min(max, Math.max(min, n));
-}
-
-function loadAya() {
-  if (!isLoaded()) return;
-  const surah = clamp(els.select.value, 1, 114);
-  const total = Math.max(1, ayaCount(surah));
-  const aya = clamp(els.aya.value, 1, total);
-
-  els.select.value = String(surah);
-  els.aya.value = String(aya);
-  els.aya.max = String(total);
-  if (els.countHint) {
-    els.countHint.textContent = `Is surah me ${total} ayaat hain — ek waqt me sirf ek aya. Agli/Pichli se badlein.`;
-  }
-  if (els.prev) els.prev.disabled = aya <= 1;
-  if (els.next) els.next.disabled = aya >= total;
-
-  const verses = getVerses(surah, aya, aya);
-  if (!verses.length) {
-    els.error.textContent = 'Is aya ka Quran text nahi mila.';
-    els.error.hidden = false;
-    return;
-  }
-  els.error.hidden = true;
-  state.verses = verses;
-  els.ref.textContent = `${surahName(surah)} — aya ${aya} / ${total}`;
-
-  const entries = flatten(verses);
-  renderVerse(els.verse, entries, null, []);
-  renderTajweed();
-  hideResult();
-
-  // A new aya starts clean: no leftover recording or result from the last one.
-  state.audioBlob = null;
-  if (state.audioUrl) {
-    URL.revokeObjectURL(state.audioUrl);
-    state.audioUrl = null;
-  }
-  if (els.player) {
-    try {
-      els.player.pause();
-    } catch (error) {
-      console.warn('player pause failed', error);
-    }
-    els.player.removeAttribute('src');
-    els.player.hidden = true;
-  }
-  if (els.audioStatus) setAudioStatus('Is aya ke liye Record dabaein.', 'info');
-  updateTranscribeButton();
-
-  persistSelection();
-}
-
-/** Move one aya forward or back inside the current surah. */
-function stepAya(delta) {
-  if (!isLoaded()) return;
-  const surah = clamp(els.select.value, 1, 114);
-  const total = Math.max(1, ayaCount(surah));
-  els.aya.value = String(clamp(Number(els.aya.value) + delta, 1, total));
-  loadAya();
-}
-
-/** Blur the aya so it can be recited from memory, or show it again. */
-function setTextHidden(hidden) {
-  state.textHidden = Boolean(hidden);
-  if (els.verse) els.verse.classList.toggle('is-hidden', state.textHidden);
-  if (els.toggleVerse) {
-    els.toggleVerse.textContent = state.textHidden ? 'Text dikhayein' : 'Text chhupayein';
-    els.toggleVerse.setAttribute('aria-pressed', String(state.textHidden));
-  }
-}
-
-function toggleTextHidden() {
-  setTextHidden(!state.textHidden);
-  toast(
-    state.textHidden
-      ? 'Text chhup gaya — yaad se padhein, Record rukne par text aur natija dikh jayenge.'
-      : 'Text dikh raha hai — dekh kar padhein.'
-  );
-}
-
-function flatten(verses) {
-  const entries = [];
-  for (const verse of verses) {
-    verse.words.forEach((word, indexInAya) => {
-      entries.push({
-        word,
-        optional: Boolean(verse.optional[indexInAya]),
-        surah: verse.surah,
-        aya: verse.aya,
-      });
-    });
-  }
-  return entries;
-}
-
-// ------------------------------------------------------------------ render
-
-function renderVerse(target, entries, results, extras = []) {
-  target.innerHTML = '';
-  const groups = [];
-  entries.forEach((entry, index) => {
-    let group = groups[groups.length - 1];
-    if (!group || group.surah !== entry.surah || group.aya !== entry.aya) {
-      group = { surah: entry.surah, aya: entry.aya, items: [] };
-      groups.push(group);
-    }
-    group.items.push({ entry, index, result: results ? results[index] : null });
-  });
-
-  for (const group of groups) {
-    const line = document.createElement('div');
-    line.className = 'ayah-line';
-
-    if (groups.length > 1) {
-      const label = document.createElement('span');
-      label.className = 'aya-label';
-      label.textContent = `${group.surah}:${group.aya}`;
-      line.appendChild(label);
-    }
-
-    for (const item of group.items) {
-      const result = item.result;
-      if (!result) {
-        line.appendChild(wordSpan(item.entry.word, null));
-        continue;
-      }
-      if (result.status === WORD_STATUS.CORRECT) {
-        line.appendChild(wordSpan(item.entry.word, WORD_STATUS.CORRECT));
-        continue;
-      }
-      // Word that was not read exactly right: keep it in the aya and put what
-      // the reciter actually said right under it.
-      const wrap = document.createElement('span');
-      wrap.className = `w-wrap is-${result.status}`;
-      wrap.title = describeResult(result);
-      wrap.appendChild(wordSpan(item.entry.word, result.status));
-
-      const note = document.createElement('span');
-      note.className = 'w-note';
-      note.textContent = noteFor(result);
-      wrap.appendChild(note);
-      line.appendChild(wrap);
-    }
-
-    const firstIndex = group.items[0].index;
-    const lastIndex = group.items[group.items.length - 1].index;
-    const groupExtras = extras.filter(
-      (extra) => extra.afterIndex >= firstIndex - 1 && extra.afterIndex <= lastIndex
-    );
-    if (groupExtras.length) {
-      const extraLine = document.createElement('div');
-      extraLine.className = 'extra-line';
-      const label = document.createElement('span');
-      label.className = 'extra-label';
-      label.textContent = 'aya me nahi:';
-      const words = document.createElement('span');
-      words.lang = 'ar';
-      words.dir = 'rtl';
-      words.textContent = groupExtras.map((extra) => extra.heard).join(' ');
-      extraLine.append(label, words);
-      line.appendChild(extraLine);
-    }
-
-    const num = document.createElement('span');
-    num.className = 'aya-num';
-    num.textContent = toArabicDigits(group.aya);
-    line.appendChild(num);
-
-    target.appendChild(line);
-  }
-}
-
-function wordSpan(word, status) {
-  const span = document.createElement('span');
-  span.className = status ? `w is-${status}` : 'w';
-  span.textContent = word;
-  return span;
-}
-
-function renderTajweed() {
-  els.tajweed.innerHTML = '';
-  const hints = [];
-  for (const verse of state.verses) {
-    const verseHints = tajweedHints(verse.text, 8);
-    for (const hint of verseHints) hints.push({ ...hint, aya: verse.aya });
-  }
-
-  if (!hints.length) {
-    const empty = document.createElement('p');
-    empty.className = 'hint';
-    empty.textContent = 'Is aya me koi tajweed hint nahi mila.';
-    els.tajweed.appendChild(empty);
-    return;
-  }
-
-  const chips = document.createElement('div');
-  chips.className = 'chips';
-  for (const item of summariseHints(hints)) {
-    const chip = document.createElement('span');
-    chip.className = 'chip';
-    chip.textContent = `${item.rule} ×${item.count}`;
-    chips.appendChild(chip);
-  }
-  els.tajweed.appendChild(chips);
-
-  const list = document.createElement('ul');
-  list.className = 'hint-list';
-  for (const hint of hints.slice(0, 24)) {
-    const li = document.createElement('li');
-    li.className = 'hint-item';
-
-    const glyph = document.createElement('span');
-    glyph.className = 'glyph';
-    glyph.lang = 'ar';
-    glyph.dir = 'rtl';
-    glyph.textContent = hint.glyph;
-
-    const name = document.createElement('span');
-    name.className = 'rule-name';
-    name.textContent = hint.rule;
-
-    const note = document.createElement('span');
-    note.textContent = hint.note;
-
-    li.append(glyph, name, note);
-    list.appendChild(li);
-  }
-  els.tajweed.appendChild(list);
-}
-
-function hideResult() {
-  if (!els.verseStatus) return;
-  els.verseStatus.hidden = true;
-  els.verseStatus.className = 'verse-status';
-  els.verseStatus.innerHTML = '';
-  if (els.verseDetails) {
-    els.verseDetails.hidden = true;
-    els.verseDetails.innerHTML = '';
-  }
-}
-
-/** Say, right above the aya, why a check could not run. */
-function showVerseNotice(message) {
-  if (!els.verseStatus) return;
-  els.verseStatus.hidden = false;
-  els.verseStatus.className = 'verse-status bad';
-  els.verseStatus.innerHTML = '';
-
-  const text = document.createElement('span');
-  text.className = 'vs-verdict';
-  text.textContent = message;
-  els.verseStatus.appendChild(text);
-
-  if (els.verseDetails) {
-    els.verseDetails.hidden = true;
-    els.verseDetails.innerHTML = '';
-  }
-  els.verse.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-/** Score + verdict above the aya, with the aya itself coloured word by word. */
-function showResult(entries, alignment) {
-  if (!els.verseStatus) return;
-  // Whatever mode the reciter chose, the answered aya is shown with its colours.
-  setTextHidden(false);
-  els.verseStatus.hidden = false;
-  els.verseStatus.className = `verse-status ${scoreClass(alignment.score)}`;
-  els.verseStatus.innerHTML = '';
-
-  const score = document.createElement('span');
-  score.className = 'vs-score';
-  score.textContent = `${alignment.score}%`;
-
-  const verdict = document.createElement('span');
-  verdict.className = 'vs-verdict';
-  verdict.textContent = alignment.verdict;
-
-  const counts = alignment.counts;
-  const parts = [
-    `${counts.correct} sahi`,
-    counts.close ? `${counts.close} qareeb` : '',
-    counts.wrong ? `${counts.wrong} galat` : '',
-    counts.missing ? `${counts.missing} chhoote` : '',
-    counts.extra ? `${counts.extra} zaid` : '',
-  ].filter(Boolean);
-  const summary = document.createElement('span');
-  summary.className = 'vs-counts';
-  summary.textContent = parts.join(' · ');
-
-  const hint = document.createElement('span');
-  hint.className = 'vs-hint';
-  hint.textContent =
-    'Hara = sahi, peela = qareeb, laal = galat, cut = chhoot gaya. Galat lafz ke neeche aap ka padha hua lafz likha hai.';
-
-  els.verseStatus.append(score, verdict, summary, hint);
-
-  renderVerse(els.verse, entries, alignment.results, alignment.extras);
-  renderMistakes(alignment);
-  els.verse.scrollIntoView({ behavior: 'smooth', block: 'center' });
-}
-
-/** The mistakes spelled out under the aya: aya ka lafz -> jo aapne padha. */
-function renderMistakes(alignment) {
-  if (!els.verseDetails) return;
-  els.verseDetails.hidden = false;
-  els.verseDetails.innerHTML = '';
-
-  const problems = alignment.results.filter((result) => result.status !== WORD_STATUS.CORRECT);
-  const head = document.createElement('h4');
-  head.textContent = problems.length
-    ? `Ghaltiyan (${problems.length}) — aya ka lafz → jo aap ne padha`
-    : 'Ghaltiyan (0)';
-  els.verseDetails.appendChild(head);
-
-  if (!problems.length) {
-    const ok = document.createElement('p');
-    ok.className = 'hint';
-    ok.textContent =
-      alignment.score === 100
-        ? 'Model ne har lafz aya ke mutabiq suna. Yaad rahe: speech model kabhi ghalat talaffuz ko bhi sahi lafz bana deta hai, is liye tajweed/makhraj ki bareek ghalti yahan nahi pakdi jati.'
-        : 'Lafz ke mutabiq koi ghalti nahi mili.';
-    els.verseDetails.appendChild(ok);
-    return;
-  }
-
-  const list = document.createElement('ul');
-  list.className = 'mistake-list';
-  for (const result of problems) {
-    const row = document.createElement('li');
-    row.className = `mistake is-${result.status}`;
-
-    const tag = document.createElement('span');
-    tag.className = 'tag';
-    tag.textContent =
-      result.status === WORD_STATUS.CLOSE
-        ? 'qareeb'
-        : result.status === WORD_STATUS.MISSING
-          ? 'chhoot gaya'
-          : 'galat';
-
-    const expected = document.createElement('span');
-    expected.className = 'aya-word';
-    expected.textContent = result.expected;
-
-    const arrow = document.createElement('span');
-    arrow.className = 'arrow';
-    arrow.textContent = '→';
-
-    const heard = document.createElement('span');
-    heard.className = result.heard ? 'spoken-word' : 'spoken-word muted';
-    heard.textContent = result.heard || 'nahi padha';
-
-    row.append(tag, expected, arrow, heard);
-    list.appendChild(row);
-  }
-  els.verseDetails.appendChild(list);
-}
-
-/** Short label under a word that was not read exactly right. */
-function noteFor(result) {
-  if (result.status === WORD_STATUS.MISSING || !result.heard) return 'chhoot gaya';
-  if (result.status === WORD_STATUS.CLOSE) return `qareeb: ${result.heard}`;
-  return `padha: ${result.heard}`;
-}
-
-function scoreClass(score) {
-  if (score >= 85) return 'good';
-  if (score >= 60) return 'mid';
-  return 'bad';
-}
-
-function toArabicDigits(value) {
-  return String(value).replace(/\d/g, (digit) => ARABIC_DIGITS[Number(digit)]);
-}
-
-// ----------------------------------------------------------------- checking
-
-function describeResult(result) {
-  if (result.status === WORD_STATUS.CLOSE) return `Qareeb — suna gaya: ${result.heard}`;
-  if (result.status === WORD_STATUS.WRONG) return `Galat — suna gaya: ${result.heard}`;
-  if (result.status === WORD_STATUS.MISSING) return 'Chhoot gaya';
-  return 'Sahi';
-}
-
-function checkTranscript(raw) {
-  const text = String(raw || '').trim();
-  if (!text) {
-    toast('Kuch sunai nahi diya — dobara record karein.');
-    return null;
-  }
-  const entries = flatten(state.verses);
-  if (!entries.length) {
-    toast('Pehle ayaat load karein.');
-    return null;
-  }
-  const heard = text
-    .split(/\s+/)
-    .map((word) => word.trim())
-    .filter((word) => normalizeArabic(word).length > 0);
-
-  if (!heard.length) {
-    toast('Model ne koi Arabic lafz nahi suna.');
-    return null;
-  }
-
-  const alignment = alignWords(
-    entries.map((entry) => ({ word: entry.word, optional: entry.optional })),
-    heard
-  );
-  showResult(entries, alignment);
-  return alignment;
-}
-
-// -------------------------------------------------------------------- model
 
 function fillModels() {
   els.modelSelect.innerHTML = '';
@@ -579,63 +117,507 @@ function fillModels() {
   els.modelSelect.value = MODELS[0].id;
 }
 
-function fillModelSelection() {
+function restoreSelection() {
   try {
-    const stored = localStorage.getItem(STORAGE.model);
-    if (stored && MODELS.some((model) => model.id === stored)) els.modelSelect.value = stored;
+    const stored = JSON.parse(localStorage.getItem(STORAGE.selection) || 'null');
+    if (stored) {
+      if (stored.mode === 'page') state.mode = 'page';
+      if (Number.isInteger(stored.surah)) state.surah = clamp(stored.surah, 1, 114);
+      if (Number.isInteger(stored.page)) state.page = clamp(stored.page, 1, 604);
+    }
+    state.textHidden = localStorage.getItem(STORAGE.hidden) === '1';
+    const modelId = localStorage.getItem(STORAGE.model);
+    if (modelId && MODELS.some((m) => m.id === modelId)) els.modelSelect.value = modelId;
   } catch (error) {
-    console.warn('model selection restore failed', error);
+    console.warn('selection restore failed', error);
+  }
+  els.surahSelect.value = String(state.surah);
+  els.pageNumber.value = String(state.page);
+  els.toggleText.textContent = state.textHidden ? 'Text dikhayein' : 'Text chhupayein';
+  applyMode();
+}
+
+function persistSelection() {
+  try {
+    localStorage.setItem(
+      STORAGE.selection,
+      JSON.stringify({ mode: state.mode, surah: state.surah, page: state.page })
+    );
+    localStorage.setItem(STORAGE.hidden, state.textHidden ? '1' : '0');
+  } catch (error) {
+    console.warn('selection persist failed', error);
   }
 }
 
-async function handleLoadModel() {
-  if (state.busy) return false;
-  const modelId = els.modelSelect.value;
-  if (state.model && state.modelId === modelId) {
-    toast('Yeh model pehle se load hai.');
-    return true;
+function clamp(value, min, max) {
+  const n = Number.parseInt(value, 10);
+  if (Number.isNaN(n)) return min;
+  return Math.min(max, Math.max(min, n));
+}
+
+// ---------------------------------------------------------------- listing
+
+function applyMode() {
+  const isPage = state.mode === 'page';
+  els.pickerSurah.hidden = isPage;
+  els.pickerPage.hidden = !isPage;
+  els.tabSurah.classList.toggle('is-active', !isPage);
+  els.tabPage.classList.toggle('is-active', isPage);
+}
+
+async function showList() {
+  if (!isLoaded()) return;
+  state.visible = CHUNK;
+  els.rangeError.hidden = true;
+
+  try {
+    if (state.mode === 'page') {
+      if (!pageTotal()) throw new Error('Page data load nahi hua.');
+      const list = pageAyahs(state.page);
+      if (!list.length) throw new Error('Is page ka text nahi mila.');
+      state.verses = list.map(({ surah, aya }) => getVerses(surah, aya, aya)[0]).filter(Boolean);
+      els.listTitle.textContent = `Mushaf page ${state.page}`;
+    } else {
+      const total = Math.max(1, ayaCount(state.surah));
+      state.verses = getVerses(state.surah, 1, total);
+      els.listTitle.textContent = `${surahName(state.surah)} — ${total} ayaat`;
+    }
+  } catch (error) {
+    showError(error.message);
+    state.verses = [];
   }
+
+  renderList();
+  renderTajweed();
+  persistSelection();
+}
+
+function renderList() {
+  els.ayaList.innerHTML = '';
+  const verses = state.verses.slice(0, state.visible);
+
+  if (!verses.length) {
+    const empty = document.createElement('p');
+    empty.className = 'hint';
+    empty.textContent = 'Yahan koi aya nahi mili.';
+    els.ayaList.appendChild(empty);
+  }
+  for (const verse of verses) els.ayaList.appendChild(ayaCard(verse));
+
+  els.listFooter.hidden = state.visible >= state.verses.length;
+  updateRecordButtons();
+}
+
+function ayaCard(verse) {
+  const key = keyOf(verse.surah, verse.aya);
+  const alignment = state.results.get(key);
+
+  const card = document.createElement('article');
+  card.className = 'aya-card';
+  card.id = `card-${idOf(key)}`;
+
+  const head = document.createElement('div');
+  head.className = 'aya-head';
+
+  const badge = document.createElement('span');
+  badge.className = 'aya-badge';
+  badge.textContent = `${verse.surah}:${verse.aya}`;
+
+  const share = document.createElement('button');
+  share.type = 'button';
+  share.className = 'icon-btn small';
+  share.title = 'Share this aya';
+  share.textContent = '↗';
+  share.addEventListener('click', () => shareAya(verse));
+
+  head.append(badge, share);
+
+  const text = document.createElement('div');
+  text.className = 'aya-text';
+  if (state.textHidden) text.classList.add('is-hidden');
+  renderAyaText(text, verse, alignment);
+  text.addEventListener('dblclick', () => {
+    setTextHidden(!state.textHidden);
+  });
+
+  const status = document.createElement('p');
+  status.className = 'aya-status';
+  status.dataset.role = 'status';
+
+  const result = document.createElement('div');
+  result.className = 'aya-result';
+  if (alignment) renderAyaResult(result, alignment);
+
+  const actions = document.createElement('div');
+  actions.className = 'aya-actions';
+
+  const record = document.createElement('button');
+  record.type = 'button';
+  record.className = 'btn primary record-aya';
+  record.dataset.role = 'record';
+  record.dataset.key = key;
+  record.textContent = 'Record';
+  record.addEventListener('click', () => toggleRecording(key));
+  actions.appendChild(record);
+
+  card.append(head, text, status, result, actions);
+  return card;
+}
+
+function keyOf(surah, aya) {
+  return `${surah}:${aya}`;
+}
+
+function idOf(key) {
+  return key.replace(':', '-');
+}
+
+function verseOf(key) {
+  return state.verses.find((verse) => keyOf(verse.surah, verse.aya) === key) || null;
+}
+
+// ---------------------------------------------------------------- rendering
+
+function renderAyaText(target, verse, alignment) {
+  target.innerHTML = '';
+  verse.words.forEach((word, i) => {
+    const result = alignment ? alignment.results[i] : null;
+    if (!result || result.status === WORD_STATUS.CORRECT) {
+      const span = document.createElement('span');
+      span.className = result ? 'w is-correct' : 'w';
+      span.textContent = word;
+      target.appendChild(span);
+      return;
+    }
+    const wrap = document.createElement('span');
+    wrap.className = `w-wrap is-${result.status}`;
+    const span = document.createElement('span');
+    span.className = `w is-${result.status}`;
+    span.textContent = word;
+    const note = document.createElement('span');
+    note.className = 'w-note';
+    note.textContent = noteFor(result);
+    wrap.append(span, note);
+    target.appendChild(wrap);
+  });
+
+  if (alignment && alignment.extras.length) {
+    const extra = document.createElement('div');
+    extra.className = 'extra-line';
+    extra.lang = 'ar';
+    extra.dir = 'rtl';
+    extra.textContent = `aya me nahi: ${alignment.extras.map((e) => e.heard).join(' ')}`;
+    target.appendChild(extra);
+  }
+}
+
+function noteFor(result) {
+  if (result.status === WORD_STATUS.MISSING || !result.heard) return 'chhoot gaya';
+  if (result.status === WORD_STATUS.CLOSE) return `qareeb: ${result.heard}`;
+  return `padha: ${result.heard}`;
+}
+
+function renderAyaResult(target, alignment) {
+  const strip = document.createElement('div');
+  strip.className = `aya-score ${scoreClass(alignment.score)}`;
+
+  const score = document.createElement('span');
+  score.className = 'score-value';
+  score.textContent = `${alignment.score}%`;
+
+  const verdict = document.createElement('span');
+  verdict.className = 'score-verdict';
+  verdict.textContent = alignment.verdict;
+
+  const counts = document.createElement('span');
+  counts.className = 'score-counts';
+  const c = alignment.counts;
+  counts.textContent = [
+    `${c.correct} sahi`,
+    c.close ? `${c.close} qareeb` : '',
+    c.wrong ? `${c.wrong} galat` : '',
+    c.missing ? `${c.missing} chhoote` : '',
+    c.extra ? `${c.extra} zaid` : '',
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
+  strip.append(score, verdict, counts);
+  target.appendChild(strip);
+
+  const problems = alignment.results.filter((r) => r.status !== WORD_STATUS.CORRECT);
+  if (!problems.length) {
+    const ok = document.createElement('p');
+    ok.className = 'hint';
+    ok.textContent =
+      alignment.score === 100
+        ? 'Sab alfaz aya ke mutabiq sune gaye. (Tajweed ki bareek ghalti ASR se nahi pakdi jati.)'
+        : 'Lafz ke mutabiq koi ghalti nahi mili.';
+    target.appendChild(ok);
+    return;
+  }
+
+  const list = document.createElement('ul');
+  list.className = 'mistake-list';
+  for (const r of problems) {
+    const li = document.createElement('li');
+    li.className = `mistake is-${r.status}`;
+
+    const tag = document.createElement('span');
+    tag.className = 'tag';
+    tag.textContent =
+      r.status === WORD_STATUS.CLOSE ? 'qareeb' : r.status === WORD_STATUS.MISSING ? 'chhoot gaya' : 'galat';
+
+    const expected = document.createElement('span');
+    expected.className = 'aya-word';
+    expected.textContent = r.expected;
+
+    const arrow = document.createElement('span');
+    arrow.className = 'arrow';
+    arrow.textContent = '→';
+
+    const heard = document.createElement('span');
+    heard.className = r.heard ? 'spoken-word' : 'spoken-word muted';
+    heard.textContent = r.heard || 'nahi padha';
+
+    li.append(tag, expected, arrow, heard);
+    list.appendChild(li);
+  }
+  target.appendChild(list);
+}
+
+function scoreClass(score) {
+  if (score >= 85) return 'good';
+  if (score >= 60) return 'mid';
+  return 'bad';
+}
+
+function setCardStatus(key, message, kind = 'info') {
+  const card = document.getElementById(`card-${idOf(key)}`);
+  if (!card) return;
+  const status = card.querySelector('[data-role="status"]');
+  if (!status) return;
+  status.textContent = message;
+  status.className = kind === 'info' ? 'aya-status' : `aya-status is-${kind}`;
+}
+
+function refreshCard(key) {
+  const card = document.getElementById(`card-${idOf(key)}`);
+  const verse = verseOf(key);
+  if (!card || !verse) return;
+  const alignment = state.results.get(key);
+
+  const text = card.querySelector('.aya-text');
+  if (text) renderAyaText(text, verse, alignment);
+
+  const result = card.querySelector('.aya-result');
+  if (result) {
+    result.innerHTML = '';
+    if (alignment) renderAyaResult(result, alignment);
+  }
+  updateRecordButtons();
+}
+
+function updateRecordButtons() {
+  const buttons = document.querySelectorAll('[data-role="record"]');
+  buttons.forEach((button) => {
+    const key = button.dataset.key;
+    const isThisRecording = state.recordingKey === key;
+    const locked = Boolean(state.busyKey) || state.modelLoading || state.micChecking;
+    button.disabled = locked || (state.recordingKey !== null && !isThisRecording);
+    if (isThisRecording) {
+      button.classList.add('recording');
+      if (!button.textContent.startsWith('Stop')) button.textContent = 'Stop · 0:00';
+    } else {
+      button.classList.remove('recording');
+      button.textContent = 'Record';
+    }
+  });
+}
+
+// ---------------------------------------------------------------- recording
+
+async function toggleRecording(key) {
+  if (state.recordingKey === key) {
+    await finishRecording(false);
+    return;
+  }
+  if (state.recordingKey || state.busyKey || state.modelLoading || state.micChecking) return;
+
+  state.recordingKey = key;
+  state.levelState = '';
+  setCardStatus(key, 'Mic khul raha hai…');
+  updateRecordButtons();
+
+  try {
+    state.recorder = await startRecording({ maxSeconds: 120 });
+    state.recordingStarted = Date.now();
+    setCardStatus(key, 'Recording… aya padhein, phir Stop dabaein.');
+    startTimer(key);
+  } catch (error) {
+    state.recordingKey = null;
+    state.recorder = null;
+    setCardStatus(key, error.message, 'error');
+    updateRecordButtons();
+  }
+}
+
+async function finishRecording(byItself) {
+  const key = state.recordingKey;
+  const recorder = state.recorder;
+  if (!key || !recorder) return;
+
+  state.recorder = null;
+  state.recordingKey = null;
+  stopTimer();
+  updateRecordButtons();
+  setCardStatus(key, byItself ? 'Recording khud ruki — audio taiyar ho raha hai…' : 'Audio taiyar ho raha hai…');
+
+  let blob = null;
+  try {
+    blob = await recorder.stop();
+  } catch (error) {
+    setCardStatus(key, `Recording error: ${error.message}`, 'error');
+    return;
+  }
+  if (!blob || !blob.size) {
+    setCardStatus(key, 'Recording khali rahi — dobara koshish karein.', 'error');
+    return;
+  }
+  await checkAya(key, blob);
+}
+
+function startTimer(key) {
+  stopTimer();
+  state.timer = window.setInterval(() => {
+    if (!state.recordingKey) return;
+    const seconds = Math.floor((Date.now() - state.recordingStarted) / 1000);
+    const button = document.querySelector(`#card-${idOf(key)} [data-role="record"]`);
+    if (button) button.textContent = `Stop · ${formatClock(seconds)}`;
+    const recorder = state.recorder;
+    if (recorder && typeof recorder.getState === 'function' && recorder.getState() === 'inactive') {
+      finishRecording(true);
+      return;
+    }
+    const peak = recorder && typeof recorder.getPeak === 'function' ? recorder.getPeak() : -1;
+    if (peak >= 0) {
+      if (peak >= 0.01 && state.levelState !== 'ok') {
+        state.levelState = 'ok';
+        setCardStatus(key, 'Recording… awaaz aa rahi hai. Mukammal hone par Stop dabaein.');
+      } else if (peak < 0.002 && seconds >= 3 && state.levelState !== 'silent') {
+        state.levelState = 'silent';
+        setCardStatus(key, 'Awaaz nahi aa rahi — mic ke qareeb padhein.', 'error');
+      }
+    }
+  }, 300);
+}
+
+function stopTimer() {
+  if (state.timer) {
+    window.clearInterval(state.timer);
+    state.timer = null;
+  }
+}
+
+function formatClock(totalSeconds) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+}
+
+// ----------------------------------------------------------------- checking
+
+async function checkAya(key, blob) {
+  const verse = verseOf(key);
+  if (!verse) return;
+
+  state.busyKey = key;
+  updateRecordButtons();
+
+  try {
+    setCardStatus(key, 'Audio taiyar ho raha hai…');
+    const audio = await decodeToMono16k(blob);
+    if (audio.length < 6400) throw new Error('Audio bohot chhota hai — poora aya padhein.');
+    if (peakOf(audio) < 0.003) throw new Error('Audio khamosh hai — mic ke qareeb padhein.');
+
+    if (!state.model) {
+      setGlobalStatus('Speech model download ho raha hai… (pehli dafa ~105 MB)');
+      const loaded = await handleLoadModel();
+      if (!loaded) throw new Error('Model load nahi hua — Settings me dobara koshish karein.');
+      setGlobalStatus('');
+    }
+
+    setCardStatus(key, 'Transcribe ho raha hai (device par)…');
+    const text = await transcribe(state.model, audio);
+    if (!text) throw new Error('Kuch sunai nahi diya — dobara padhein.');
+
+    const expected = verse.words.map((word, i) => ({ word, optional: Boolean(verse.optional[i]) }));
+    const heard = text
+      .split(/\s+/)
+      .map((word) => word.trim())
+      .filter((word) => normalizeArabic(word).length > 0);
+
+    const alignment = alignWords(expected, heard);
+    state.results.set(key, alignment);
+    refreshCard(key);
+    setCardStatus(key, '');
+  } catch (error) {
+    setCardStatus(key, error.message, 'error');
+  } finally {
+    state.busyKey = null;
+    setGlobalStatus('');
+    updateRecordButtons();
+  }
+}
+
+// -------------------------------------------------------------------- model
+
+async function handleLoadModel() {
+  if (state.modelLoading) return false;
+  const modelId = els.modelSelect.value;
+  if (state.model && state.modelId === modelId) return true;
 
   state.modelLoading = true;
   els.loadModel.disabled = true;
   els.modelSelect.disabled = true;
   els.modelProgress.hidden = false;
   setProgress(0);
-  els.modelStatus.textContent = 'Model download ho raha hai… (pehli dafa bara download, Record abhi bhi chalta rahega)';
-  updateTranscribeButton();
+  els.modelStatus.textContent = 'Model download ho raha hai…';
+  updateRecordButtons();
 
   try {
     state.model = await loadModel(modelId, onModelProgress);
     state.modelId = modelId;
-    els.modelStatus.textContent = `Model tayyar hai${libraryVersion() ? ` (transformers ${libraryVersion()})` : ''} — ab record karein.`;
+    els.modelStatus.textContent = `Model tayyar hai${libraryVersion() ? ` (transformers ${libraryVersion()})` : ''}.`;
     setProgress(100);
     try {
       localStorage.setItem(STORAGE.model, modelId);
     } catch (error) {
       console.warn('model id persist failed', error);
     }
+    setGlobalStatus('');
     return true;
   } catch (error) {
     state.model = null;
     state.modelId = null;
     els.modelStatus.textContent = `Model load fail: ${error.message}`;
     els.modelProgress.hidden = true;
-    showVerseNotice(`Model load nahi hua (${error.message}) — internet check karein, phir dobara koshish karein.`);
+    setGlobalStatus(`Model load fail: ${error.message}`);
     return false;
   } finally {
     state.modelLoading = false;
     els.loadModel.disabled = false;
     els.modelSelect.disabled = false;
-    updateTranscribeButton();
+    updateRecordButtons();
   }
 }
 
 function onModelProgress(progress) {
   if (progress.status === 'progress' && typeof progress.progress === 'number') {
     setProgress(progress.progress);
-    if (progress.file) {
-      els.modelStatus.textContent = `${progress.file} — ${Math.round(progress.progress)}%`;
-    }
+    const pct = Math.round(progress.progress);
+    if (progress.file) els.modelStatus.textContent = `${progress.file} — ${pct}%`;
+    if (progress.file && pct % 20 < 5) setGlobalStatus(`Model download: ${progress.file} ${pct}%`);
   } else if (progress.status === 'initiate' && progress.file) {
     els.modelStatus.textContent = `Shuru: ${progress.file}`;
   } else if (progress.status === 'done' && progress.file) {
@@ -646,240 +628,133 @@ function onModelProgress(progress) {
 }
 
 function setProgress(percent) {
-  const clamped = Math.max(0, Math.min(100, percent));
-  els.modelProgressBar.style.width = `${clamped}%`;
+  els.modelProgressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
 }
 
-async function handleTranscribe() {
-  if (state.busy) return;
-  if (!state.model) {
-    showVerseNotice(
-      'Model load nahi hai, is liye tilawat check nahi ho saki. Neeche "Model load karein" dabaein, phir dobara record karein.'
-    );
-    toast('Pehle model load karein.');
-    return;
-  }
-  if (!state.audioBlob) {
-    toast('Pehle audio record karein ya file chunein.');
-    return;
-  }
+// ------------------------------------------------------------------ views
 
-  setBusy(true);
+function openSettings() {
+  els.viewReader.hidden = true;
+  els.viewSettings.hidden = false;
+  if (els.modelStatus && !els.modelStatus.textContent) {
+    els.modelStatus.textContent = 'Model abhi load nahi hua. Pehli recording par khud load hoga.';
+  }
+  renderTajweed();
+}
+
+function closeSettings() {
+  els.viewSettings.hidden = true;
+  els.viewReader.hidden = false;
+}
+
+function setTextHidden(hidden) {
+  state.textHidden = Boolean(hidden);
+  document.querySelectorAll('.aya-text').forEach((element) => {
+    element.classList.toggle('is-hidden', state.textHidden);
+  });
+  els.toggleText.textContent = state.textHidden ? 'Text dikhayein' : 'Text chhupayein';
+  els.toggleText.setAttribute('aria-pressed', String(state.textHidden));
+  persistSelection();
+}
+
+function setGlobalStatus(text) {
+  if (!els.globalStatus) return;
+  els.globalStatus.textContent = text || '';
+  els.globalStatus.hidden = !text;
+}
+
+function showError(message) {
+  els.rangeError.textContent = message;
+  els.rangeError.hidden = false;
+}
+
+// ------------------------------------------------------------------- share
+
+async function shareApp() {
+  const data = {
+    title: 'Tilawat Check',
+    text: 'Quran tilawat khud check karein — on-device, bina server ke.',
+    url: location.href,
+  };
+  await shareOrCopy(data);
+}
+
+async function shareAya(verse) {
+  const reference = `${surahName(verse.surah)} — aya ${verse.aya}`;
+  await shareOrCopy({
+    title: reference,
+    text: `${reference}\n\n${verse.text}\n\n${location.href}`,
+    url: location.href,
+  });
+}
+
+async function shareOrCopy(data) {
   try {
-    els.modelStatus.textContent = 'Audio taiyar ho raha hai…';
-    const audio = await decodeToMono16k(state.audioBlob);
-    if (audio.length < 16000 * 0.4) {
-      els.modelStatus.textContent = 'Audio bohot chhota hai — thori lambi tilawat record karein.';
-      showVerseNotice('Audio bohot chhota hai — poora aya record karein.');
+    if (navigator.share) {
+      await navigator.share(data);
       return;
     }
-    if (peakOf(audio) < 0.003) {
-      els.modelStatus.textContent = 'Audio khamosh hai (mic se awaaz nahi aayi) — dobara record karein.';
-      showVerseNotice(
-        'Audio khamosh hai — mic se awaaz nahi aayi. Dobara record karein, ya "Mic jaanch" se mic test karein.'
-      );
-      return;
-    }
-    els.modelStatus.textContent = 'Transcribe ho raha hai (device par)…';
-    const text = await transcribe(state.model, audio);
-    els.modelStatus.textContent = text
-      ? 'Transcribe mukammal.'
-      : 'Kuch sunai nahi diya — dobara record karein.';
-    if (text) checkTranscript(text);
-    else showVerseNotice('Kuch sunai nahi diya — dobara record karein ya zara zor se padhein.');
   } catch (error) {
-    els.modelStatus.textContent = `Transcribe fail: ${error.message}`;
-    showVerseNotice(`Check nahi ho saka: ${error.message}`);
-  } finally {
-    setBusy(false);
+    if (error && error.name === 'AbortError') return;
   }
-}
-
-// ------------------------------------------------------------------- audio
-
-async function toggleRecording() {
-  if (state.busy || state.starting || state.micChecking) return;
-  if (state.recording) {
-    await finishRecording(false);
-    return;
-  }
-
-  // Guard: a second tap while the permission prompt is open used to open a
-  // second microphone stream, and the phone then killed the first one.
-  state.starting = true;
-  els.record.disabled = true;
-  els.record.textContent = 'Mic khul raha hai…';
-  setAudioStatus('Microphone ki ijazat maangi ja rahi hai…', 'info');
   try {
-    state.recorder = await startRecording({ maxSeconds: 120 });
-    state.recording = true;
-    state.recordingStarted = Date.now();
-    state.levelState = '';
-    els.record.classList.add('recording');
-    els.record.textContent = 'Stop · 0:00';
-    setAudioStatus('Recording… aya padhein, mukammal hone par Stop dabaein.', 'recording');
-    startRecordingTimer();
+    await navigator.clipboard.writeText(`${data.text}\n${data.url}`);
+    toast('Copy ho gaya — paste kar ke share karein.');
   } catch (error) {
-    state.recorder = null;
-    state.recording = false;
-    stopRecordingTimer();
-    els.record.classList.remove('recording');
-    els.record.textContent = 'Record';
-    setAudioStatus(error.message, 'error');
-  } finally {
-    state.starting = false;
-    els.record.disabled = state.busy;
+    toast('Share support nahi hai.');
   }
 }
 
-async function finishRecording(byItself) {
-  const recorder = state.recorder;
-  if (!recorder || !state.recording) return;
+// ----------------------------------------------------------------- tajweed
 
-  state.recorder = null;
-  state.recording = false;
-  stopRecordingTimer();
-  els.record.classList.remove('recording');
-  els.record.textContent = 'Record';
-  setAudioStatus(
-    byItself
-      ? 'Recording khatam ho gayi (hadd poori ya mic chhin gaya) — jo record hua woh taiyar kiya ja raha hai…'
-      : 'Recording ruk gayi — audio taiyar ho raha hai…',
-    'info'
-  );
-
-  try {
-    const blob = await recorder.stop();
-    if (!blob || !blob.size) {
-      setAudioStatus(
-        'Recording khali rahi — mic se awaaz nahi aayi. Dobara koshish karein, ya "audio file" se upload karein.',
-        'error'
-      );
-      return;
-    }
-    setAudioBlob(blob, 'Recording');
-  } catch (error) {
-    setAudioStatus(`Recording error: ${error.message}`, 'error');
-  }
-}
-
-function startRecordingTimer() {
-  stopRecordingTimer();
-  state.recordingTimer = window.setInterval(() => {
-    if (!state.recording) return;
-    const seconds = Math.floor((Date.now() - state.recordingStarted) / 1000);
-    els.record.textContent = `Stop · ${formatClock(seconds)}`;
-    const recorder = state.recorder;
-    if (recorder && typeof recorder.getState === 'function' && recorder.getState() === 'inactive') {
-      finishRecording(true);
-      return;
-    }
-    // Tell the person whether the mic is really hearing something.
-    const peak = recorder && typeof recorder.getPeak === 'function' ? recorder.getPeak() : -1;
-    if (peak >= 0) {
-      if (peak >= 0.01 && state.levelState !== 'ok') {
-        state.levelState = 'ok';
-        setAudioStatus('Recording… awaaz aa rahi hai. Mukammal hone par Stop dabaein.', 'recording');
-      } else if (peak < 0.002 && seconds >= 3 && state.levelState !== 'silent') {
-        state.levelState = 'silent';
-        setAudioStatus(
-          'Recording chal rahi hai magar awaaz nahi aa rahi — mic ke qareeb padhein, ya phone ka mic mute/band to nahi?',
-          'error'
-        );
-      }
-    }
-  }, 300);
-}
-
-function stopRecordingTimer() {
-  if (state.recordingTimer) {
-    window.clearInterval(state.recordingTimer);
-    state.recordingTimer = null;
-  }
-}
-
-function formatClock(totalSeconds) {
-  const minutes = Math.floor(totalSeconds / 60);
-  const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, '0')}`;
-}
-
-function setAudioStatus(message, kind = 'info') {
-  els.audioStatus.textContent = message;
-  els.audioStatus.className = kind === 'info' ? 'hint' : `hint is-${kind}`;
-}
-
-function setAudioBlob(blob, source) {
-  state.audioBlob = blob;
-  const kb = Math.max(1, Math.round(blob.size / 1024));
-  if (state.audioUrl) URL.revokeObjectURL(state.audioUrl);
-  state.audioUrl = URL.createObjectURL(blob);
-  els.player.src = state.audioUrl;
-  els.player.hidden = false;
-  updateTranscribeButton();
-
-  if (!state.model) {
-    if (state.modelLoading) {
-      setAudioStatus(`${source} — ${kb} KB. Model load ho raha hai, phir khud check hoga.`, 'info');
-      return;
-    }
-    // No model yet: load the selected one, then check the recording by itself.
-    setAudioStatus(`${source} — ${kb} KB. Model load ho raha hai, phir khud check hoga…`, 'info');
-    handleLoadModel().then((loaded) => {
-      if (loaded && state.model && state.audioBlob && !state.busy) handleTranscribe();
-    });
+function renderTajweed() {
+  if (!els.tajweed) return;
+  els.tajweed.innerHTML = '';
+  const verse = state.verses[0];
+  if (!verse) {
+    els.tajweed.textContent = 'Pehle koi aya chunein.';
     return;
   }
-  if (state.modelLoading || state.busy) {
-    setAudioStatus(`${source} — ${kb} KB. Tayyar hai.`, 'ok');
+  const hints = tajweedHints(verse.text, 8);
+  if (!hints.length) {
+    els.tajweed.textContent = `Surah ${verse.surah}:${verse.aya} me koi tajweed hint nahi mila.`;
     return;
   }
-  // Model is ready: transcribe and show the result on the aya without an extra tap.
-  setAudioStatus(`${source} — ${kb} KB. Transcribe ho raha hai…`, 'ok');
-  handleTranscribe();
-}
-
-function updateTranscribeButton() {
-  els.transcribe.disabled =
-    state.busy || state.modelLoading || !state.model || !state.audioBlob;
-}
-
-function setBusy(busy) {
-  state.busy = busy;
-  els.loadModel.disabled = busy || state.modelLoading;
-  els.record.disabled = busy;
-  els.load.disabled = busy;
-  updateTranscribeButton();
+  const intro = document.createElement('p');
+  intro.className = 'hint';
+  intro.textContent = `${surahName(verse.surah)} ${verse.aya} — script se milne wale hints:`;
+  els.tajweed.appendChild(intro);
+  const list = document.createElement('ul');
+  list.className = 'hint-list';
+  for (const hint of hints) {
+    const li = document.createElement('li');
+    li.className = 'hint-item';
+    const glyph = document.createElement('span');
+    glyph.className = 'glyph';
+    glyph.lang = 'ar';
+    glyph.dir = 'rtl';
+    glyph.textContent = hint.glyph;
+    const rule = document.createElement('span');
+    rule.className = 'rule-name';
+    rule.textContent = hint.rule;
+    const note = document.createElement('span');
+    note.textContent = hint.note;
+    li.append(glyph, rule, note);
+    list.appendChild(li);
+  }
+  els.tajweed.appendChild(list);
 }
 
 // --------------------------------------------------------------- mic check
 
 async function runMicCheck() {
-  if (!els.micOutput) return;
-  if (state.recording) {
-    toast('Pehle chal rahi recording band karein, phir Mic jaanch chalayein.');
-    return;
-  }
-  if (state.starting || state.micChecking) return;
-  els.micOutput.hidden = false;
+  if (!els.micCheckOutput || state.recordingKey) return;
   state.micChecking = true;
-  els.record.disabled = true;
-  if (els.micCheck) els.micCheck.disabled = true;
-  try {
-    await micCheckRun();
-  } catch (error) {
-    toast(`Mic jaanch me error: ${error.message}`);
-  } finally {
-    state.micChecking = false;
-    els.record.disabled = state.busy;
-    if (els.micCheck) els.micCheck.disabled = false;
-  }
-}
-
-async function micCheckRun() {
+  updateRecordButtons();
+  els.micCheckOutput.hidden = false;
   const items = [];
   const render = () => {
-    els.micOutput.innerHTML = '';
+    els.micCheckOutput.innerHTML = '';
     for (const item of items) {
       const li = document.createElement('li');
       li.className = item.ok === true ? 'diag-ok' : item.ok === false ? 'diag-bad' : 'diag-wait';
@@ -889,14 +764,10 @@ async function micCheckRun() {
       const value = document.createElement('span');
       value.textContent = item.value;
       li.append(label, value);
-      els.micOutput.appendChild(li);
+      els.micCheckOutput.appendChild(li);
     }
   };
   const push = (label, value, ok = null) => {
-    items.push({ label, value, ok });
-    render();
-  };
-  const update = (label, value, ok) => {
     const existing = items.find((item) => item.label === label);
     if (existing) {
       existing.value = value;
@@ -907,47 +778,24 @@ async function micCheckRun() {
     render();
   };
 
-  items.length = 0;
   const support = micSupport();
-  push('Secure page (https)', support.secure ? 'haan' : 'nahi', support.secure);
+  push('Secure page', support.secure ? 'haan' : 'nahi', support.secure);
   push('Microphone API', support.hasApi ? 'maujood' : 'nahi', support.hasApi);
-  push('MediaRecorder', support.hasRecorder ? 'maujood' : 'nahi', support.hasRecorder);
-  push('Audio format', support.mimeType || '(browser default)', Boolean(support.mimeType));
+  push('Permission', await micPermissionState(), null);
 
-  const permission = await micPermissionState();
-  push('Permission', permission, permission === 'denied' ? false : null);
-
-  if (!support.hasApi || !support.hasRecorder) {
-    push('Recording', 'rucka — API maujood nahi', false);
-    return;
-  }
-
-  push('Recording (2s test)', 'koshish…', null);
-  let recorder;
   try {
-    recorder = await startRecording({ maxSeconds: 8 });
+    const recorder = await startRecording({ maxSeconds: 8 });
+    push('Recording (2s)', 'chal rahi hai…', null);
+    await new Promise((resolve) => window.setTimeout(resolve, 2000));
+    const peak = recorder.getPeak();
+    const blob = await recorder.stop();
+    push('Recording (2s)', `${blob.size} bytes`, blob.size > 0);
+    if (peak >= 0) push('Awaaz ka level', peak >= 0.01 ? 'theek' : 'bohot halka', peak >= 0.01);
   } catch (error) {
-    update('Recording (2s test)', error.message, false);
-    return;
-  }
-
-  push('Tareeqa', recorder.kind === 'webaudio' ? 'Web Audio (seedha)' : 'MediaRecorder (fallback)', true);
-  await new Promise((resolve) => window.setTimeout(resolve, 2000));
-  const peak = recorder.getPeak();
-  const blob = await recorder.stop();
-  update('Recording (2s test)', `${blob.size} bytes`, blob.size > 0);
-  if (peak >= 0) {
-    push('Awaaz ka level', peak >= 0.01 ? 'theek' : 'bohot halka — mic ke qareeb bolein', peak >= 0.01);
-  }
-
-  if (blob.size > 0) {
-    try {
-      const audio = await decodeToMono16k(blob);
-      const seconds = audio.length / 16000;
-      push('Decode', `${audio.length} samples (~${seconds.toFixed(1)}s)`, audio.length > 0);
-    } catch (error) {
-      push('Decode', `fail: ${error.message}`, false);
-    }
+    push('Recording (2s)', error.message, false);
+  } finally {
+    state.micChecking = false;
+    updateRecordButtons();
   }
 }
 
@@ -977,39 +825,73 @@ function runEngineTests() {
   toast(`Self-test: ${passed}/${results.length} pass`);
 }
 
-// ------------------------------------------------------------------ events
+// ----------------------------------------------------------------- events
 
 function wireEvents() {
-  els.load.addEventListener('click', () => loadAya());
-  els.select.addEventListener('change', () => {
-    els.aya.value = '1';
-    loadAya();
+  els.openSettings.addEventListener('click', openSettings);
+  els.closeSettings.addEventListener('click', closeSettings);
+
+  els.tabSurah.addEventListener('click', () => {
+    state.mode = 'surah';
+    applyMode();
+    showList();
   });
-  if (els.aya) els.aya.addEventListener('change', () => loadAya());
-  if (els.prev) els.prev.addEventListener('click', () => stepAya(-1));
-  if (els.next) els.next.addEventListener('click', () => stepAya(1));
-  els.record.addEventListener('click', () => {
-    toggleRecording();
+  els.tabPage.addEventListener('click', () => {
+    state.mode = 'page';
+    applyMode();
+    showList();
   });
-  els.file.addEventListener('change', () => {
-    const file = els.file.files && els.file.files[0];
-    if (file) setAudioBlob(file, file.name);
+
+  els.surahSelect.addEventListener('change', () => {
+    state.surah = clamp(els.surahSelect.value, 1, 114);
+    showList();
+  });
+
+  els.pageNumber.addEventListener('change', () => {
+    state.page = clamp(els.pageNumber.value, 1, Math.max(1, pageTotal() || 604));
+    els.pageNumber.value = String(state.page);
+    showList();
+  });
+  els.pagePrev.addEventListener('click', () => {
+    state.page = clamp(state.page - 1, 1, Math.max(1, pageTotal() || 604));
+    els.pageNumber.value = String(state.page);
+    showList();
+  });
+  els.pageNext.addEventListener('click', () => {
+    state.page = clamp(state.page + 1, 1, Math.max(1, pageTotal() || 604));
+    els.pageNumber.value = String(state.page);
+    showList();
+  });
+
+  els.toggleText.addEventListener('click', () => setTextHidden(!state.textHidden));
+  els.loadMore.addEventListener('click', () => {
+    state.visible += CHUNK;
+    renderList();
+  });
+
+  els.shareApp.addEventListener('click', shareApp);
+
+  els.modelSelect.addEventListener('change', () => {
+    if (state.model && state.modelId !== els.modelSelect.value) {
+      state.model = null;
+      state.modelId = null;
+      els.modelStatus.textContent = 'Naya model — "Model load karein" dabaein.';
+    }
   });
   els.loadModel.addEventListener('click', () => {
     handleLoadModel();
   });
-  els.transcribe.addEventListener('click', () => {
-    handleTranscribe();
+
+  els.audioFile.addEventListener('change', () => {
+    const file = els.audioFile.files && els.audioFile.files[0];
+    if (!file) return;
+    els.player.src = URL.createObjectURL(file);
+    els.player.hidden = false;
+    toast('Audio file lagi hai — ab us aya ka Record dabaein jise check karna hai.');
   });
-  els.runTests.addEventListener('click', () => runEngineTests());
-  if (els.toggleVerse) {
-    els.toggleVerse.addEventListener('click', () => toggleTextHidden());
-  }
-  if (els.micCheck) {
-    els.micCheck.addEventListener('click', () => {
-      runMicCheck();
-    });
-  }
+
+  els.micCheck.addEventListener('click', runMicCheck);
+  els.runTests.addEventListener('click', runEngineTests);
 }
 
 function toast(message) {
