@@ -1137,3 +1137,82 @@ audio {
 .mistake .arrow {
   color: var(--muted);
 }
+
+
+/* ---- one big record button, everything else behind Settings ---- */
+
+.record-button {
+  width: 100%;
+  min-height: 72px;
+  border-radius: 18px;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.record-button.recording {
+  background: var(--bad-ink);
+  border-color: var(--bad-ink);
+  color: #fff;
+}
+
+#audio-status {
+  text-align: center;
+  margin: 10px 0 0;
+}
+
+#model-status {
+  text-align: center;
+  margin: 6px 0 0;
+  min-height: 1em;
+}
+
+.settings {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--card);
+  padding: 12px 14px;
+}
+
+.settings > summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  list-style: none;
+}
+
+.settings > summary::-webkit-details-marker {
+  display: none;
+}
+
+.settings > summary::before {
+  content: '▸ ';
+}
+
+.settings[open] > summary {
+  margin-bottom: 10px;
+}
+
+.settings[open] > summary::before {
+  content: '▾ ';
+}
+
+.settings-body {
+  display: grid;
+  gap: 10px;
+}
+
+.settings-body h3 {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.settings-body .row {
+  align-items: flex-end;
+}

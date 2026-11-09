@@ -52,6 +52,10 @@ function init() {
   restoreSelection();
   fillModelSelection();
   wireEvents();
+  if (els.modelStatus) {
+    els.modelStatus.textContent =
+      'Pehli dafa Record dabane par model download hoga (~105 MB), phir har aya khud check hogi.';
+  }
   updateTranscribeButton();
   if (els.verse) els.verse.textContent = 'Quran text load ho raha hai…';
   loadQuran()

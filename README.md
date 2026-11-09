@@ -41,6 +41,9 @@ on-device.
 - Ye ek **zero-build plain web app** hai: `index.html` + ES modules, koi bundler nahi.
 - Pehli dafa model load karne ke liye internet chahiye (CDN se library aur
   Hugging Face se model weights). Uske baad model browser cache me rehta hai.
+- Interface jaan boojh kar chhota hai: surah/aya chunein, aya dikhti hai, aur neeche
+  **sirf ek Record button**. Model download, audio file, mic jaanch, tajweed hints
+  aur self-test sab **Settings / Advanced** ke peeche hain.
 - Mic ke baghair engine test: **Engine self-test** (normalisation + alignment +
   tajweed + Quran data ke 16 assertions).
 

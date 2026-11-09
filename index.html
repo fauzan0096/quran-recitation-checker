@@ -13,22 +13,13 @@
         <span class="brand-mark" lang="ar" dir="rtl">ق</span>
         <div class="brand-text">
           <h1>Quran Recitation Checker</h1>
-          <p class="tagline">
-            Aya chunein, mic par padhein, aur dekhein kaunsa lafz sahi tha, kaunsa chhoot gaya.
-            Poora kaam device par — koi server nahi.
-          </p>
+          <p class="tagline">Aya padhein, Record dabaein — sahi/ghalat wahin dikh jayega.</p>
         </div>
-      </div>
-      <div class="badges">
-        <span class="badge">No server</span>
-        <span class="badge">On-device ASR</span>
-        <span class="badge">Offline after first load</span>
       </div>
     </header>
 
     <main>
       <section class="panel" id="range-panel">
-        <h2><span class="step">1</span> Aya chunein (ek waqt me ek aya)</h2>
         <div class="row wrap">
           <label class="field">
             <span>Surah</span>
@@ -38,8 +29,8 @@
             <span>Aya</span>
             <input id="aya-number" type="number" min="1" step="1" value="1" inputmode="numeric" />
           </label>
-          <button type="button" id="prev-aya" class="btn ghost small">◀ Pichli</button>
-          <button type="button" id="next-aya" class="btn ghost small">Agli ▶</button>
+          <button type="button" id="prev-aya" class="btn ghost small">◀</button>
+          <button type="button" id="next-aya" class="btn ghost small">▶</button>
           <button type="button" id="load-range" class="btn">Load</button>
         </div>
         <p id="aya-count-hint" class="hint"></p>
@@ -48,15 +39,7 @@
 
       <section class="panel" id="verse-panel">
         <div class="panel-head">
-          <h2><span class="step">2</span> Ayaat (padhne ke liye)</h2>
           <span id="verse-ref" class="ref"></span>
-        </div>
-        <div class="row wrap verse-actions">
-          <button type="button" id="toggle-verse" class="btn ghost small">Text chhupayein</button>
-          <span class="hint">
-            Dekh kar padhna hai to text khula rakhein; yaad se azmaish ke liye chhupa dein — Record
-            rukne par text aur natija dono khud dikh jate hain.
-          </span>
         </div>
         <div id="verse-status" class="verse-status" hidden></div>
         <div id="verse" class="verse" lang="ar" dir="rtl"></div>
@@ -64,72 +47,65 @@
         <div class="legend">
           <span class="legend-item"><span class="sw is-correct"></span> sahi</span>
           <span class="legend-item"><span class="sw is-close"></span> qareeb</span>
-          <span class="legend-item"><span class="sw is-wrong"></span> galat lafz</span>
+          <span class="legend-item"><span class="sw is-wrong"></span> galat</span>
           <span class="legend-item"><span class="sw is-missing"></span> chhoot gaya</span>
         </div>
       </section>
 
       <section class="panel" id="audio-panel">
-        <h2><span class="step">3</span> Tilawat</h2>
-
-        <div class="row wrap">
-          <button type="button" id="record" class="btn primary">Record</button>
-          <label class="field file">
-            <span>Ya audio file</span>
-            <input id="audio-file" type="file" accept="audio/*" />
-          </label>
-        </div>
-        <p id="audio-status" class="hint">Koi audio nahi. Record dabaein ya file chunein.</p>
-        <audio id="player" controls hidden></audio>
-        <div class="mic-check">
-          <button type="button" id="mic-check" class="btn ghost small">Mic jaanch</button>
-          <span class="hint">Mic kaam nahi kar raha? Yahan asli wajah dekhein.</span>
-        </div>
-        <ul id="mic-check-output" class="diag" hidden></ul>
-
-        <div class="divider"></div>
-
-        <h3>Speech model (on-device)</h3>
-        <div class="row wrap">
-          <label class="field">
-            <span>Model</span>
-            <select id="model-select"></select>
-          </label>
-          <button type="button" id="load-model" class="btn">Model load karein</button>
-        </div>
+        <button type="button" id="record" class="btn primary record-button">Record</button>
+        <p id="audio-status" class="hint">Record dabaein.</p>
         <div class="progress" id="model-progress" hidden>
           <div class="progress-bar" id="model-progress-bar"></div>
         </div>
-        <p id="model-status" class="hint">Model load nahi hua.</p>
-        <button type="button" id="transcribe" class="btn primary wide" disabled>
-          Transcribe + check
-        </button>
-        <p class="hint">
-          Recording khatam hote hi khud check ho jata hai — nateeja usi aya ke alfaaz par rang
-          aur ghalat lafz ke neeche aap ke padhe hue lafz ki soorat me aata hai.
-        </p>
+        <p id="model-status" class="hint"></p>
+        <audio id="player" controls hidden></audio>
       </section>
 
-      <section class="panel" id="tajweed-panel">
-        <h2><span class="step">4</span> Tajweed hints (text se)</h2>
-        <p class="hint">
-          Yeh sirf script se nikalay gaye hints hain: kahan ghunnah, idgham, qalqalah ya madd
-          lazim hai. Audio se timing naapna is version me nahi hai.
-        </p>
-        <div id="tajweed"></div>
-      </section>
+      <details class="settings" id="advanced">
+        <summary>Settings / Advanced</summary>
 
-      <section class="panel" id="test-panel">
-        <h2>Engine self-test</h2>
-        <p class="hint">Mic aur model ke baghair: normalisation, alignment aur tajweed scanner ki jaanch.</p>
-        <button type="button" id="run-tests" class="btn ghost">Self-test chalayein</button>
-        <ul id="test-results" class="tests"></ul>
-      </section>
+        <div class="settings-body">
+          <h3>Padhne ka tareeqa</h3>
+          <button type="button" id="toggle-verse" class="btn ghost small">Text chhupayein</button>
+          <span class="hint">Yaad se azmaish ke liye aya ka text chhupa dein.</span>
+
+          <h3>Speech model (on-device)</h3>
+          <div class="row wrap">
+            <label class="field">
+              <span>Model</span>
+              <select id="model-select"></select>
+            </label>
+            <button type="button" id="load-model" class="btn">Model load karein</button>
+          </div>
+          <button type="button" id="transcribe" class="btn primary wide" disabled>
+            Dobara check karein
+          </button>
+
+          <h3>Audio file</h3>
+          <label class="field file">
+            <span>Recording ki jagah file chunein</span>
+            <input id="audio-file" type="file" accept="audio/*" />
+          </label>
+
+          <h3>Mic jaanch</h3>
+          <button type="button" id="mic-check" class="btn ghost small">Mic jaanch</button>
+          <ul id="mic-check-output" class="diag" hidden></ul>
+
+          <h3>Tajweed hints (text se)</h3>
+          <div id="tajweed"></div>
+
+          <h3>Engine self-test</h3>
+          <button type="button" id="run-tests" class="btn ghost small">Self-test chalayein</button>
+          <ul id="test-results" class="tests"></ul>
+        </div>
+      </details>
 
       <footer class="foot">
         <p>
-          Quran text: Tanzil Project — Uthmani, Hafs (<a href="https://tanzil.net" target="_blank" rel="noreferrer">tanzil.net</a>).
-          ASR models: Tarteel AI ke Quran fine-tunes ke community ONNX exports.
+          Quran text: Tanzil Project — Uthmani, Hafs
+          (<a href="https://tanzil.net" target="_blank" rel="noreferrer">tanzil.net</a>).
+          ASR: Tarteel AI ke Quran fine-tunes ke community ONNX exports.
         </p>
       </footer>
     </main>
