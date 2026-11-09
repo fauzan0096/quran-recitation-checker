@@ -1,7 +1,8 @@
-// Bayyin service worker: app shell offline, Quran text and page data cached.
-// Model weights and the IndoPak API stay network-first (they are large/remote).
+// Bayyin service worker: network-first, so a new version of any app file reaches
+// the phone on the next load, with the cached copy as the offline fallback.
+// CDN / model / Quran.com requests are left to the network.
 
-const CACHE = 'bayyin-v3';
+const CACHE = 'bayyin-v4';
 const SHELL = [
   './',
   'index.html',
@@ -23,7 +24,7 @@ const SHELL = [
   'icon-192.png',
   'icon-512.png',
   'icon-maskable-512.png',
-  'apple-touch-icon.png',
+  'apple-touch-icon-180.png',
   'favicon.ico',
   'favicon-32.png',
   'quran-tanzil.txt',
@@ -43,7 +44,9 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches
       .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key))))
+      .then((keys) =>
+        Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)))
+      )
       .then(() => self.clients.claim())
   );
 });
@@ -53,35 +56,26 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return; // CDN, Hugging Face, Quran.com
+  if (url.origin !== self.location.origin) return;
 
-  // Navigations: network first so a new version shows up, cache as fallback.
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const copy = response.clone();
-          caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
-          return response;
-        })
-        .catch(() => caches.match(request).then((hit) => hit || caches.match('index.html')))
-    );
-    return;
-  }
-
-  // Everything else: cache first, then network (and remember it).
   event.respondWith(
-    caches.match(request).then((hit) => {
-      if (hit) return hit;
-      return fetch(request)
-        .then((response) => {
-          if (response && response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE).then((cache) => cache.put(request, copy)).catch(() => {});
-          }
-          return response;
-        })
-        .catch(() => hit);
-    })
+    (async () => {
+      const cache = await caches.open(CACHE);
+      try {
+        const fresh = await fetch(request);
+        if (fresh && fresh.ok && fresh.type === 'basic') {
+          cache.put(request, fresh.clone()).catch(() => {});
+        }
+        return fresh;
+      } catch (error) {
+        const hit = await cache.match(request);
+        if (hit) return hit;
+        if (request.mode === 'navigate') {
+          const shell = await cache.match('index.html');
+          if (shell) return shell;
+        }
+        throw error;
+      }
+    })()
   );
 });

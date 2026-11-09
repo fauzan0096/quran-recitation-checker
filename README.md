@@ -154,9 +154,16 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 
 - `install.js` + `sw.js`: app home screen par install ho jati hai aur shell (Quran
   text, page data, JS/CSS) offline cache ho jata hai.
+- Service worker **network-first** hai: naya version agli load par khud aa jata hai
+  (offline par cache se chalta hai), aur naya worker activate hote hi page ek dafa
+  reload hota hai.
 - Android/Chrome: `beforeinstallprompt` pakar kar neeche chhoti **Install** card aati
   hai, jo asli install prompt kholti hai (`appinstalled` par band ho jati hai).
 - iOS/Safari: wahi card **Share → Add to Home Screen** ke steps dikhata hai.
+- iPhone par launcher icon change karne ke baad purana icon reh sakta hai — Home
+  Screen se app **remove** kar ke dobara **Add to Home Screen** karein (iOS icon
+  cache karta hai). `apple-touch-icon-180.png` ka naam badla gaya hai taake naya
+  icon naya URL ho.
 - Settings me bhi **"Install app"** card hai (banner dismiss karne ke baad bhi).
 - Installed app ka naam **بيّن** hi dikhta hai (manifest `short_name` + `lang: ar`).
 
@@ -177,7 +184,7 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 Repo me apni image `icon-source.png` naam se upload kar dein (koi bhi size,
 PNG/JPG). Workflow `.github/workflows/icons-from-source.yml` **ek hi source** se
 saare icons bana deta hai — `icon-512.png`, `icon-192.png`,
-`icon-maskable-512.png` (icon ke apne background par padded), `apple-touch-icon.png`
+`icon-maskable-512.png` (icon ke apne background par padded), `apple-touch-icon-180.png`
 (180, iPhone), `favicon-48.png` / `favicon-32.png` / `favicon.ico`, aur
 `icon.svg` / `icon-maskable.svg` (jo wahi PNG embed karte hain). Manifest aur
 index.html pehle se inhi filenames par set hain, is liye kuch aur badalna nahi padta.

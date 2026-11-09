@@ -16,10 +16,23 @@
   let card = null;
 
   if ('serviceWorker' in navigator) {
+    let refreshing = false;
+    const hadController = Boolean(navigator.serviceWorker.controller);
+
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      // Only reload when this page was already controlled by an older worker.
+      if (!hadController || refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+
     window.addEventListener('load', () => {
-      navigator.serviceWorker.register('sw.js').catch((error) => {
-        console.warn('service worker register failed', error);
-      });
+      navigator.serviceWorker
+        .register('sw.js', { updateViaCache: 'none' })
+        .then((registration) => registration.update().catch(() => {}))
+        .catch((error) => {
+          console.warn('service worker register failed', error);
+        });
     });
   }
 
