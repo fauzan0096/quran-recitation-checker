@@ -306,6 +306,11 @@
         </div>
 
         <div class="more-grid">
+          <button type="button" class="more-card" id="more-daily">
+            <span class="more-mark">❖</span>
+            <strong data-i18n="more.daily">Roz ka Noor</strong>
+            <span data-i18n="more.dailyHint">Roz ek aya, ek hadith, ek sunnah</span>
+          </button>
           <button type="button" class="more-card" id="more-tasbeeh">
             <span class="more-mark">◉</span>
             <strong data-i18n="more.tasbeeh">Tasbeeh</strong>
@@ -322,6 +327,14 @@
             <span data-i18n="more.calendarHint">Hijri tareekh aur mahina</span>
           </button>
         </div>
+      </section>
+
+      <section id="view-daily" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-daily" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2 data-i18n="daily.heading">Roz ka Noor</h2>
+        </div>
+        <div id="daily-root"></div>
       </section>
 
       <section id="view-tasbeeh" hidden>

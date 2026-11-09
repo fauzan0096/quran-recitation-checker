@@ -1958,3 +1958,145 @@ body[data-theme='dark'] .tasbeeh-chip[data-on='1'] {
 body[data-theme='dark'] .compass {
   background: radial-gradient(circle at 50% 38%, #2a1d20, var(--card));
 }
+
+
+
+/* ---------------------------------------------------------- daily light */
+
+.daily {
+  display: grid;
+  gap: 12px;
+}
+
+.daily-card {
+  position: relative;
+  border-radius: var(--radius);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow);
+  padding: 14px;
+  background:
+    radial-gradient(420px 220px at 50% 0%, rgba(176, 122, 60, 0.16), transparent 70%),
+    var(--card);
+}
+
+.daily-card.is-ayah {
+  border-color: rgba(176, 122, 60, 0.45);
+}
+
+.daily-card.is-hadith,
+.daily-card.is-sunnah {
+  background:
+    linear-gradient(180deg, rgba(107, 34, 51, 0.06), transparent 55%),
+    var(--card);
+}
+
+.daily-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.daily-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--green-dark);
+}
+
+.daily-arabic {
+  margin: 0 0 10px;
+  font-family: var(--arabic);
+  font-size: calc(var(--aya-size) * 0.92);
+  line-height: 2.1;
+  text-align: right;
+  direction: rtl;
+  color: var(--ink);
+}
+
+.daily-text {
+  margin: 0 0 10px;
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--ink);
+}
+
+.daily-ref {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #7c5a2e;
+  background: rgba(176, 122, 60, 0.14);
+  border: 1px solid rgba(176, 122, 60, 0.4);
+  border-radius: 999px;
+  padding: 3px 10px;
+  direction: ltr;
+}
+
+.daily-list {
+  padding: 14px;
+}
+
+.daily-list summary {
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 15px;
+  list-style: none;
+}
+
+.daily-list summary::-webkit-details-marker {
+  display: none;
+}
+
+.daily-list summary::before {
+  content: '▸ ';
+  color: var(--muted);
+}
+
+.daily-list[open] summary::before {
+  content: '▾ ';
+}
+
+.daily-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px dashed var(--line);
+}
+
+.daily-row:last-of-type {
+  border-bottom: 0;
+}
+
+.daily-row-num {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: rgba(176, 122, 60, 0.16);
+  color: var(--green-dark);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.daily-row-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.daily-row-body p {
+  margin: 0 0 4px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+body[data-theme='dark'] .daily-ref {
+  color: #e7c9a8;
+  background: rgba(216, 166, 107, 0.14);
+  border-color: rgba(216, 166, 107, 0.4);
+}

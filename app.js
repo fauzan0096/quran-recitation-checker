@@ -38,6 +38,7 @@ import { runSelfTest } from './selftest.js';
 import { mountTasbeeh } from './tasbeeh.js';
 import { mountQibla } from './qibla.js';
 import { mountCalendar } from './calendar.js';
+import { mountDaily } from './daily.js';
 import { LANGUAGES, initLanguage, getLanguage, setLanguage, t } from './i18n.js';
 import {
   clearAll,
@@ -183,6 +184,7 @@ async function changeLanguage(value) {
   applyReading(false);
   renderTajweed();
   renderProgress();
+  moreViews.daily?.refresh();
   moreViews.tasbeeh?.refresh();
   moreViews.calendar?.refresh();
   moreViews.qibla?.refresh();
@@ -211,6 +213,7 @@ function cacheElements() {
     'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
     'resume-aya', 'progress-stats', 'progress-lists', 'progress-reset',
     'open-more', 'close-more', 'view-more', 'more-tasbeeh', 'more-qibla', 'more-calendar',
+    'more-daily', 'view-daily', 'close-daily', 'daily-root',
     'view-tasbeeh', 'close-tasbeeh', 'tasbeeh-root',
     'view-qibla', 'close-qibla', 'qibla-root',
     'view-calendar', 'close-calendar', 'calendar-root',
@@ -1335,13 +1338,14 @@ async function jumpToAya(surah, aya) {
 
 // ------------------------------------------------------------------ views
 
-const moreViews = { tasbeeh: null, qibla: null, calendar: null };
+const moreViews = { daily: null, tasbeeh: null, qibla: null, calendar: null };
 let moreMounted = false;
 
-/** Mount the three extra sections the first time one of them is opened. */
+/** Mount the extra sections the first time one of them is opened. */
 function mountMore() {
   if (moreMounted) return;
   moreMounted = true;
+  moreViews.daily = mountDaily(els.dailyRoot);
   moreViews.tasbeeh = mountTasbeeh(els.tasbeehRoot);
   moreViews.qibla = mountQibla(els.qiblaRoot);
   moreViews.calendar = mountCalendar(els.calendarRoot);
@@ -1353,6 +1357,7 @@ function setView(name) {
     reader: els.viewReader,
     settings: els.viewSettings,
     more: els.viewMore,
+    daily: els.viewDaily,
     tasbeeh: els.viewTasbeeh,
     qibla: els.viewQibla,
     calendar: els.viewCalendar,
@@ -1360,9 +1365,10 @@ function setView(name) {
   for (const [key, element] of Object.entries(sections)) {
     if (element) element.hidden = key !== name;
   }
-  if (name === 'more' || name === 'tasbeeh' || name === 'qibla' || name === 'calendar') {
+  if (['more', 'daily', 'tasbeeh', 'qibla', 'calendar'].includes(name)) {
     mountMore();
   }
+  if (name === 'daily') moreViews.daily?.refresh();
   if (name === 'tasbeeh') moreViews.tasbeeh?.refresh();
   if (name === 'calendar') moreViews.calendar?.refresh();
   window.scrollTo(0, 0);
@@ -1752,6 +1758,7 @@ function wireEvents() {
 
   if (els.openMore) els.openMore.addEventListener('click', () => setView('more'));
   if (els.closeMore) els.closeMore.addEventListener('click', () => setView('reader'));
+  if (els.moreDaily) els.moreDaily.addEventListener('click', () => setView('daily'));
   if (els.moreTasbeeh) els.moreTasbeeh.addEventListener('click', () => setView('tasbeeh'));
   if (els.moreQibla) els.moreQibla.addEventListener('click', () => setView('qibla'));
   if (els.moreCalendar) els.moreCalendar.addEventListener('click', () => setView('calendar'));
@@ -1763,6 +1770,7 @@ function wireEvents() {
     });
   }
   if (els.closeCalendar) els.closeCalendar.addEventListener('click', () => setView('more'));
+  if (els.closeDaily) els.closeDaily.addEventListener('click', () => setView('more'));
 }
 
 function toast(message) {

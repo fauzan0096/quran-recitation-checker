@@ -116,6 +116,26 @@ Header ke **⋯ (Mazeed)** se teen sections khulte hain — reader saaf rehta ha
   Note: chand dekhne ki bina par mahina 1 din aage/peeche ho sakta hai — app yahi
   likhti hai, andaze se "aaj Eid hai" ka dawa nahi karti.
 
+## Roz ka Noor (daily aya / hadith / sunnah)
+
+Mazeed ke sab se pehle card par **Roz ka Noor**:
+
+- **Aaj ki aya** — 60 ayaton ki list se roz badalti hai; text hamesha bundled Tanzil
+  mushaf se aata hai (kabhi retype nahi), saath reference (`Al-Baqarah 255`).
+- **Aaj ki hadith** — 30 chhoti, mashhoor ahadith (Arabic + Roman Urdu/English matlab +
+  hawala: Bukhari / Muslim / Tirmidhi waghera).
+- **Aaj ki sunnah** — 60 pyaari sunnatein, roz ek; neeche poori list khul jati hai
+  (number, matlab, hawala, aur share button).
+- **Status par lagayein** — har card ka share button ek **1080×1920 WhatsApp status**
+  image banata hai: app ke rangeen (burgundy/copper/parchment) frame me Arabic ya
+  Roman Urdu text, reference, Bayyin branding aur © line. Phone support kare to
+  seedha share sheet khulta hai, warna image download ho jati hai.
+- Roz ka item **local date** se tay hota hai, is liye din badalte hi naya content
+  aata hai.
+- **Zaroori note (app me bhi likha hai):** hadith/sunnah ke hawale kitab ki sath hain —
+  publish se pehle kisi aalim se takhreej ki tasdeeq karayein. Content
+  `daily-content.js` me hai, barhana asaan hai.
+
 ## Zubaan, splash aur khush aamdeed
 
 - Teen zubanein: **Roman Urdu**, **اردو** aur **English** — Settings → *Zubaan*, ya
