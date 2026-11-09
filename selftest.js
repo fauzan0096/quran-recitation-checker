@@ -111,6 +111,16 @@ export function runSelfTest(context = {}) {
     return 'ءامنا / آمنا / امنا / شيء = sahi';
   });
 
+  check('Do hamze wale lafz (ءأنذرتهم = أأنذرتهم)', () => {
+    const ank = alignWords(['ءَأَنذَرْتَهُمْ'], ['أأنذرتهم']);
+    assertEqual(ank.results[0].status, WORD_STATUS.CORRECT, 'ءأنذرتهم');
+    const ula = alignWords(['أُو۟لَٰٓئِكَ'], ['أولئك']);
+    assertEqual(ula.results[0].status, WORD_STATUS.CORRECT, 'أولئك');
+    const wula = alignWords(['ءُولَٰئِكَ'], ['أولئك']);
+    assertEqual(wula.results[0].status, WORD_STATUS.CORRECT, 'ءولئك');
+    return 'ءأنذرتهم / أولئك / ءولئك = sahi';
+  });
+
   check('Uthmani rasm aur aam imla barabar (الصلوة = الصلاة)', () => {
     for (const heard of ['الصلاة', 'الصلوة']) {
       const alignment = alignWords(['ٱلصَّلَوٰةَ'], [heard]);

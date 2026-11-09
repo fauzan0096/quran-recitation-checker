@@ -56,6 +56,10 @@ export function normalizeArabic(input) {
   s = s.replace(MARKS, '');
   for (const [re, to] of LETTER_MAP) s = s.replace(re, to);
   for (const [from, to] of RASM_FIXES) s = s.split(from).join(to);
+  // A hamza next to an alef often leaves two alefs behind on one side only
+  // (ءَأَنذَرْتَهُمْ is written أأنذرتهم by a reader, and recognised that way).
+  // One alef says exactly the same thing.
+  s = s.replace(/\u0627{2,}/g, ALEF);
   // Drop everything that is not an Arabic letter or a space (punctuation,
   // digits, Latin, aya markers...).
   s = s.replace(/[^\u0621-\u063A\u0641-\u064A\s]/g, ' ');
@@ -128,6 +132,13 @@ function stripPrefix(word) {
   return word;
 }
 
+// The alef a word needs to start a sentence (hamzat wasl) disappears when the
+// word is read inside a sentence, and the recogniser often leaves it out.
+function stripAlef(word) {
+  if (word.length >= 3 && word.charCodeAt(0) === 0x0627) return word.slice(1);
+  return word;
+}
+
 /**
  * Distance used for judging "close enough": the best of the plain edit
  * distance and the distance with the definite article removed on both sides.
@@ -142,6 +153,14 @@ export function compareDistance(a, b) {
   if (a2 !== a || b2 !== b) {
     const alt = levenshtein(a2, b2);
     if (alt < best) best = alt;
+  }
+  if (best > 0) {
+    const pA = stripAlef(a2);
+    const pB = stripAlef(b2);
+    if (pA !== a2 || pB !== b2) {
+      const alt = levenshtein(pA, pB);
+      if (alt < best) best = alt;
+    }
   }
   return best;
 }

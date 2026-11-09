@@ -329,7 +329,9 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   likhta hai.
 - **Hamza ki kami-beshi chalti hai:** `ءامنا` / `آمنا` / `امنا` ek hi lafz hain, aur
   `شيء` / `شي` bhi. Jo hamza akela likha ho (ء) usay hata diya jata hai; أ/إ/آ pehle
-  se alef hain.
+  se alef hain. Do hamze wale lafz bhi barabar hain — `ءَأَنذَرْتَهُمْ` = `أأنذرتهم`,
+  aur `ءُولَئِكَ` = `أولئك` (do alef ek ho jate hain, aur lafz ke shuru ka alef bhi
+  optional hai).
 - **Uthmani rasm aur aam imla barabar:** mushaf me `الصَّلَوٰة` / `الزَّكَوٰة` /
   `الحَيَوٰة` / `المِشْكَوٰة` waw ke sath likhe jate hain, jabki padhne/ASR me
   `الصلاة` / `الزكاة` / `الحياة` / `المشكاة` alef ke sath aate hain — dono ko ek hi
