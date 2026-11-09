@@ -8,7 +8,7 @@ import { AYAT, AHADITH, AYAT_MEANING, SUNNAHS } from './daily-content.js';
 import { getVerses, isLoaded } from './quran.js';
 import { surahName } from './surahs.js';
 import { shareStatus } from './status-card.js';
-import { todayHijri } from './hijri.js';
+import { hijriArabic, todayHijri } from './hijri.js';
 
 const english = () => getLanguage() === 'en';
 const meaning = (item) => (english() ? item.en : item.rm);
@@ -84,9 +84,15 @@ export function mountDaily(root, options = {}) {
     const hijri = todayHijri();
     const strip = document.createElement('div');
     strip.className = 'daily-date';
-    strip.textContent = `${now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${hijri.day} ${t(
-      `hm.${hijri.month}`
-    )} ${hijri.year}`;
+    const en = document.createElement('span');
+    en.className = 'date-en';
+    en.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const ar = document.createElement('span');
+    ar.className = 'date-ar';
+    ar.lang = 'ar';
+    ar.dir = 'rtl';
+    ar.textContent = hijriArabic(hijri);
+    strip.append(en, ar);
     root.appendChild(strip);
 
     const sheet = document.createElement('div');

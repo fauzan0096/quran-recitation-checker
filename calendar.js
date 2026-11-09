@@ -5,7 +5,7 @@
 // local moon sighting moves the month start.
 
 import { getLanguage, t } from './i18n.js';
-import { gregorianToJDN, hijriOf, hijriOffset, setHijriOffset } from './hijri.js';
+import { gregorianToJDN, hijriArabic, hijriMonthArabic, hijriOf, hijriOffset, setHijriOffset } from './hijri.js';
 
 const monthName = (month) => t(`hm.${month}`);
 const locale = () => (getLanguage() === 'ur' ? 'ur-PK-u-nu-latn' : 'en-GB');
@@ -41,7 +41,7 @@ export function mountCalendar(root) {
     sub.className = 'cal-small';
     sub.lang = 'ar';
     sub.dir = 'rtl';
-    sub.textContent = hijriText(
+    sub.textContent = hijriArabic(
       hijriOf(gregorianToJDN(today.getFullYear(), today.getMonth() + 1, today.getDate()))
     );
     card.append(big, sub);
@@ -75,8 +75,8 @@ export function mountCalendar(root) {
     });
     label.querySelector('small').textContent =
       h1.month === h2.month && h1.year === h2.year
-        ? `${monthName(h1.month)} ${h1.year}`
-        : `${monthName(h1.month)} – ${monthName(h2.month)} ${h2.year}`;
+        ? `${hijriMonthArabic(h1.month)} ${h1.year}`
+        : `${hijriMonthArabic(h1.month)} – ${hijriMonthArabic(h2.month)} ${h2.year}`;
     head.append(nav('◀', -1, t('cal.prev')), label, nav('▶', 1, t('cal.next')));
     root.appendChild(head);
 

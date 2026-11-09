@@ -1055,3 +1055,44 @@ body[data-theme='dark'] {
 .tsb-bead {
   stroke-width: 0.8;
 }
+
+/* ---- dates: English line + Arabic line */
+.home-date, .daily-date { display: grid; gap: 2px; }
+.date-en { font-size: 14px; font-weight: 600; }
+.date-ar { font-family: var(--arabic); font-size: 17px; line-height: 1.7; color: var(--gold-soft); }
+.daily-date .date-ar { color: var(--green); }
+.daily-date { text-align: center; margin-bottom: 8px; }
+.daily.is-compact .daily-date { display: none; }
+
+/* ---- Naiki: no stars — crescent dividers, plain gold labels */
+.noor-sheet .daily-card.is-ayah::before,
+.noor-sheet .daily-card.is-ayah::after { content: none !important; display: none !important; }
+.noor-sheet .daily-card + .daily-card::before {
+  content: '' !important;
+  top: -11px;
+  width: 24px;
+  height: 22px;
+  padding: 0;
+  background: #4a1622 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23f0c193' d='M15.5 3.2a9 9 0 1 0 5.3 15.9A7.4 7.4 0 0 1 15.5 3.2z'/%3E%3C/svg%3E") center / 18px no-repeat;
+}
+.noor-sheet .daily-label {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: 999px;
+  background: rgba(240, 193, 147, 0.14);
+  border: 1px solid rgba(240, 193, 147, 0.4);
+}
+.noor-sheet .daily-head { justify-content: center; }
+.noor-sheet .daily-card .daily-text { text-align: center; }
+
+/* ---- Tasbeeh: calm, like the green one */
+.tsb {
+  background:
+    radial-gradient(480px 380px at 50% 34%, rgba(176, 122, 60, 0.2), transparent 70%),
+    linear-gradient(170deg, #4d1724 0%, #34101a 55%, #240a11 100%);
+}
+.tsb-dial::before { inset: 12.5%; border: 2px solid rgba(240, 193, 147, 0.7); }
+.tsb-pointer { top: -14px; font-size: 26px; }
+.tsb-bead { fill: rgba(0, 0, 0, 0.28); stroke: rgba(240, 193, 147, 0.5); stroke-width: 1.2; }
+.tsb-bead.is-on { fill: #f0c193; stroke: #fff0d8; }
+.tsb-core { inset: 22%; }

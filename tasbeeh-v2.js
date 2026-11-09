@@ -102,7 +102,7 @@ function beep(freq, ms, gain = 0.06, delay = 0) {
   }
 }
 
-const RING_R = 92;
+const RING_R = 90;
 const BEADS = 33;
 const PRESET_TARGETS = [33, 99, 100];
 
@@ -174,14 +174,14 @@ export function mountTasbeeh(root) {
 
     // dial with bead ring
     const wrap = el('div', 'tsb-wrap');
-    wrap.appendChild(el('span', 'tsb-pointer', '▼'));
+    wrap.appendChild(el('span', 'tsb-pointer', '▽'));
     const dial = el('button', 'tsb-dial');
     dial.type = 'button';
     dial.setAttribute('aria-label', t('tasbeeh.tapHere'));
     let beads = '';
     for (let i = 0; i < BEADS; i += 1) {
-      const a = ((360 / BEADS) * i - 90) * (Math.PI / 180);
-      beads += `<circle class="tsb-bead" cx="${(100 + RING_R * Math.cos(a)).toFixed(1)}" cy="${(100 + RING_R * Math.sin(a)).toFixed(1)}" r="5.2"></circle>`;
+      const a = (-90 - (360 / BEADS) * i) * (Math.PI / 180);
+      beads += `<circle class="tsb-bead" cx="${(100 + RING_R * Math.cos(a)).toFixed(1)}" cy="${(100 + RING_R * Math.sin(a)).toFixed(1)}" r="7.4"></circle>`;
     }
     dial.innerHTML = `<svg class="tsb-svg" viewBox="0 0 200 200" aria-hidden="true">${beads}</svg>
       <span class="tsb-core"><span class="tsb-count">0</span><span class="tsb-of"></span><span class="tsb-hint"></span></span>`;

@@ -38,7 +38,7 @@ import { runSelfTest } from './selftest.js';
 import './strings-v2.js';
 import { mountTasbeeh } from './tasbeeh-v2.js';
 import { mountDuas } from './duas.js';
-import { todayHijri } from './hijri.js';
+import { hijriArabic, todayHijri } from './hijri.js';
 import { mountQibla } from './qibla.js';
 import { mountCalendar } from './calendar.js';
 import { mountDaily } from './daily.js';
@@ -161,19 +161,26 @@ function loadQuranInBackground() {
 /** Gregorian + Hijri date line on the home banner. */
 function paintHomeDate() {
   if (!els.homeDate) return;
-  const now = new Date();
-  let text = now.toLocaleDateString(getLanguage() === 'ur' ? 'ur-PK' : 'en-GB', {
+  const english = new Date().toLocaleDateString(getLanguage() === 'ur' ? 'ur-PK-u-nu-latn' : 'en-GB', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
+    year: 'numeric',
   });
+  els.homeDate.textContent = '';
+  const line1 = document.createElement('span');
+  line1.className = 'date-en';
+  line1.textContent = english;
+  const line2 = document.createElement('span');
+  line2.className = 'date-ar';
+  line2.lang = 'ar';
+  line2.dir = 'rtl';
   try {
-    const hijri = todayHijri();
-    text += ` · ${hijri.day} ${t(`hm.${hijri.month}`)} ${hijri.year}`;
+    line2.textContent = hijriArabic(todayHijri());
   } catch (error) {
-    /* date line is optional */
+    /* optional */
   }
-  els.homeDate.textContent = text;
+  els.homeDate.append(line1, line2);
 }
 
 // ---------------------------------------------------------------- boot UIs

@@ -134,3 +134,14 @@ export function distanceToKaaba(lat, lon) {
     Math.cos(toRad(lat)) * Math.cos(toRad(KAABA.lat)) * Math.sin(dLon / 2) ** 2;
   return Math.round(2 * 6371 * Math.asin(Math.min(1, Math.sqrt(a))));
 }
+
+const AR_MONTHS = ['المحرم', 'صفر', 'ربيع الأول', 'ربيع الآخر', 'جمادى الأولى', 'جمادى الآخرة', 'رجب', 'شعبان', 'رمضان', 'شوال', 'ذو القعدة', 'ذو الحجة'];
+const arDigits = (value) => String(value).replace(/\d/g, (d) => '٠١٢٣٤٥٦٧٨٩'[d]);
+
+/** Hijri date in Arabic script, e.g. ٢٨ جمادى الأولى ١٤٤٨ هـ */
+export function hijriArabic(h) {
+  return arDigits(`${h.day} ${AR_MONTHS[h.month - 1]} ${h.year} هـ`);
+}
+export function hijriMonthArabic(month) {
+  return AR_MONTHS[month - 1];
+}
