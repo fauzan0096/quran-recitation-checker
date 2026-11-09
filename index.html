@@ -41,12 +41,17 @@
           </p>
         </div>
       </div>
-      <button type="button" id="toggle-theme" class="icon-btn" aria-label="Night mode" title="Night mode">
-        🌙
-      </button>
-      <button type="button" id="open-settings" class="icon-btn" aria-label="Settings" title="Settings">
-        ⚙
-      </button>
+      <div class="app-tools">
+        <button type="button" id="open-more" class="icon-btn" aria-label="Mazeed" title="Mazeed">
+          ⋯
+        </button>
+        <button type="button" id="toggle-theme" class="icon-btn" aria-label="Night mode" title="Night mode">
+          🌙
+        </button>
+        <button type="button" id="open-settings" class="icon-btn" aria-label="Settings" title="Settings">
+          ⚙
+        </button>
+      </div>
     </header>
 
     <main>
@@ -292,6 +297,55 @@
           <span data-i18n="copyright.rights">All rights reserved.</span> ·
           <a href="privacy.html" data-i18n="privacy.link">Privacy policy</a>
         </p>
+      </section>
+
+      <section id="view-more" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-more" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2 data-i18n="more.heading">Mazeed</h2>
+        </div>
+
+        <div class="more-grid">
+          <button type="button" class="more-card" id="more-tasbeeh">
+            <span class="more-mark">◉</span>
+            <strong data-i18n="more.tasbeeh">Tasbeeh</strong>
+            <span data-i18n="more.tasbeehHint">Zikr ginein, round aur daily total</span>
+          </button>
+          <button type="button" class="more-card" id="more-qibla">
+            <span class="more-mark">⌖</span>
+            <strong data-i18n="more.qibla">Qibla</strong>
+            <span data-i18n="more.qiblaHint">Kaaba ki simt, compass ke sath</span>
+          </button>
+          <button type="button" class="more-card" id="more-calendar">
+            <span class="more-mark">▤</span>
+            <strong data-i18n="more.calendar">Islami calendar</strong>
+            <span data-i18n="more.calendarHint">Hijri tareekh aur mahina</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="view-tasbeeh" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-tasbeeh" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2 data-i18n="tasbeeh.heading">Tasbeeh</h2>
+        </div>
+        <div id="tasbeeh-root"></div>
+      </section>
+
+      <section id="view-qibla" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-qibla" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2 data-i18n="qibla.heading">Qibla</h2>
+        </div>
+        <div id="qibla-root"></div>
+      </section>
+
+      <section id="view-calendar" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-calendar" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2 data-i18n="cal.heading">Islami calendar</h2>
+        </div>
+        <div id="calendar-root"></div>
       </section>
     </main>
 

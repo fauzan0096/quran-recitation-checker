@@ -95,6 +95,27 @@ on-device.
 - Sab kuch sirf is device par (localStorage) — koi account nahi, koi server nahi.
 - Mushaf page par kisi aya ko select karein to usi bar me ★ aur ✓/↺ bhi mil jate hain.
 
+## Tasbeeh, Qibla aur Islami calendar
+
+Header ke **⋯ (Mazeed)** se teen sections khulte hain — reader saaf rehta hai:
+
+- **Tasbeeh**: 6 zikr presets (SubhanAllah 33, Alhamdulillah 33, Allahu Akbar 34,
+  tahlil / istighfar / darood 100). Bade gol button par tap = ginti +1, gol ring
+  bharta hai, target poora hone par halka vibrate. Neeche **round**, **aaj ka
+  total** aur **kul total**. Sab kuch `localStorage['tc.tasbeeh']` me; naya din
+  aane par aaj ka count khud zero ho jata hai, lifetime total rehta hai.
+- **Qibla**: button dabane par location + compass ki ijazat mangi jati hai, phir
+  Kaaba ka rukh (**degrees uttar se**) aur **Makkah se doori** dikhti hai. Dial
+  phone ke ghumne ke sath ghumta hai aur align hone par sunhara ho jata hai.
+  iPhone par compass ki ijazat sirf usi tap se milti hai (iOS ka rule), aur agar
+  phone me compass na ho to sirf bearing + instructions dikhte hain — jhoota
+  compass nahi.
+- **Islami calendar**: hisabi (tabular) Hijri calendar — aaj ki Hijri aur
+  Gregorian tareekh, poore mahine ka grid (bada Hijri din, chhota Gregorian din),
+  Jumma ka din alag rang, aur mahina aage/peeche karne ke buttons.
+  Note: chand dekhne ki bina par mahina 1 din aage/peeche ho sakta hai — app yahi
+  likhti hai, andaze se "aaj Eid hai" ka dawa nahi karti.
+
 ## Zubaan, splash aur khush aamdeed
 
 - Teen zubanein: **Roman Urdu**, **اردو** aur **English** — Settings → *Zubaan*, ya

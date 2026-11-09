@@ -35,6 +35,9 @@ import {
   libraryVersion,
 } from './asr.js';
 import { runSelfTest } from './selftest.js';
+import { mountTasbeeh } from './tasbeeh.js';
+import { mountQibla } from './qibla.js';
+import { mountCalendar } from './calendar.js';
 import { LANGUAGES, initLanguage, getLanguage, setLanguage, t } from './i18n.js';
 import {
   clearAll,
@@ -180,6 +183,9 @@ async function changeLanguage(value) {
   applyReading(false);
   renderTajweed();
   renderProgress();
+  moreViews.tasbeeh?.refresh();
+  moreViews.calendar?.refresh();
+  moreViews.qibla?.refresh();
   if (!isLoaded()) return;
   if (state.mode === 'search') {
     els.listTitle.textContent = t('list.searchTitle');
@@ -204,6 +210,10 @@ function cacheElements() {
     'test-results', 'toast',
     'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
     'resume-aya', 'progress-stats', 'progress-lists', 'progress-reset',
+    'open-more', 'close-more', 'view-more', 'more-tasbeeh', 'more-qibla', 'more-calendar',
+    'view-tasbeeh', 'close-tasbeeh', 'tasbeeh-root',
+    'view-qibla', 'close-qibla', 'qibla-root',
+    'view-calendar', 'close-calendar', 'calendar-root',
   ];
   for (const id of ids) {
     const name = id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -1325,9 +1335,41 @@ async function jumpToAya(surah, aya) {
 
 // ------------------------------------------------------------------ views
 
+const moreViews = { tasbeeh: null, qibla: null, calendar: null };
+let moreMounted = false;
+
+/** Mount the three extra sections the first time one of them is opened. */
+function mountMore() {
+  if (moreMounted) return;
+  moreMounted = true;
+  moreViews.tasbeeh = mountTasbeeh(els.tasbeehRoot);
+  moreViews.qibla = mountQibla(els.qiblaRoot);
+  moreViews.calendar = mountCalendar(els.calendarRoot);
+}
+
+/** Show exactly one section, and keep the extra ones fresh. */
+function setView(name) {
+  const sections = {
+    reader: els.viewReader,
+    settings: els.viewSettings,
+    more: els.viewMore,
+    tasbeeh: els.viewTasbeeh,
+    qibla: els.viewQibla,
+    calendar: els.viewCalendar,
+  };
+  for (const [key, element] of Object.entries(sections)) {
+    if (element) element.hidden = key !== name;
+  }
+  if (name === 'more' || name === 'tasbeeh' || name === 'qibla' || name === 'calendar') {
+    mountMore();
+  }
+  if (name === 'tasbeeh') moreViews.tasbeeh?.refresh();
+  if (name === 'calendar') moreViews.calendar?.refresh();
+  window.scrollTo(0, 0);
+}
+
 function openSettings() {
-  els.viewReader.hidden = true;
-  els.viewSettings.hidden = false;
+  setView('settings');
   if (els.modelStatus && !els.modelStatus.textContent) {
     els.modelStatus.textContent = t('model.status');
   }
@@ -1336,8 +1378,7 @@ function openSettings() {
 }
 
 function closeSettings() {
-  els.viewSettings.hidden = true;
-  els.viewReader.hidden = false;
+  setView('reader');
 }
 
 // --------------------------------------------------------------- progress
@@ -1708,6 +1749,20 @@ function wireEvents() {
       toast(t('progress.cleared'));
     });
   }
+
+  if (els.openMore) els.openMore.addEventListener('click', () => setView('more'));
+  if (els.closeMore) els.closeMore.addEventListener('click', () => setView('reader'));
+  if (els.moreTasbeeh) els.moreTasbeeh.addEventListener('click', () => setView('tasbeeh'));
+  if (els.moreQibla) els.moreQibla.addEventListener('click', () => setView('qibla'));
+  if (els.moreCalendar) els.moreCalendar.addEventListener('click', () => setView('calendar'));
+  if (els.closeTasbeeh) els.closeTasbeeh.addEventListener('click', () => setView('more'));
+  if (els.closeQibla) {
+    els.closeQibla.addEventListener('click', () => {
+      moreViews.qibla?.stop();
+      setView('more');
+    });
+  }
+  if (els.closeCalendar) els.closeCalendar.addEventListener('click', () => setView('more'));
 }
 
 function toast(message) {
