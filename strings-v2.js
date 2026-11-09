@@ -5,6 +5,12 @@
 import { addStrings } from './i18n.js';
 
 addStrings('roman', {
+  'more.khatam': 'Khatam plan',
+  'more.khatamHint': 'Roz ka hissa aur yaad dehani',
+  'more.hifz': 'Hifz plan',
+  'more.hifzHint': 'Kitne din mein yaad hoga',
+  'home.mushafHint': 'Surah, safha aur talash — sab yahin',
+  'home.todo': 'Aaj baaki hai',
   'tasbeeh.afterNamaz': 'Namaz ke baad: SubhanAllah 33 • Alhamdulillah 33 • Allahu Akbar 34',
   'daily.heading': 'Roz ki Naiki',
   'more.daily': 'Roz ki Naiki',
@@ -15,7 +21,7 @@ addStrings('roman', {
   'daily.shareAll': 'Share karein',
   'more.dailyHint': 'Ayat, hadith aur sunnah — ek hi page',
   'nav.home': 'Home',
-  'nav.quran': 'Quran',
+  'nav.quran': 'Mushaf',
   'nav.dua': 'Duaein',
   'nav.tasbeeh': 'Tasbeeh',
   'home.salam': 'السَّلَامُ عَلَيْكُمْ',
@@ -63,6 +69,12 @@ addStrings('roman', {
 });
 
 addStrings('ur', {
+  'more.khatam': 'ختم پلان',
+  'more.khatamHint': 'روز کا حصہ اور یاد دہانی',
+  'more.hifz': 'حفظ پلان',
+  'more.hifzHint': 'کتنے دن میں یاد ہوگا',
+  'home.mushafHint': 'سورۃ، صفحہ اور تلاش — سب یہیں',
+  'home.todo': 'آج باقی ہے',
   'tasbeeh.afterNamaz': 'نماز کے بعد: سبحان اللہ 33 • الحمد للہ 33 • اللہ اکبر 34',
   'daily.heading': 'روز کی نیکی',
   'more.daily': 'روز کی نیکی',
@@ -73,7 +85,7 @@ addStrings('ur', {
   'daily.shareAll': 'شیئر کریں',
   'more.dailyHint': 'آیت، حدیث اور سنت — ایک ہی صفحہ',
   'nav.home': 'ہوم',
-  'nav.quran': 'قرآن',
+  'nav.quran': 'مصحف',
   'nav.dua': 'دعائیں',
   'nav.tasbeeh': 'تسبیح',
   'home.salam': 'السَّلَامُ عَلَيْكُمْ',
@@ -121,6 +133,12 @@ addStrings('ur', {
 });
 
 addStrings('en', {
+  'more.khatam': 'Khatam plan',
+  'more.khatamHint': 'Daily portion and reminders',
+  'more.hifz': 'Hifz plan',
+  'more.hifzHint': 'How many days to memorise',
+  'home.mushafHint': 'Surah, page and search — all here',
+  'home.todo': 'Left for today',
   'tasbeeh.afterNamaz': 'After prayer: SubhanAllah 33 • Alhamdulillah 33 • Allahu Akbar 34',
   'daily.heading': 'Daily Good Deed',
   'more.daily': 'Daily Good Deed',
@@ -131,7 +149,7 @@ addStrings('en', {
   'daily.shareAll': 'Share',
   'more.dailyHint': 'Ayah, hadith and sunnah — one page',
   'nav.home': 'Home',
-  'nav.quran': 'Quran',
+  'nav.quran': 'Mushaf',
   'nav.dua': 'Duas',
   'nav.tasbeeh': 'Tasbeeh',
   'home.salam': 'السَّلَامُ عَلَيْكُمْ',

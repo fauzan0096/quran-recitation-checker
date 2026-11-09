@@ -38,6 +38,7 @@ import { runSelfTest } from './selftest.js';
 import './strings-v2.js';
 import { mountTasbeeh } from './tasbeeh-v2.js';
 import { mountDuas } from './duas.js';
+import { mountHifz, mountKhatam, pendingToday, startReminderLoop } from './planners.js';
 import { hijriArabic, todayHijri } from './hijri.js';
 import { mountQibla } from './qibla.js';
 import { mountCalendar } from './calendar.js';
@@ -111,6 +112,8 @@ const moreViews = {
   qibla: null,
   calendar: null,
   duas: null,
+  khatam: null,
+  hifz: null,
 };
 
 init();
@@ -133,6 +136,7 @@ async function init() {
   hideSplash();
   maybeWelcome();
   loadQuranInBackground();
+  startReminderLoop();
 }
 
 /** Quran text + page data load after first paint; the reader fills in when they arrive. */
@@ -265,7 +269,8 @@ function cacheElements() {
     'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
     'resume-aya', 'progress-stats', 'progress-lists', 'progress-reset',
     'view-home', 'more-tasbeeh', 'more-qibla', 'more-calendar',
-    'home-surah', 'home-mushaf', 'home-search', 'home-dua', 'home-open-quran',
+    'home-mushaf', 'home-dua', 'home-open-quran', 'home-todo', 'more-khatam', 'more-hifz',
+    'view-khatam', 'view-hifz', 'khatam-root', 'hifz-root', 'close-khatam', 'close-hifz',
     'home-date', 'home-noor', 'view-dua', 'close-dua', 'dua-root', 'bottom-nav',
     'more-daily', 'view-daily', 'close-daily', 'daily-root',
     'view-tasbeeh', 'close-tasbeeh', 'tasbeeh-root',
@@ -1402,6 +1407,8 @@ function ensureMounted(name) {
   else if (name === 'qibla') moreViews.qibla = mountQibla(els.qiblaRoot);
   else if (name === 'calendar') moreViews.calendar = mountCalendar(els.calendarRoot);
   else if (name === 'duas') moreViews.duas = mountDuas(els.duaRoot);
+  else if (name === 'khatam') moreViews.khatam = mountKhatam(els.khatamRoot);
+  else if (name === 'hifz') moreViews.hifz = mountHifz(els.hifzRoot);
 }
 
 /** Show exactly one section, keep the bottom bar in step, and stop what is not on screen. */
@@ -1415,6 +1422,8 @@ function setView(name) {
     tasbeeh: els.viewTasbeeh,
     qibla: els.viewQibla,
     calendar: els.viewCalendar,
+    khatam: els.viewKhatam,
+    hifz: els.viewHifz,
   };
   if (currentView === 'qibla' && name !== 'qibla') moreViews.qibla?.stop();
   if (currentView === 'tasbeeh' && name !== 'tasbeeh') moreViews.tasbeeh?.stop();
@@ -1431,6 +1440,11 @@ function setView(name) {
   if (name === 'qibla') ensureMounted('qibla');
   if (name === 'calendar') ensureMounted('calendar');
   if (name === 'dua') ensureMounted('duas');
+  if (name === 'khatam') ensureMounted('khatam');
+  if (name === 'hifz') ensureMounted('hifz');
+  if (name === 'khatam') moreViews.khatam?.refresh();
+  if (name === 'hifz') moreViews.hifz?.refresh();
+  if (name === 'home') paintHomeTodo();
   if (name === 'daily') moreViews.daily?.refresh();
   if (name === 'tasbeeh') moreViews.tasbeeh?.refresh();
   if (name === 'calendar') moreViews.calendar?.refresh();
@@ -1725,6 +1739,36 @@ function setMode(mode) {
   showList();
 }
 
+/** "Aaj baaki hai" cards on Home (Khatam / Hifz). */
+function paintHomeTodo() {
+  if (!els.homeTodo) return;
+  els.homeTodo.textContent = '';
+  for (const item of pendingToday()) {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'todo-item';
+    row.innerHTML = '<span class="todo-dot"></span><span class="todo-text"></span><span aria-hidden="true">›</span>';
+    row.querySelector('.todo-text').textContent = item.text;
+    row.addEventListener('click', () => setView(item.view));
+    els.homeTodo.appendChild(row);
+  }
+}
+
+window.addEventListener('bayyin:planner', paintHomeTodo);
+window.addEventListener('bayyin:open', async (event) => {
+  const detail = event.detail || {};
+  setView('reader');
+  await loadQuranInBackground();
+  if (detail.page) {
+    state.mode = 'page';
+    state.page = clamp(detail.page, 1, pageMax());
+    applyMode();
+    await showList();
+  } else if (detail.surah) {
+    await jumpToAya(detail.surah, detail.aya || 1);
+  }
+});
+
 function wireEvents() {
   els.openSettings.addEventListener('click', openSettings);
   els.closeSettings.addEventListener('click', closeSettings);
@@ -1835,9 +1879,9 @@ function wireEvents() {
       if (mode) setMode(mode);
     });
   };
-  go(els.homeSurah, 'reader', 'surah');
-  go(els.homeMushaf, 'reader', 'page');
-  go(els.homeSearch, 'reader', 'search');
+  go(els.homeMushaf, 'reader');
+  go(els.moreKhatam, 'khatam');
+  go(els.moreHifz, 'hifz');
   go(els.homeOpenQuran, 'reader');
   go(els.homeDua, 'dua');
   go(els.moreDaily, 'daily');
@@ -1850,6 +1894,8 @@ function wireEvents() {
     els.closeCalendar,
     els.closeDaily,
     els.closeDua,
+    els.closeKhatam,
+    els.closeHifz,
   ]) {
     go(closer, 'home');
   }

@@ -1096,3 +1096,48 @@ body[data-theme='dark'] {
 .tsb-bead { fill: rgba(0, 0, 0, 0.28); stroke: rgba(240, 193, 147, 0.5); stroke-width: 1.2; }
 .tsb-bead.is-on { fill: #f0c193; stroke: #fff0d8; }
 .tsb-core { inset: 22%; }
+
+/* ---- Home "baaki hai" + planners */
+.todo-item { width: 100%; display: flex; align-items: center; gap: 10px; margin: 0 0 8px; padding: 12px 14px; font: inherit; font-weight: 600; text-align: start; color: var(--ink); background: var(--card); border: 1px solid rgba(176,122,60,.55); border-inline-start: 5px solid var(--gold); border-radius: 14px; cursor: pointer; box-shadow: var(--shadow); }
+.todo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px rgba(176,122,60,.25); }
+.todo-text { flex: 1; font-size: 14px; }
+.pro-badge { font-style: normal; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; color: #3a1119; background: linear-gradient(180deg,#f6d4a8,#d8a66b); vertical-align: middle; }
+.planner { display: grid; gap: 12px; }
+.pl-card { display: grid; gap: 10px; padding: 16px; border-radius: 20px; background: var(--card); border: 1px solid var(--line); border-top: 4px solid var(--gold); box-shadow: var(--shadow); }
+.pl-card h3 { margin: 0; font-size: 18px; color: var(--green-dark); }
+.pl-card h4 { margin: 6px 0 0; font-size: 13.5px; color: var(--green); }
+.pl-top { grid-template-columns: auto 1fr; align-items: center; gap: 16px; background: linear-gradient(165deg,#5a1b2a,#3a111b); color: #fff6eb; border-color: rgba(240,193,147,.5); }
+.pl-side { display: grid; gap: 4px; }
+.pl-side strong { font-size: 18px; line-height: 1.4; color: #fff6eb; }
+.pl-lab { font-size: 12.5px; color: #f0c193; }
+.pl-ring { position: relative; width: 112px; height: 112px; }
+.pl-ring svg { width: 100%; height: 100%; }
+.pl-ring-bg { fill: none; stroke: rgba(240,193,147,.2); stroke-width: 9; }
+.pl-ring-fg { fill: none; stroke: #f0c193; stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset .4s ease; }
+.pl-ring-t { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
+.pl-ring-t strong { font-size: 24px; color: #fff6eb; }
+.pl-ring-t span { font-size: 11px; color: rgba(255,246,235,.7); }
+.pl-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.pl-quick .dua-chip small { opacity: .75; }
+.pl-result { display: grid; gap: 2px; padding: 12px 14px; border-radius: 14px; background: rgba(176,122,60,.14); border: 1px dashed rgba(176,122,60,.55); }
+.pl-result strong { font-size: 22px; color: var(--green-dark); }
+.pl-result span { font-size: 13px; color: var(--muted); }
+.pl-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.pl-row label { flex: 1; font-size: 13.5px; font-weight: 600; }
+.pl-num, .pl-select, .pl-time { font: inherit; font-size: 16px; padding: 9px 10px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); }
+.pl-num { width: 90px; }
+.pl-select { flex: 1; min-width: 0; }
+.pl-check { font-size: 13.5px; }
+.pl-stepper { display: flex; align-items: center; gap: 14px; }
+.pl-step { width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line); background: var(--card); color: var(--green); font-size: 22px; font-weight: 700; cursor: pointer; }
+.pl-step-v { min-width: 36px; text-align: center; font-size: 24px; color: var(--green-dark); }
+.pl-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.pl-actions .btn { flex: 1 1 auto; }
+.btn.gold { color: #3a1119; border: 0; background: linear-gradient(180deg,#f6d4a8,#d8a66b); }
+.pl-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+.pl-stats > div { display: grid; justify-items: center; gap: 2px; padding: 12px 4px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); }
+.pl-stats strong { font-size: 22px; color: var(--green-dark); }
+.pl-stats span { font-size: 11.5px; color: var(--muted); text-align: center; }
+.pl-text { padding: 14px; border-radius: 16px; font-family: var(--arabic); font-size: calc(var(--aya-size) * .95); line-height: 2.2; background: linear-gradient(180deg,rgba(176,122,60,.16),rgba(176,122,60,.04)); border: 1px solid rgba(176,122,60,.35); }
+.pl-line { margin: 0; padding: 8px 12px; border-radius: 10px; background: rgba(107,34,51,.07); font-size: 14px; }
+.pl-remind { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }

@@ -32,7 +32,9 @@
           <path class="ai-accent" d="M16 4l1.3 3.1 3.1 1.3-3.1 1.3L16 12.8l-1.3-3.1L11.6 8.4l3.1-1.3z" />
           <path class="ai-accent" d="M7.4 9.2l.9 1.8M24.6 9.2l-.9 1.8" />
         </symbol>
-        <symbol id="i-daily" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <symbol id="i-khatam" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="11"/><path d="M10.5 16.5l3.8 3.8 7.2-8"/></g></symbol>
+    <symbol id="i-hifz" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6v20M16 8c-3-2.4-7-2.6-10-1.4v16c3-1.2 7-1 10 1.4M16 8c3-2.4 7-2.6 10-1.4v16c-3-1.2-7-1-10 1.4"/><path d="M9 12.5h3.5M9 16.5h3.5M19.5 12.5H23M19.5 16.5H23"/></g></symbol>
+    <symbol id="i-daily" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
           <path d="M16 13.4c-2.7-1.9-6.2-2.6-9.8-2v14.2c3.6-.5 7.1.2 9.8 2 2.7-1.8 6.2-2.5 9.8-2V11.4c-3.6-.6-7.1.1-9.8 2z" />
           <path d="M16 13.4v14.2" />
           <path class="ai-accent" d="M16 8.6V4.2M10.4 7.6L8.6 4.6M21.6 7.6l1.8-3" />
@@ -378,23 +380,17 @@
           </button>
         </div>
 
+        <div id="home-todo"></div>
+
         <h2 class="home-h" data-i18n="home.all">Sab kuch yahin</h2>
         <div class="more-grid home-grid">
-          <button type="button" class="more-card" id="home-surah">
-            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-surah" /></svg></span>
-            <strong data-i18n="tab.surah">Surah</strong>
-            <span data-i18n="home.surahHint">Aya-ba-aya padhein</span>
-          </button>
+          
           <button type="button" class="more-card" id="home-mushaf">
             <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-mushaf" /></svg></span>
-            <strong data-i18n="tab.mushaf">Mushaf</strong>
+            <strong data-i18n="nav.quran">Mushaf</strong>
             <span data-i18n="home.mushafHint">Safha ba-safha mushaf</span>
           </button>
-          <button type="button" class="more-card" id="home-search">
-            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-search" /></svg></span>
-            <strong data-i18n="tab.search">Talash</strong>
-            <span data-i18n="home.searchHint">Lafz, aya ya juz se</span>
-          </button>
+          
           <button type="button" class="more-card" id="home-dua">
             <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-dua" /></svg></span>
             <strong data-i18n="more.dua">Duaein</strong>
@@ -409,6 +405,16 @@
             <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-daily" /></svg></span>
             <strong data-i18n="more.daily">Roz ka Noor</strong>
             <span data-i18n="more.dailyHint">Roz ek aya, ek hadith, ek sunnah</span>
+          </button>
+          <button type="button" class="more-card" id="more-khatam">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-khatam" /></svg></span>
+            <strong data-i18n="more.khatam">Khatam plan</strong>
+            <span data-i18n="more.khatamHint">Roz ka hissa aur yaad dehani</span>
+          </button>
+          <button type="button" class="more-card" id="more-hifz">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-hifz" /></svg></span>
+            <strong><span data-i18n="more.hifz">Hifz plan</span> <em class="pro-badge">Premium</em></strong>
+            <span data-i18n="more.hifzHint">Kitne din mein yaad hoga</span>
           </button>
           <button type="button" class="more-card" id="more-qibla">
             <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
@@ -437,6 +443,22 @@
           </h2>
         </div>
         <div id="dua-root"></div>
+      </section>
+
+      <section id="view-khatam" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-khatam" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2><span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-khatam" /></svg></span><span data-i18n="more.khatam">Khatam plan</span></h2>
+        </div>
+        <div id="khatam-root"></div>
+      </section>
+
+      <section id="view-hifz" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-hifz" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2><span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-hifz" /></svg></span><span data-i18n="more.hifz">Hifz plan</span> <em class="pro-badge">Premium</em></h2>
+        </div>
+        <div id="hifz-root"></div>
       </section>
 
       <section id="view-daily" hidden>

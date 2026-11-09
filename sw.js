@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / model / Quran.com requests are left to the network.
 
-const CACHE = 'bayyin-v19';
+const CACHE = 'bayyin-v20';
 
 const SHELL = [
   './',
@@ -27,6 +27,8 @@ const SHELL = [
   'tasbeeh-v2.js',
   'duas.js',
   'duas-data.js',
+  'planners.js',
+  'premium.js',
   'qibla.js',
   'calendar.js',
   'asr.js',
@@ -115,5 +117,15 @@ self.addEventListener('fetch', (event) => {
       }
       return Response.error();
     })()
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
+      for (const client of list) if ('focus' in client) return client.focus();
+      return self.clients.openWindow('./');
+    })
   );
 });
