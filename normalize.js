@@ -27,8 +27,20 @@ const LETTER_MAP = [
   [/\u0624/g, WAW], // ؤ
   [/\u0626/g, YEH], // ئ
   [/\u0629/g, HEH], // ة
+  [/\u0621/g, ''], // ء — hamza on its own is often simply omitted: ءامنا / آمنا / امنا
   [/\u06A9/g, '\u0643'], // Persian kaf
   [/[\u06BE\u06C1\u06D5]/g, HEH], // heh variants
+];
+
+// Uthmani rasm writes a long ā with a waw in a handful of words (الصَّلَوٰةُ,
+// الزَّكَوٰةُ, الحَيَوٰةُ, المِشْكَوٰةُ) where a modern reader and every speech
+// recogniser writes an alef. Both sides are pulled to the alef form here, after
+// the letters above have already turned ة into ه.
+const RASM_FIXES = [
+  ['صلوه', 'صلاه'],
+  ['زكوه', 'زكاه'],
+  ['حيوه', 'حياه'],
+  ['مشكوه', 'مشكاه'],
 ];
 
 /**
@@ -43,6 +55,7 @@ export function normalizeArabic(input) {
   s = s.replace(/\u0640/g, ''); // tatweel
   s = s.replace(MARKS, '');
   for (const [re, to] of LETTER_MAP) s = s.replace(re, to);
+  for (const [from, to] of RASM_FIXES) s = s.split(from).join(to);
   // Drop everything that is not an Arabic letter or a space (punctuation,
   // digits, Latin, aya markers...).
   s = s.replace(/[^\u0621-\u063A\u0641-\u064A\s]/g, ' ');

@@ -327,6 +327,13 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   Aise lafz **"qareeb"** dikhte hain, **"sahi" nahi** — taake ghalti chhupe na.
 - **"ال" aur ek-harf prefix** (و/ف/ب/ل/ك) ki kami-beshi chalti hai, kyunki ASR aise hi
   likhta hai.
+- **Hamza ki kami-beshi chalti hai:** `ءامنا` / `آمنا` / `امنا` ek hi lafz hain, aur
+  `شيء` / `شي` bhi. Jo hamza akela likha ho (ء) usay hata diya jata hai; أ/إ/آ pehle
+  se alef hain.
+- **Uthmani rasm aur aam imla barabar:** mushaf me `الصَّلَوٰة` / `الزَّكَوٰة` /
+  `الحَيَوٰة` / `المِشْكَوٰة` waw ke sath likhe jate hain, jabki padhne/ASR me
+  `الصلاة` / `الزكاة` / `الحياة` / `المشكاة` alef ke sath aate hain — dono ko ek hi
+  shakl me badal diya jata hai, warna sahi padhne par bhi ghalti dikhti thi.
 - **Lambe lafz** (8+ harf) par ek extra chhot (2 ki jagah 3 edits tak) bhi "qareeb".
 - **Kharab audio ki pehchan:** agar ASR ne poore text ka 30% se kam suna, to app
   "aawaz saaf nahi thi — dobara padhein" kehti hai, har lafz "chhoot gaya" nahi.
