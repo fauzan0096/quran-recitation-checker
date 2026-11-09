@@ -6,6 +6,7 @@ import { ayaCount } from './quran.js';
 
 let pages = null;
 let index = new Map();
+let juzs = [];
 
 export async function loadPages(url = 'quran-pages.xml') {
   const response = await fetch(url);
@@ -22,7 +23,45 @@ export async function loadPages(url = 'quran-pages.xml') {
   list.sort((a, b) => a.page - b.page);
   pages = list;
   index = new Map(list.map((entry, i) => [entry.page, { ...entry, i }]));
+
+  const juzList = [];
+  doc.querySelectorAll('juzs > juz').forEach((element) => {
+    const juz = Number(element.getAttribute('index'));
+    const surah = Number(element.getAttribute('sura'));
+    const aya = Number(element.getAttribute('aya'));
+    if (juz && surah && aya) juzList.push({ juz, surah, aya });
+  });
+  juzs = juzList.sort((a, b) => a.juz - b.juz);
+
   return list;
+}
+
+export function juzTotal() {
+  return juzs.length;
+}
+
+/** Ayaat of one juz (1..30), as [{surah, aya}]. */
+export function juzAyahs(juzNumber) {
+  const i = juzs.findIndex((entry) => entry.juz === Number(juzNumber));
+  if (i < 0) return [];
+  const start = juzs[i];
+  const after = juzs[i + 1];
+  const out = [];
+  let surah = start.surah;
+  let aya = start.aya;
+  for (let guard = 0; guard < 7000; guard += 1) {
+    if (after && (surah > after.surah || (surah === after.surah && aya >= after.aya))) break;
+    out.push({ surah, aya });
+    const total = Math.max(1, ayaCount(surah));
+    if (aya >= total) {
+      surah += 1;
+      aya = 1;
+      if (surah > 114) break;
+    } else {
+      aya += 1;
+    }
+  }
+  return out;
 }
 
 export function pageTotal() {

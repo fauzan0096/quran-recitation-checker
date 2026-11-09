@@ -41,7 +41,8 @@
       <section id="view-reader">
         <div class="tabs" role="tablist">
           <button type="button" id="tab-surah" class="tab is-active" data-mode="surah">Surah</button>
-          <button type="button" id="tab-page" class="tab" data-mode="page">Mushaf page</button>
+          <button type="button" id="tab-page" class="tab" data-mode="page">Mushaf</button>
+          <button type="button" id="tab-search" class="tab" data-mode="search">Search</button>
         </div>
 
         <div class="picker" id="picker-surah">
@@ -52,13 +53,28 @@
         </div>
 
         <div class="picker" id="picker-page" hidden>
+          <label class="field small">
+            <span>Mushaf</span>
+            <select id="mushaf-select">
+              <option value="madani">Madani (604 pages)</option>
+              <option value="indopak">IndoPak (610 pages)</option>
+            </select>
+          </label>
           <button type="button" id="page-prev" class="btn ghost small">◀</button>
           <label class="field small">
             <span>Page</span>
-            <input id="page-number" type="number" min="1" max="604" step="1" value="1" inputmode="numeric" />
+            <input id="page-number" type="number" min="1" max="610" step="1" value="1" inputmode="numeric" />
           </label>
           <button type="button" id="page-next" class="btn ghost small">▶</button>
           <span id="page-total" class="hint"></span>
+        </div>
+
+        <div class="picker" id="picker-search" hidden>
+          <label class="field">
+            <span>Talash — lafz, aya (2:255) ya juz (5)</span>
+            <input id="search-input" type="search" inputmode="search" placeholder="رحمن  ·  2:255  ·  5" />
+          </label>
+          <button type="button" id="search-go" class="btn">Dhoondein</button>
         </div>
 
         <div class="toolbar">
@@ -80,6 +96,7 @@
         <p id="range-error" class="error" hidden></p>
 
         <div id="aya-list" class="aya-list"></div>
+        <div id="search-results" class="search-results" hidden></div>
 
         <div id="list-footer" class="list-footer" hidden>
           <button type="button" id="load-more" class="btn ghost">Aur ayaat dikhayein</button>
