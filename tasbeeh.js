@@ -70,7 +70,6 @@ export function mountTasbeeh(root) {
     const preset = PRESETS.find((item) => item.id === store.preset) || PRESETS[0];
     const count = countOf(store, preset);
     const round = Math.floor(count / preset.target);
-    const progress = (count % preset.target) / preset.target;
 
     root.innerHTML = '';
     root.className = 'tasbeeh';
@@ -108,19 +107,32 @@ export function mountTasbeeh(root) {
     big.className = 'tasbeeh-big';
     big.setAttribute('aria-label', t('tasbeeh.tap'));
 
-    const circumference = 2 * Math.PI * 88;
+    const beadCount = preset.target;
+    const beadRadius = beadCount > 60 ? 2.1 : 3.2;
+    let beads = '';
+    for (let index = 0; index < beadCount; index += 1) {
+      const angle = ((360 / beadCount) * index - 90) * (Math.PI / 180);
+      const x = 100 + 86 * Math.cos(angle);
+      const y = 100 + 86 * Math.sin(angle);
+      beads += `<circle class="bead" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${beadRadius}"></circle>`;
+    }
+
     big.innerHTML = `
       <svg class="tasbeeh-ring" viewBox="0 0 200 200" aria-hidden="true">
-        <circle class="ring-track" cx="100" cy="100" r="88"></circle>
-        <circle class="ring-fill" cx="100" cy="100" r="88"
-          stroke-dasharray="${circumference.toFixed(2)}"
-          stroke-dashoffset="${(circumference * (1 - progress)).toFixed(2)}"></circle>
+        <circle class="ring-track" cx="100" cy="100" r="86"></circle>
+        ${beads}
       </svg>
       <span class="tasbeeh-count">${count % preset.target}</span>
       <span class="tasbeeh-target">/ ${preset.target}</span>
     `;
 
     const counter = big.querySelector('.tasbeeh-count');
+    const dots = Array.from(big.querySelectorAll('.bead'));
+    const paintBeads = (filled) => {
+      dots.forEach((dot, index) => dot.classList.toggle('is-on', index < filled));
+    };
+    paintBeads(count % preset.target);
+
     big.addEventListener('click', () => {
       const next = load();
       next.counts[preset.id] = countOf(next, preset) + 1;
@@ -130,13 +142,7 @@ export function mountTasbeeh(root) {
       const done = total % preset.target === 0;
 
       counter.textContent = String(total % preset.target);
-      const span = big.querySelector('.tasbeeh-target');
-      span.textContent = `/ ${preset.target}`;
-      const fill = big.querySelector('.ring-fill');
-      fill.setAttribute(
-        'stroke-dashoffset',
-        String(circumference * (1 - (total % preset.target) / preset.target))
-      );
+      paintBeads(total % preset.target);
 
       if (navigator.vibrate) navigator.vibrate(done ? [18, 50, 18, 50, 18] : 8);
       if (done) {

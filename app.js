@@ -648,6 +648,7 @@ function renderMushafPage() {
   const page = document.createElement('div');
   page.className = 'mushaf-page';
   page.id = 'mushaf-page';
+  page.dir = 'rtl';
 
   if (state.selectedKey) {
     const selected = verseOf(state.selectedKey);
