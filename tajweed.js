@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // Text based tajweed hints.
 //
 // What this can do: read the Uthmani script and point out where a rule

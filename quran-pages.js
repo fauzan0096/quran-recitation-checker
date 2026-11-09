@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // Mushaf page data (Tanzil quran-data metadata, CC-BY).
 // Every <page> entry is the first aya on that page; the next entry ends it.
 // Used by the "Page" tab: pick a mushaf page (1..604) and get its ayaat.

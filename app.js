@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // Bayyin (بيّن) — Quran reader with recitation checking.
 //
 // Surah tab: every aya its own card with a Record button.

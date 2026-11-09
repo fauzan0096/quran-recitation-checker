@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // IndoPak mushaf text (Quran.com "Indopak 15 lines", 610 pages) fetched page by
 // page and cached in memory + localStorage. The Madani mushaf stays fully
 // offline with the bundled Uthmani text; IndoPak pages need the page itself

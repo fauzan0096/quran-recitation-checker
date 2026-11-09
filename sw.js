@@ -1,11 +1,15 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // Bayyin service worker: network-first, so a new version of any app file reaches
 // the phone on the next load, with the cached copy as the offline fallback.
 // CDN / model / Quran.com requests are left to the network.
 
-const CACHE = 'bayyin-v5';
+const CACHE = 'bayyin-v6';
 const SHELL = [
   './',
   'index.html',
+  'privacy.html',
   'styles.css',
   'app.js',
   'i18n.js',

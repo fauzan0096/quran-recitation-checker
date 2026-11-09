@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // The 114 surah names. Arabic name plus the transliteration used in the UI.
 
 export const SURAHS = [

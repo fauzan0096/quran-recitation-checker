@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // Small assertions that prove the offline engine behaves. Run from the UI so a
 // non-developer can see that normalisation, alignment and the tajweed scanner
 // are working, without needing a microphone or a model.

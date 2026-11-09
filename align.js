@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // Word level alignment between the Uthmani words of the selected ayaat and the
 // words we actually heard. This is the part of the pipeline that decides
 // "sahi pada / ghalat / chhoot gaya".

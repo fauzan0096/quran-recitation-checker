@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // On-device speech recognition + audio helpers.
 //
 // The model is a Whisper checkpoint fine-tuned on Quran recitation, exported to

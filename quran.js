@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // Loads and parses the Uthmani Quran text (Tanzil "txt-2" format:
 // every line is  surah|aya|text  and comment lines start with '#').
 

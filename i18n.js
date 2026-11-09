@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // Bayyin — tiny translation layer. Three languages, no build step.
 //
 // Static UI text lives in index.html with data-i18n="key"; dynamic text is read
@@ -100,6 +103,8 @@ const DICT = {
     'self.pass': 'Self-test: {passed}/{total} pass',
     'about.summary': 'About & privacy',
     'licenses.summary': 'Licenses / Open source',
+    'copyright.rights': 'All rights reserved.',
+    'privacy.link': 'Privacy policy',
     'welcome.title': 'Khush aamdeed',
     'welcome.sub': 'بيّن — aap ki tilawat ka apna check, poori tarah phone par.',
     'welcome.p1': 'Aya ya poora mushaf page chunein, Record dabaein aur padhein.',
@@ -245,6 +250,8 @@ const DICT = {
     'self.pass': 'خود جانچ: {passed}/{total} کامیاب',
     'about.summary': 'تعارف اور رازداری',
     'licenses.summary': 'لائسنس / اوپن سورس',
+    'copyright.rights': 'تمام حقوق محفوظ ہیں۔',
+    'privacy.link': 'رازداری کی پالیسی',
     'welcome.title': 'خوش آمدید',
     'welcome.sub': 'بيّن — آپ کی تلاوت کی اپنی جانچ، مکمل طور پر فون پر۔',
     'welcome.p1': 'آیت یا پورا مصحف صفحہ چنیں، ریکارڈ دبائیں اور پڑھیں۔',
@@ -389,6 +396,8 @@ const DICT = {
     'self.pass': 'Self-test: {passed}/{total} passed',
     'about.summary': 'About & privacy',
     'licenses.summary': 'Licenses / Open source',
+    'copyright.rights': 'All rights reserved.',
+    'privacy.link': 'Privacy policy',
     'welcome.title': 'Welcome',
     'welcome.sub': 'بيّن — your own recitation check, entirely on your phone.',
     'welcome.p1': 'Pick an aya or a whole mushaf page, tap Record and read.',

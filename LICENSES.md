@@ -1,5 +1,17 @@
 # Licenses / Attributions
 
+## 0. App ka code, design aur naam — © 2026 fauzan0096
+
+Bayyin (بيّن) ka **code, UI, theme, icon aur naam** © 2026 fauzan0096 hain.
+**Tamam huqooq mehfooz hain.** Copy karna, badalna, kisi doosri app ya website me
+istemal karna, ya bechna mana hai — poori shartein repo ki `LICENSE` file me
+hain. Woh notice har source file ke top par aur app ke andar Settings me bhi
+maujood hai.
+
+Neeche diye gaye third-party hisse **is licence se mustasna** hain aur apne apne
+malik ke terms ke tehat hain. Ye licence un par koi haq nahi deta, aur un ke
+licences is app ke code par koi haq nahi dete.
+
 Is app me teen tarah ka third-party material hai: Quran ka text, speech
 recognition models, aur browser me unhe chalane wali libraries.
 

@@ -7,9 +7,10 @@ upload nahi hota**.
 
 ## Files (sab ek hi level par, koi folder nahi)
 
-`index.html`, `styles.css`, `app.js` (UI), `i18n.js` (zubaan / translations),
-`asr.js` (mic + model), `align.js`, `normalize.js`,
-`tajweed.js`, `quran.js`, `surahs.js`, `selftest.js`, `quran-tanzil.txt`.
+`index.html` (+ `privacy.html`), `styles.css`, `app.js` (UI), `i18n.js` (zubaan /
+translations), `asr.js` (mic + model), `align.js`, `normalize.js`,
+`tajweed.js`, `quran.js`, `surahs.js`, `selftest.js`, `quran-tanzil.txt`,
+`LICENSE` / `LICENSES.md`.
 
 ## Kaam kaise karta hai (pipeline)
 
@@ -221,6 +222,34 @@ App ke andar **Settings → Licenses / Open source** me poore notices hain, aur
 
 Yani app free hai aur store par publish ho sakti hai; bas ye notices app me
 maujood rehni chahiye.
+
+## Copyright / licence (app ka apna)
+
+App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
+
+- **© 2026 fauzan0096 — All rights reserved.** Poori shartein repo ki `LICENSE`
+  file me hain: copy karna, badalna, kisi aur app / website / store listing me
+  istemal karna ya bechna mana hai; sirf app ko apne istemal ke liye chalana
+  jaiz hai.
+- Yeh notice **har source file ke top** par bhi maujood hai (`index.html`,
+  `app.js`, `styles.css`, `sw.js` …) aur app ke andar **Settings → About &
+  privacy** aur settings ke neeche footer me bhi dikhta hai.
+- Third-party hisse is licence se **mustasna** hain: Quran text (Tanzil,
+  CC BY 3.0 — badalna mana), Whisper models (Apache-2.0), Transformers.js
+  (Apache-2.0), ONNX Runtime (MIT). Tafseel `LICENSES.md` me hai.
+- Naam "Bayyin / بيّن" aur icon par bhi haq mehfooz hai, taake koi doosra isi
+  naam ya icon ke saath app publish na kar sake.
+
+## Privacy policy (Play Store ke liye)
+
+- `privacy.html` — alag page, bina kisi JS ke, app ke hi theme me. Ismein likha
+  hai: koi account nahi, koi server nahi, audio upload nahi, local storage me
+  kya rehta hai, aur internet sirf model download + IndoPak pages ke liye hai.
+- Settings ke About card aur footer me iska link hai; service worker ise bhi
+  cache karta hai, to offline bhi khulta hai.
+- Play Store listing me **privacy policy URL** chahiye hota hai — published site
+  ka `…/privacy.html` wohi URL hai. `LICENSE` aur `LICENSES.md` bhi repo me
+  maujood hain, un ka link bhi desk par de sakte hain.
 
 ## Credits
 

@@ -1,3 +1,6 @@
+/* © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+   or modification without written permission is not permitted (see LICENSE). */
+
 :root {
   --paper: #f7f1e6;
   --card: #fffcf5;
@@ -1376,4 +1379,70 @@ body.has-overlay {
   width: 100%;
   min-height: 48px;
   font-size: 16px;
+}
+
+
+
+/* ------------------------------------------------------------ copyright */
+
+.app-footer {
+  margin: 18px 0 8px;
+  text-align: center;
+  font-size: 12px;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.app-footer a,
+.copyright a {
+  color: var(--green-dark);
+}
+
+.copyright {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.welcome-foot {
+  margin: 10px 0 0;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+/* --------------------------------------------------------- privacy page */
+
+.privacy h2 {
+  margin: 0 0 4px;
+  font-size: 20px;
+  color: var(--green-dark);
+}
+
+.privacy h3 {
+  margin: 18px 0 6px;
+  font-size: 14px;
+  color: var(--ink);
+}
+
+.privacy ul {
+  padding-inline-start: 18px;
+}
+
+.privacy p,
+.privacy li {
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+.privacy a {
+  color: var(--green-dark);
+}
+
+.privacy hr {
+  border: 0;
+  border-top: 1px dashed var(--line);
+  margin: 16px 0;
 }

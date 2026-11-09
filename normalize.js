@@ -1,3 +1,6 @@
+// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
 // Arabic normalisation and fuzzy distance.
 //
 // The Uthmani script carries harakat, madd signs, small high letters and
