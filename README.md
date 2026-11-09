@@ -141,6 +141,16 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 - Alignment/tajweed ka koi bhi hissa server-side nahi hai — sirf model ka ek
   dafa download, uske baad app offline chalti hai.
 
+## Design / icon / naam
+
+- Palette: **mushaf leather (burgundy/plum) + copper + parchment** — green/blue se alag,
+  raat ke liye alag mahogany dark theme.
+- Icon: `icon.svg` (rounded mushaf + mihrab arch + ayah medallion) aur
+  `icon-maskable.svg`; `manifest.webmanifest` me dono register hain. Play Store ke liye
+  in SVG se 512×512 PNG export karna hoga (`apple-touch-icon` bhi PNG leta hai).
+- App ka naam abhi "Tilawat Check" hai; Play Store par "Qirat Check" ya "Harf Mizan"
+  bhi check kiye gaye — dono ke exact naam ka koi listing search me nahi mila.
+
 ## Licenses (Play Store ke liye)
 
 App ke andar **Settings → Licenses / Open source** me poore notices hain, aur
