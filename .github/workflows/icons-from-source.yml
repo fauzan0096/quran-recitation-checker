@@ -1,14 +1,17 @@
 name: Icons from icon-source.png
 
 # Put your own icon in the repository as `icon-source.png` (any size, PNG/JPG).
-# This workflow turns it into every size the app and the stores need:
-#   512, 192, maskable 512 (padded on the icon's own background) and 180 for iOS.
-# It runs only when icon-source.png changes and does nothing if the file is absent.
+# This workflow turns it into *every* icon the app uses, all from that one file:
+#   512, 192, maskable 512 (padded on the icon's own background), 180 for iOS,
+#   favicon 48/32/ico, and the two SVG wrappers the manifest still lists.
+# It runs when icon-source.png or this workflow changes, and does nothing if the
+# file is absent.
 
 on:
   push:
     paths:
       - 'icon-source.png'
+      - '.github/workflows/icons-from-source.yml'
   workflow_dispatch:
 
 permissions:
@@ -41,15 +44,30 @@ jobs:
           convert icon-source.png -resize '192x192^' -gravity center -extent 192x192 icon-192.png
           convert icon-source.png -background "$BG" -resize '410x410' -gravity center -extent 512x512 icon-maskable-512.png
           convert icon-source.png -resize '180x180^' -gravity center -extent 180x180 apple-touch-icon.png
+          convert icon-source.png -resize '48x48^' -gravity center -extent 48x48 favicon-48.png
+          convert icon-source.png -resize '32x32^' -gravity center -extent 32x32 favicon-32.png
+          convert icon-source.png -define icon:auto-resize=48,32,16 favicon.ico
 
-          file icon-512.png icon-192.png icon-maskable-512.png apple-touch-icon.png
+          # The SVG wrappers embed the matching PNG so every file agrees.
+          B64=$(base64 -w0 icon-512.png)
+          printf '%s\n' \
+            '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" role="img" aria-label="Bayyin"><image width="512" height="512" xlink:href="data:image/png;base64,'"$B64"'"/></svg>' \
+            > icon.svg
+          B64M=$(base64 -w0 icon-maskable-512.png)
+          printf '%s\n' \
+            '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" role="img" aria-label="Bayyin"><image width="512" height="512" xlink:href="data:image/png;base64,'"$B64M"'"/></svg>' \
+            > icon-maskable.svg
+
+          file icon-512.png icon-192.png icon-maskable-512.png apple-touch-icon.png \
+            favicon-48.png favicon-32.png favicon.ico
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add icon-512.png icon-192.png icon-maskable-512.png apple-touch-icon.png
+          git add icon-512.png icon-192.png icon-maskable-512.png apple-touch-icon.png \
+            favicon-48.png favicon-32.png favicon.ico icon.svg icon-maskable.svg
           if git diff --cached --quiet; then
             echo "Icons unchanged."
             exit 0
           fi
-          git commit -m "Build the app icons from icon-source.png"
+          git commit -m "Build every app icon from icon-source.png"
           git push
