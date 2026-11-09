@@ -135,6 +135,20 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 - Alignment/tajweed ka koi bhi hissa server-side nahi hai — sirf model ka ek
   dafa download, uske baad app offline chalti hai.
 
+## Licenses (Play Store ke liye)
+
+App ke andar **Settings → Licenses / Open source** me poore notices hain, aur
+`LICENSES.md` me bhi:
+
+- **Quran text**: Tanzil Project, **CC BY 3.0** — commercial use allowed, magar
+  text badalna mana hai, copyright block rehna chahiye, aur Tanzil + tanzil.net ka
+  zikr zaroori hai.
+- **Quran-tuned Whisper** (Tarteel AI + ONNX exports): **Apache-2.0**.
+- **Whisper**: MIT. **Transformers.js**: Apache-2.0. **ONNX Runtime**: MIT.
+
+Yani app free hai aur store par publish ho sakti hai; bas ye notices app me
+maujood rehni chahiye.
+
 ## Credits
 
 - Quran text: **Tanzil Project** (tanzil.net), Uthmani Hafs — copyright notice
