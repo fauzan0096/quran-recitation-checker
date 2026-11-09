@@ -1,0 +1,115 @@
+/* Shared theme — dua.html, games.html, tajweed.html ko index.html jaisa "Mushaf" design deta hai.
+   Ye file page ke apne <style> ke BAAD load hoti hai, isliye wahi rang/style override karti hai. */
+
+:root {
+    --primary: #0F4C3A;
+    --secondary: #B8923A;
+    --gold: #B8923A;
+    --bg: #EDF0E7;
+    --card-bg: #FFFDF6;
+    --text: #1F2A25;
+    --text-light: #55645C;
+    --border: #D9D6C3;
+    --arabic: #0A2E24;
+    --chip-bg: rgba(15,76,58,.08);
+    --shadow: 0 1px 2px rgba(10,46,36,.08), 0 8px 24px rgba(10,46,36,.08);
+    --star: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='56' viewBox='0 0 56 56'%3E%3Cg fill='none' stroke='%23D9B65A' stroke-opacity='.2' stroke-width='1'%3E%3Crect x='14' y='14' width='28' height='28'/%3E%3Crect x='14' y='14' width='28' height='28' transform='rotate(45 28 28)'/%3E%3C/g%3E%3C/svg%3E");
+}
+[data-theme="dark"] {
+    --primary: #0C3A2C;
+    --secondary: #D9B65A;
+    --gold: #D9B65A;
+    --bg: #0A1411;
+    --card-bg: #12211B;
+    --text: #E8E3D0;
+    --text-light: #A5B3AA;
+    --border: #27403A;
+    --arabic: #F0E9D0;
+    --chip-bg: rgba(217,182,90,.10);
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+}
+
+body {
+    font-family: 'Figtree', 'Poppins', system-ui, sans-serif;
+    background: var(--bg);
+    line-height: 1.5;
+}
+
+/* ---------- Header (index jaisa: emerald + sunehri line + star pattern) ---------- */
+header {
+    position: sticky;
+    background: linear-gradient(180deg, var(--hdr-a, #14614A) 0%, var(--hdr-b, #0F4C3A) 100%);
+    color: #fff;
+    border-bottom: none;
+    padding-top: calc(14px + env(safe-area-inset-top));
+    box-shadow: none;
+}
+header::before { content: ""; position: absolute; inset: 0; background-image: var(--star); pointer-events: none; }
+header::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: linear-gradient(90deg, transparent, #D9B65A 20%, #D9B65A 80%, transparent); }
+header .header-top { position: relative; z-index: 1; }
+header h1 { font-family: 'Amiri', serif; font-size: 21px; font-weight: 700; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+header .header-top { gap: 8px; }
+header .header-controls { flex: 0 0 auto; gap: 6px; }
+
+.icon-btn { background: rgba(255,255,255,.14); width: 36px; height: 36px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 18px; }
+.icon-btn:active { background: rgba(255,255,255,.28); }
+.size-btn { background: rgba(255,255,255,.14); border: none; width: 36px; height: 36px; padding: 0; border-radius: 50%; font-size: 14px; }
+.size-btn:active { background: rgba(255,255,255,.28); }
+header a[href="index.html"] { display: inline-flex; width: 36px; height: 36px; align-items: center; justify-content: center; border-radius: 50%; background: rgba(255,255,255,.14); }
+
+/* ---------- Nav chips ---------- */
+.nav-btn { border: 1px solid var(--border); background: var(--card-bg); color: var(--text); box-shadow: var(--shadow); min-height: 40px; }
+.nav-btn.active { background: linear-gradient(180deg, var(--btn-a, #17614B), var(--btn-b, #0F4C3A)); color: var(--btn-text, #fff); border-color: transparent; box-shadow: 0 4px 12px rgba(15,76,58,.35); }
+[data-theme="dark"] .nav-btn.active { background: linear-gradient(180deg, #D9B65A, #B8923A); color: #2A2008; }
+
+/* ---------- Search ---------- */
+.search-box { background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 14px; color: var(--text); box-shadow: var(--shadow); }
+.search-box:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(15,76,58,.18); }
+
+/* ---------- Cards ---------- */
+.card { background: var(--card-bg); border-color: var(--border); box-shadow: var(--shadow); }
+.card::after { content: ""; position: absolute; inset: 5px; border: 1px solid rgba(184,146,58,.35); border-radius: 13px; pointer-events: none; }
+.card-title { color: var(--primary); }
+[data-theme="dark"] .card-title { color: var(--secondary); }
+.chip { background: var(--primary); }
+.sec-ar .chip { background: var(--gold); color: #2A2008; }
+[data-theme="dark"] .chip { background: rgba(217,182,90,.16); color: var(--secondary); }
+[data-theme="dark"] .sec-ar .chip { background: var(--gold); color: #2A2008; }
+.num-badge { background: linear-gradient(135deg, var(--gold), #8f7312); }
+
+.play-btn, .audio-btn { background: linear-gradient(180deg, var(--btn-a, #17614B), var(--btn-b, #0F4C3A)); color: var(--btn-text, #fff); box-shadow: 0 4px 12px rgba(15,76,58,.3); min-height: 36px; }
+[data-theme="dark"] .play-btn, [data-theme="dark"] .audio-btn { background: linear-gradient(180deg, #D9B65A, #B8923A); color: #2A2008; }
+
+.tafseel-box, .example-box { border-color: rgba(184,146,58,.4); }
+.hawala { background: var(--chip-bg); }
+
+/* ---------- Focus (keyboard) ---------- */
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid #D9B65A; outline-offset: 2px; }
+
+/* ---------- Games page ---------- */
+.sahaba-box { background: var(--card-bg); border-top-color: var(--gold); }
+.sahaba-opt { border-color: var(--border); background: var(--bg); color: var(--text); }
+.sahaba-opt:hover { border-color: var(--primary); }
+[data-theme="dark"] .sahaba-opt.correct { background: #12301f; border-color: #2ea14a; color: #b7f0c4; }
+[data-theme="dark"] .sahaba-opt.wrong { background: #3a1616; border-color: #a12e2e; color: #f5b5b5; }
+
+/* ---------- Kharidi hui special themes (themes.js): dark wale default gold rules ko dabao ---------- */
+[data-skin] .nav-btn.active { background: linear-gradient(180deg, var(--btn-a), var(--btn-b)); color: var(--btn-text); }
+[data-skin] .play-btn, [data-skin] .audio-btn { background: linear-gradient(180deg, var(--btn-a), var(--btn-b)); color: var(--btn-text); }
+[data-skin] header .icon-btn, [data-skin] header .size-btn { color: #fff; }
+
+/* ---------- v72 fix: chhote phone (360px) par header ka title kat jata tha aur Home button bahar nikal jata tha ---------- */
+header .header-controls { display: flex; align-items: center; }
+@media (max-width: 420px) {
+    header .header-top { gap: 6px; padding-left: 10px; padding-right: 10px; }
+    header .header-controls { gap: 4px; }
+    header .icon-btn, header .size-btn, header a[href="index.html"] { width: 32px; height: 32px; font-size: 16px; }
+    header .size-btn[data-qs-lang] { width: auto; min-width: 44px !important; padding: 0 8px; border-radius: 16px; }
+    header h1 { font-size: 17px; white-space: normal; overflow: visible; text-overflow: clip; line-height: 1.15; } /* naam kat'ne ki jagah 2 line mein */
+}
+@media (max-width: 350px) {
+    header .size-btn:not([data-qs-lang]) { display: none; } /* bahut chhoti screen: A-/A+ hide, title poora dikhe */
+}
+
+/* search box header se chipakta tha */
+header ~ .container > .search-box:first-child, header + .container > .search-box:first-child { margin-top: 12px; }

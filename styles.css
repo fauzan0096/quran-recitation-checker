@@ -2100,3 +2100,177 @@ body[data-theme='dark'] .daily-ref {
   background: rgba(216, 166, 107, 0.14);
   border-color: rgba(216, 166, 107, 0.4);
 }
+
+
+
+/* ------------------------------------------------- polish: tasbeeh/qibla */
+
+a.more-card {
+  text-decoration: none;
+}
+
+.tasbeeh {
+  position: relative;
+  counter-reset: tasbeeh;
+}
+
+.tasbeeh::before {
+  content: '۞';
+  position: absolute;
+  top: -22px;
+  inset-inline-end: 4px;
+  font-size: 92px;
+  line-height: 1;
+  color: var(--gold);
+  opacity: 0.09;
+  pointer-events: none;
+}
+
+.tasbeeh-presets {
+  width: 100%;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  justify-content: flex-start;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.tasbeeh-presets::-webkit-scrollbar {
+  display: none;
+}
+
+.tasbeeh-chip {
+  flex: 0 0 auto;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 10px 14px;
+  box-shadow: 0 2px 8px rgba(74, 22, 34, 0.06);
+}
+
+.tasbeeh-chip[data-on='1'] {
+  border-color: var(--gold);
+  background: linear-gradient(180deg, rgba(176, 122, 60, 0.18), rgba(176, 122, 60, 0.05));
+  color: var(--green-dark);
+  box-shadow: 0 0 0 2px rgba(176, 122, 60, 0.22);
+}
+
+.tasbeeh-current {
+  margin: 2px 0 0;
+  font-family: var(--arabic);
+  font-size: 26px;
+  line-height: 1.7;
+  text-align: center;
+  color: var(--green-dark);
+}
+
+.tasbeeh-big {
+  background:
+    radial-gradient(circle at 50% 30%, #fffdf7, var(--card) 62%),
+    var(--card);
+  border: 2px solid rgba(176, 122, 60, 0.45);
+  box-shadow:
+    0 0 0 8px rgba(176, 122, 60, 0.08),
+    0 16px 40px rgba(74, 22, 34, 0.16);
+}
+
+.tasbeeh-big:active {
+  transform: scale(0.985);
+}
+
+.tasbeeh-count {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  font-size: 64px;
+  color: var(--green-dark);
+}
+
+.ring-track {
+  stroke: rgba(176, 122, 60, 0.22);
+  stroke-width: 12;
+}
+
+.ring-fill {
+  stroke: var(--gold);
+  stroke-width: 12;
+  filter: drop-shadow(0 2px 4px rgba(176, 122, 60, 0.35));
+}
+
+.tasbeeh-meta .stat {
+  border-top: 3px solid rgba(176, 122, 60, 0.55);
+  background: linear-gradient(180deg, rgba(176, 122, 60, 0.08), var(--card));
+}
+
+.tasbeeh-meta .stat strong {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  font-size: 22px;
+}
+
+.compass {
+  border: 2px solid rgba(176, 122, 60, 0.5);
+  box-shadow:
+    0 0 0 10px rgba(176, 122, 60, 0.08),
+    0 18px 44px rgba(74, 22, 34, 0.18);
+}
+
+.compass::after {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  border: 1px dashed rgba(176, 122, 60, 0.35);
+  pointer-events: none;
+}
+
+.cp-hub {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 54px;
+  height: 54px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--card);
+  border: 2px solid var(--gold);
+  box-shadow: 0 4px 14px rgba(74, 22, 34, 0.18);
+  font-size: 24px;
+  line-height: 1;
+  z-index: 2;
+}
+
+.cp-point b {
+  color: var(--green-dark);
+  font-size: 13px;
+  letter-spacing: 0.04em;
+}
+
+.cp-tick i {
+  background: rgba(124, 106, 99, 0.45);
+}
+
+.cp-tick.is-major i {
+  background: var(--gold);
+  height: 16px;
+}
+
+.qibla-read {
+  font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
+  font-size: 17px;
+}
+
+.qibla .btn.primary {
+  border-radius: 999px;
+  padding: 12px 26px;
+  background: linear-gradient(135deg, #6b2233, #8f3b4d);
+  border-color: #6b2233;
+  box-shadow: 0 6px 18px rgba(107, 34, 51, 0.28);
+}
+
+body[data-theme='dark'] .tasbeeh-big {
+  background: radial-gradient(circle at 50% 30%, #2a1d20, var(--card) 62%);
+}
+
+body[data-theme='dark'] .cp-hub {
+  background: #2a1d20;
+}

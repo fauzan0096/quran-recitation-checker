@@ -71,6 +71,11 @@ export function mountQibla(root) {
     index.className = 'cp-index';
     dial.appendChild(index);
 
+    const hub = document.createElement('span');
+    hub.className = 'cp-hub';
+    hub.textContent = '🕋';
+    dial.appendChild(hub);
+
     if (heading !== null && bearing !== null) {
       face.style.transform = `rotate(${-heading}deg)`;
       const delta = Math.abs(((bearing - heading + 540) % 360) - 180);

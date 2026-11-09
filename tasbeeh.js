@@ -96,6 +96,13 @@ export function mountTasbeeh(root) {
     }
     root.appendChild(presets);
 
+    const current = document.createElement('p');
+    current.className = 'tasbeeh-current';
+    current.lang = 'ar';
+    current.dir = 'rtl';
+    current.textContent = preset.ar;
+    root.appendChild(current);
+
     const big = document.createElement('button');
     big.type = 'button';
     big.className = 'tasbeeh-big';
