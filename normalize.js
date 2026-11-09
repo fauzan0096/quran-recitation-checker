@@ -27,20 +27,8 @@ const LETTER_MAP = [
   [/\u0624/g, WAW], // ؤ
   [/\u0626/g, YEH], // ئ
   [/\u0629/g, HEH], // ة
-  [/\u0621/g, ''], // ء — hamza on its own is often simply omitted: ءامنا / آمنا / امنا
   [/\u06A9/g, '\u0643'], // Persian kaf
   [/[\u06BE\u06C1\u06D5]/g, HEH], // heh variants
-];
-
-// Uthmani rasm writes a long ā with a waw in a handful of words (الصَّلَوٰةُ,
-// الزَّكَوٰةُ, الحَيَوٰةُ, المِشْكَوٰةُ) where a modern reader and every speech
-// recogniser writes an alef. Both sides are pulled to the alef form here, after
-// the letters above have already turned ة into ه.
-const RASM_FIXES = [
-  ['صلوه', 'صلاه'],
-  ['زكوه', 'زكاه'],
-  ['حيوه', 'حياه'],
-  ['مشكوه', 'مشكاه'],
 ];
 
 /**
@@ -55,11 +43,6 @@ export function normalizeArabic(input) {
   s = s.replace(/\u0640/g, ''); // tatweel
   s = s.replace(MARKS, '');
   for (const [re, to] of LETTER_MAP) s = s.replace(re, to);
-  for (const [from, to] of RASM_FIXES) s = s.split(from).join(to);
-  // A hamza next to an alef often leaves two alefs behind on one side only
-  // (ءَأَنذَرْتَهُمْ is written أأنذرتهم by a reader, and recognised that way).
-  // One alef says exactly the same thing.
-  s = s.replace(/\u0627{2,}/g, ALEF);
   // Drop everything that is not an Arabic letter or a space (punctuation,
   // digits, Latin, aya markers...).
   s = s.replace(/[^\u0621-\u063A\u0641-\u064A\s]/g, ' ');
@@ -105,45 +88,9 @@ function stripArticle(word) {
   return word;
 }
 
-// Letters a reciter (and a recogniser) routinely swap because they share a
-// sound or a makhraj. Mapping them to one form lets "close" catch a real
-// near-miss instead of calling it wrong.
-const PHONETIC_MAP = [
-  [/[\u0635\u0633]/g, '\u0633'], // ص س
-  [/[\u0637\u062A]/g, '\u062A'], // ط ت
-  [/[\u0630\u0632\u0638]/g, '\u0632'], // ذ ز ظ
-  [/[\u062B\u0633]/g, '\u0633'], // ث س
-  [/[\u062D\u0647]/g, '\u0647'], // ح ه
-  [/[\u0642\u0643]/g, '\u0643'], // ق ك
-];
-
-/** A sound-alike form of a bare word (one letter for one letter). */
-export function phoneticForm(word) {
-  let s = word;
-  for (const [re, to] of PHONETIC_MAP) s = s.replace(re, to);
-  return s;
-}
-
-// A conjunction or preposition written as one letter is often merged or dropped
-// by the recogniser ("wa" + word, "bi" + word), so the same word may come back
-// without its first letter.
-function stripPrefix(word) {
-  if (word.length >= 4 && /^[\u0648\u0641\u0628\u0644\u0643]/.test(word)) return word.slice(1);
-  return word;
-}
-
-// The alef a word needs to start a sentence (hamzat wasl) disappears when the
-// word is read inside a sentence, and the recogniser often leaves it out.
-function stripAlef(word) {
-  if (word.length >= 3 && word.charCodeAt(0) === 0x0627) return word.slice(1);
-  return word;
-}
-
 /**
  * Distance used for judging "close enough": the best of the plain edit
  * distance and the distance with the definite article removed on both sides.
- * A distance of 0 here means the same word, so it must stay strict — the
- * sound-alike comparison below is only used to soften "wrong" into "close".
  */
 export function compareDistance(a, b) {
   if (a === b) return 0;
@@ -152,33 +99,6 @@ export function compareDistance(a, b) {
   const b2 = stripArticle(b);
   if (a2 !== a || b2 !== b) {
     const alt = levenshtein(a2, b2);
-    if (alt < best) best = alt;
-  }
-  if (best > 0) {
-    const pA = stripAlef(a2);
-    const pB = stripAlef(b2);
-    if (pA !== a2 || pB !== b2) {
-      const alt = levenshtein(pA, pB);
-      if (alt < best) best = alt;
-    }
-  }
-  return best;
-}
-
-/**
- * How different two words sound — sound-alike letters and a dropped one-letter
- * prefix count for less here. Only ever used to decide "close", never to turn
- * a word into "correct": a mispronounced letter must still be visible.
- */
-export function phoneticDistance(a, b) {
-  if (a === b) return 0;
-  const pa = phoneticForm(stripArticle(a));
-  const pb = phoneticForm(stripArticle(b));
-  let best = levenshtein(pa, pb);
-  const preA = stripPrefix(pa);
-  const preB = stripPrefix(pb);
-  if (preA !== pa || preB !== pb) {
-    const alt = levenshtein(preA, preB);
     if (alt < best) best = alt;
   }
   return best;

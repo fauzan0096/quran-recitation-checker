@@ -186,17 +186,6 @@ aur nateeja **usi aya ke andar** aata hai:
 
 ## Models
 
-Model ke wazan **browser ke `transformers-cache`** me rehte hain, aur app ka service
-worker ab **sirf apne purane `bayyin-*` caches** hataata hai — is liye app ka naya
-version aane par 105 MB dobara download **nahi** hota. Pehle service worker har cache
-delete kar deta tha (model samet), wahi wajah thi ke har update par poora model phir
-se aata tha.
-
-Model khud tabhi badalta hai jab Hugging Face par us ke files badlein — aur tab bhi
-sirf **badle hue files** naye hote hain, baqi cache se chalte hain (URLs same rehte
-hain). Settings → Speech model me app dikhati hai ke model device par kitne MB
-mehfooz hai.
-
 `asr.js` me do options hain (dono Transformers.js ke liye ONNX, same Tarteel
 Quran fine-tune ke base se):
 
@@ -327,35 +316,10 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
 - Quran-tuned Whisper: **Tarteel AI** (Apache-2.0), ONNX exports community se.
 - Transformers.js / ONNX Runtime Web: Hugging Face / Microsoft (Apache-2.0).
 
-
-## Check ki accuracy kaise barhti hai
-
-- **Audio ki safai (khud app karti hai):** recording ke shuru aur aakhir ki khamoshi
-  kaat di jati hai, awaaz ka level barabar (peak ~0.92) kiya jata hai, aur mic par
-  browser ki noise-suppression / echo-cancellation **band** hai — Whisper ko saaf,
-  bina chhere hue audio par behtar nateeja milta hai.
-- **Lafz ka muqabla:** ص/س، ت/ط، ذ/ز/ظ، ث/س، ح/ه، ق/ك ko ek hi awaaz mana jata hai.
-  Aise lafz **"qareeb"** dikhte hain, **"sahi" nahi** — taake ghalti chhupe na.
-- **"ال" aur ek-harf prefix** (و/ف/ب/ل/ك) ki kami-beshi chalti hai, kyunki ASR aise hi
-  likhta hai.
-- **Hamza ki kami-beshi chalti hai:** `ءامنا` / `آمنا` / `امنا` ek hi lafz hain, aur
-  `شيء` / `شي` bhi. Jo hamza akela likha ho (ء) usay hata diya jata hai; أ/إ/آ pehle
-  se alef hain. Do hamze wale lafz bhi barabar hain — `ءَأَنذَرْتَهُمْ` = `أأنذرتهم`,
-  aur `ءُولَئِكَ` = `أولئك` (do alef ek ho jate hain, aur lafz ke shuru ka alef bhi
-  optional hai).
-- **Uthmani rasm aur aam imla barabar:** mushaf me `الصَّلَوٰة` / `الزَّكَوٰة` /
-  `الحَيَوٰة` / `المِشْكَوٰة` waw ke sath likhe jate hain, jabki padhne/ASR me
-  `الصلاة` / `الزكاة` / `الحياة` / `المشكاة` alef ke sath aate hain — dono ko ek hi
-  shakl me badal diya jata hai, warna sahi padhne par bhi ghalti dikhti thi.
-- **Lambe lafz** (8+ harf) par ek extra chhot (2 ki jagah 3 edits tak) bhi "qareeb".
-- **Kharab audio ki pehchan:** agar ASR ne poore text ka 30% se kam suna, to app
-  "aawaz saaf nahi thi — dobara padhein" kehti hai, har lafz "chhoot gaya" nahi.
-- **Self-test** me ek test isi baat ka hai ke ص/س "close" ho, "sahi" na ho.
-
-**Aap kya kar sakte hain:** khamosh kamre me, mic se 15–20 cm, poori aya padh kar
-phir rukein; Settings me **base model** chunein (tiny se behtar); headphones ka mic
-aam tor par behtar hota hai.
-
-**Bare levers (aage ka kaam):** bara/behtar Quran-tuned model, phoneme-level tajweed
-check, ya server par bara model — magar aakhri wale se "on-device, audio upload nahi"
-ka wada khatam ho jata hai.
+## v2 changes (Nov 2026)
+- Home screen opens instantly (Quran text loads in background); bottom bar: Home / Quran / Duaein / Tasbeeh / Noor.
+- Duaein are now inside the app (duas.js + duas-data.js); Ruqya section has only dua + hawala.
+- New tasbeeh (tasbeeh-v2.js): own target, Aaj/Round/Kul, undo, zero, vibration, sound, screen-on.
+- "Aaj ka Noor": ayat + hadith + sunnah on one page, also on Home.
+- Faster service worker (cache-first for heavy files). Amiri Quran font bundled (OFL, see OFL-AmiriQuran.txt).
+- Old Fahm-ul-Quran files moved to _unused/ (not shipped).

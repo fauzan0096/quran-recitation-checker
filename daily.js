@@ -21,7 +21,8 @@ function dayIndex(length) {
   return ((days % length) + length) % length;
 }
 
-export function mountDaily(root) {
+export function mountDaily(root, options = {}) {
+  const compact = Boolean(options.compact);
   if (!root) return { refresh() {} };
 
   async function share(button, payload) {
@@ -83,7 +84,7 @@ export function mountDaily(root) {
 
   function build() {
     root.innerHTML = '';
-    root.className = 'daily';
+    root.className = compact ? 'daily is-compact' : 'daily';
 
     const now = new Date();
     const hijri = todayHijri();
@@ -94,6 +95,10 @@ export function mountDaily(root) {
     )} ${hijri.year}`;
     root.appendChild(strip);
 
+    const sheet = document.createElement('div');
+    sheet.className = 'noor-sheet';
+    root.appendChild(sheet);
+
     const ayah = AYAT[dayIndex(AYAT.length)];
     const hadith = AHADITH[dayIndex(AHADITH.length)];
     const sunnah = SUNNAHS[dayIndex(SUNNAHS.length)];
@@ -102,7 +107,7 @@ export function mountDaily(root) {
 
     if (verse) {
       const tarjuma = AYAT_MEANING[`${ayah[0]}:${ayah[1]}`];
-      root.appendChild(
+      sheet.appendChild(
         card({
           kind: 'ayah',
           title: t('daily.ayah'),
@@ -115,10 +120,10 @@ export function mountDaily(root) {
       const missing = document.createElement('p');
       missing.className = 'hint';
       missing.textContent = t('daily.missing');
-      root.appendChild(missing);
+      sheet.appendChild(missing);
     }
 
-    root.appendChild(
+    sheet.appendChild(
       card({
         kind: 'hadith',
         title: t('daily.hadith'),
@@ -128,7 +133,7 @@ export function mountDaily(root) {
       })
     );
 
-    root.appendChild(
+    sheet.appendChild(
       card({
         kind: 'sunnah',
         title: t('daily.sunnah'),
@@ -136,6 +141,8 @@ export function mountDaily(root) {
         reference: sunnah.ref,
       })
     );
+
+    if (compact) return;
 
     const details = document.createElement('details');
     details.className = 'card daily-list';

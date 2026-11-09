@@ -2,14 +2,14 @@
   "id": "bayyin",
   "name": "بيّن — Bayyin",
   "short_name": "بيّن",
-  "lang": "ar",
-  "dir": "rtl",
+  "lang": "en",
+  "dir": "ltr",
   "description": "بيّن — Quran tilawat aya-ba-aya khud check karein, on-device, bina server.",
-  "start_url": "./",
+  "start_url": "./?source=pwa",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#4b1b21",
+  "background_color": "#f7f1e6",
   "theme_color": "#4b1b21",
   "icons": [
     {
@@ -29,13 +29,46 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
+    }
+  ],
+  "categories": [
+    "education",
+    "lifestyle",
+    "books"
+  ],
+  "shortcuts": [
+    {
+      "name": "Duaein",
+      "short_name": "Duaein",
+      "url": "./?go=dua",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     },
     {
-      "src": "icon.svg",
-      "sizes": "any",
-      "type": "image/svg+xml",
-      "purpose": "any"
+      "name": "Tasbeeh",
+      "short_name": "Tasbeeh",
+      "url": "./?go=tasbeeh",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
+    },
+    {
+      "name": "Noor",
+      "short_name": "Noor",
+      "url": "./?go=daily",
+      "icons": [
+        {
+          "src": "icon-192.png",
+          "sizes": "192x192"
+        }
+      ]
     }
   ]
 }
-

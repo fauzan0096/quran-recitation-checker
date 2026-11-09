@@ -33,10 +33,12 @@ import {
   micPermissionState,
   peakOf,
   libraryVersion,
-  modelCacheInfo,
 } from './asr.js';
 import { runSelfTest } from './selftest.js';
-import { mountTasbeeh } from './tasbeeh.js';
+import './strings-v2.js';
+import { mountTasbeeh } from './tasbeeh-v2.js';
+import { mountDuas } from './duas.js';
+import { todayHijri } from './hijri.js';
 import { mountQibla } from './qibla.js';
 import { mountCalendar } from './calendar.js';
 import { mountDaily } from './daily.js';
@@ -100,6 +102,16 @@ const els = {};
 let toastTimer = null;
 const bootAt = Date.now();
 let splashGone = false;
+let currentView = 'home';
+let quranReady = null;
+const moreViews = {
+  daily: null,
+  homeNoor: null,
+  tasbeeh: null,
+  qibla: null,
+  calendar: null,
+  duas: null,
+};
 
 init();
 
@@ -113,27 +125,55 @@ async function init() {
   wireEvents();
   setGlobalStatus('');
 
-  // If the Quran text or the page data never arrives, the splash must not stay
-  // in front of the app.
-  window.setTimeout(hideSplash, 6000);
-
-  try {
-    await loadQuran();
-  } catch (error) {
-    showError(t('error.quranLoad'));
-    hideSplash();
-    return;
-  }
-  try {
-    await loadPages();
-  } catch (error) {
-    console.warn('page data failed', error);
-  }
-  updatePageTotal();
-  await showList();
-  setView('home');
+  // Show the home screen at once. The Quran text (1.3 MB) loads in the
+  // background, so the app opens instantly instead of waiting for it.
+  paintHomeDate();
+  const go = new URLSearchParams(window.location.search).get('go');
+  setView(['dua', 'tasbeeh', 'daily', 'reader', 'qibla', 'calendar'].includes(go) ? go : 'home');
   hideSplash();
   maybeWelcome();
+  loadQuranInBackground();
+}
+
+/** Quran text + page data load after first paint; the reader fills in when they arrive. */
+function loadQuranInBackground() {
+  if (quranReady) return quranReady;
+  quranReady = (async () => {
+    try {
+      await loadQuran();
+    } catch (error) {
+      showError(t('error.quranLoad'));
+      return;
+    }
+    try {
+      await loadPages();
+    } catch (error) {
+      console.warn('page data failed', error);
+    }
+    updatePageTotal();
+    await showList();
+    moreViews.daily?.refresh();
+    moreViews.homeNoor?.refresh();
+  })();
+  return quranReady;
+}
+
+/** Gregorian + Hijri date line on the home banner. */
+function paintHomeDate() {
+  if (!els.homeDate) return;
+  const now = new Date();
+  let text = now.toLocaleDateString(getLanguage() === 'ur' ? 'ur-PK' : 'en-GB', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+  try {
+    const hijri = todayHijri();
+    text += ` · ${hijri.day} ${t(`hm.${hijri.month}`)} ${hijri.year}`;
+  } catch (error) {
+    /* date line is optional */
+  }
+  els.homeDate.textContent = text;
 }
 
 // ---------------------------------------------------------------- boot UIs
@@ -146,7 +186,7 @@ function hideSplash() {
     return;
   }
   splashGone = true;
-  const wait = Math.max(0, 900 - (Date.now() - bootAt));
+  const wait = Math.max(0, 350 - (Date.now() - bootAt));
   window.setTimeout(() => {
     splash.classList.add('is-gone');
     window.setTimeout(() => splash.remove(), 420);
@@ -186,10 +226,13 @@ async function changeLanguage(value) {
   applyReading(false);
   renderTajweed();
   renderProgress();
+  paintHomeDate();
   moreViews.daily?.refresh();
+  moreViews.homeNoor?.refresh();
   moreViews.tasbeeh?.refresh();
   moreViews.calendar?.refresh();
   moreViews.qibla?.refresh();
+  moreViews.duas?.refresh();
   if (!isLoaded()) return;
   if (state.mode === 'search') {
     els.listTitle.textContent = t('list.searchTitle');
@@ -210,13 +253,13 @@ function cacheElements() {
     'toggle-text', 'list-title', 'global-status', 'range-error', 'aya-list',
     'list-footer', 'load-more', 'share-app', 'model-select', 'load-model',
     'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
-    'model-cache',
     'mic-check', 'mic-check-output', 'player', 'tajweed', 'run-tests',
     'test-results', 'toast',
     'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
     'resume-aya', 'progress-stats', 'progress-lists', 'progress-reset',
-    'open-more', 'close-more', 'view-more', 'more-tasbeeh', 'more-qibla', 'more-calendar',
-    'home-surah', 'home-mushaf', 'home-search',
+    'view-home', 'more-tasbeeh', 'more-qibla', 'more-calendar',
+    'home-surah', 'home-mushaf', 'home-search', 'home-dua', 'home-open-quran',
+    'home-date', 'home-noor', 'view-dua', 'close-dua', 'dua-root', 'bottom-nav',
     'more-daily', 'view-daily', 'close-daily', 'daily-root',
     'view-tasbeeh', 'close-tasbeeh', 'tasbeeh-root',
     'view-qibla', 'close-qibla', 'qibla-root',
@@ -1108,13 +1151,6 @@ async function checkTarget(id, keys, blob) {
       .map((word) => word.trim())
       .filter((word) => normalizeArabic(word).length > 0);
 
-    // A recogniser that caught only a fraction of a real aya heard bad audio,
-    // not a reciter who forgot half the page. Say so instead of marking every
-    // word missing.
-    if (expected.length >= 6 && heard.length && heard.length < expected.length * 0.3) {
-      throw new Error(t('status.unclear'));
-    }
-
     const alignment = alignWords(expected, heard);
 
     // Store a per-aya slice so each aya shows its own mistakes.
@@ -1204,7 +1240,6 @@ async function handleLoadModel() {
       console.warn('model id persist failed', error);
     }
     setGlobalStatus('');
-    renderModelCache();
     return true;
   } catch (error) {
     state.model = null;
@@ -1238,22 +1273,6 @@ function onModelProgress(progress) {
 
 function setProgress(percent) {
   els.modelProgressBar.style.width = `${Math.max(0, Math.min(100, percent))}%`;
-}
-
-/** Show how much of the model the browser already keeps on the phone. */
-async function renderModelCache() {
-  if (!els.modelCache) return;
-  const info = await modelCacheInfo();
-  if (!info || !info.files) {
-    els.modelCache.textContent = t('model.cacheNone');
-    els.modelCache.hidden = false;
-    return;
-  }
-  const mb = info.bytes ? Math.round(info.bytes / 1048576) : 0;
-  els.modelCache.textContent = mb
-    ? t('model.cacheReady', { size: `${mb} MB` })
-    : t('model.cacheFiles', { count: info.files });
-  els.modelCache.hidden = false;
 }
 
 // ----------------------------------------------------------------- search
@@ -1367,39 +1386,56 @@ async function jumpToAya(surah, aya) {
 
 // ------------------------------------------------------------------ views
 
-const moreViews = { daily: null, tasbeeh: null, qibla: null, calendar: null };
-let moreMounted = false;
-
-/** Mount the extra sections the first time one of them is opened. */
-function mountMore() {
-  if (moreMounted) return;
-  moreMounted = true;
-  moreViews.daily = mountDaily(els.dailyRoot);
-  moreViews.tasbeeh = mountTasbeeh(els.tasbeehRoot);
-  moreViews.qibla = mountQibla(els.qiblaRoot);
-  moreViews.calendar = mountCalendar(els.calendarRoot);
+/** Mount a section the first time it is needed (keeps the first screen light). */
+function ensureMounted(name) {
+  if (moreViews[name]) return;
+  if (name === 'daily') moreViews.daily = mountDaily(els.dailyRoot);
+  else if (name === 'homeNoor') moreViews.homeNoor = mountDaily(els.homeNoor, { compact: true });
+  else if (name === 'tasbeeh') moreViews.tasbeeh = mountTasbeeh(els.tasbeehRoot);
+  else if (name === 'qibla') moreViews.qibla = mountQibla(els.qiblaRoot);
+  else if (name === 'calendar') moreViews.calendar = mountCalendar(els.calendarRoot);
+  else if (name === 'duas') moreViews.duas = mountDuas(els.duaRoot);
 }
 
-/** Show exactly one section, and keep the extra ones fresh. */
+/** Show exactly one section, keep the bottom bar in step, and stop what is not on screen. */
 function setView(name) {
   const sections = {
     reader: els.viewReader,
     settings: els.viewSettings,
-    more: els.viewMore,
+    home: els.viewHome,
+    dua: els.viewDua,
     daily: els.viewDaily,
     tasbeeh: els.viewTasbeeh,
     qibla: els.viewQibla,
     calendar: els.viewCalendar,
   };
+  if (currentView === 'qibla' && name !== 'qibla') moreViews.qibla?.stop();
+  if (currentView === 'tasbeeh' && name !== 'tasbeeh') moreViews.tasbeeh?.stop();
+  if (currentView === 'dua' && name !== 'dua') moreViews.duas?.stop();
+  currentView = name;
+
   for (const [key, element] of Object.entries(sections)) {
     if (element) element.hidden = key !== name;
   }
-  if (['more', 'daily', 'tasbeeh', 'qibla', 'calendar'].includes(name)) {
-    mountMore();
-  }
+
+  if (name === 'home') ensureMounted('homeNoor');
+  if (name === 'daily') ensureMounted('daily');
+  if (name === 'tasbeeh') ensureMounted('tasbeeh');
+  if (name === 'qibla') ensureMounted('qibla');
+  if (name === 'calendar') ensureMounted('calendar');
+  if (name === 'dua') ensureMounted('duas');
   if (name === 'daily') moreViews.daily?.refresh();
   if (name === 'tasbeeh') moreViews.tasbeeh?.refresh();
   if (name === 'calendar') moreViews.calendar?.refresh();
+  if (name === 'reader') loadQuranInBackground();
+
+  const navKey = { reader: 'reader', settings: '', home: 'home', dua: 'dua', daily: 'daily', tasbeeh: 'tasbeeh' }[name];
+  document.querySelectorAll('.bn-item').forEach((item) => {
+    const on = item.dataset.nav === navKey;
+    item.classList.toggle('is-on', on);
+    if (on) item.setAttribute('aria-current', 'page');
+    else item.removeAttribute('aria-current');
+  });
   window.scrollTo(0, 0);
 }
 
@@ -1410,11 +1446,10 @@ function openSettings() {
   }
   renderTajweed();
   renderProgress();
-  renderModelCache();
 }
 
 function closeSettings() {
-  setView('reader');
+  setView('home');
 }
 
 // --------------------------------------------------------------- progress
@@ -1786,39 +1821,34 @@ function wireEvents() {
     });
   }
 
-  if (els.openMore) els.openMore.addEventListener('click', () => setView('more'));
-  if (els.closeMore) els.closeMore.addEventListener('click', () => setView('reader'));
-  if (els.homeSurah) {
-    els.homeSurah.addEventListener('click', () => {
-      setView('reader');
-      setMode('surah');
+  const go = (element, view, mode) => {
+    if (!element) return;
+    element.addEventListener('click', () => {
+      setView(view);
+      if (mode) setMode(mode);
     });
+  };
+  go(els.homeSurah, 'reader', 'surah');
+  go(els.homeMushaf, 'reader', 'page');
+  go(els.homeSearch, 'reader', 'search');
+  go(els.homeOpenQuran, 'reader');
+  go(els.homeDua, 'dua');
+  go(els.moreDaily, 'daily');
+  go(els.moreTasbeeh, 'tasbeeh');
+  go(els.moreQibla, 'qibla');
+  go(els.moreCalendar, 'calendar');
+  for (const closer of [
+    els.closeTasbeeh,
+    els.closeQibla,
+    els.closeCalendar,
+    els.closeDaily,
+    els.closeDua,
+  ]) {
+    go(closer, 'home');
   }
-  if (els.homeMushaf) {
-    els.homeMushaf.addEventListener('click', () => {
-      setView('reader');
-      setMode('page');
-    });
-  }
-  if (els.homeSearch) {
-    els.homeSearch.addEventListener('click', () => {
-      setView('reader');
-      setMode('search');
-    });
-  }
-  if (els.moreDaily) els.moreDaily.addEventListener('click', () => setView('daily'));
-  if (els.moreTasbeeh) els.moreTasbeeh.addEventListener('click', () => setView('tasbeeh'));
-  if (els.moreQibla) els.moreQibla.addEventListener('click', () => setView('qibla'));
-  if (els.moreCalendar) els.moreCalendar.addEventListener('click', () => setView('calendar'));
-  if (els.closeTasbeeh) els.closeTasbeeh.addEventListener('click', () => setView('more'));
-  if (els.closeQibla) {
-    els.closeQibla.addEventListener('click', () => {
-      moreViews.qibla?.stop();
-      setView('more');
-    });
-  }
-  if (els.closeCalendar) els.closeCalendar.addEventListener('click', () => setView('more'));
-  if (els.closeDaily) els.closeDaily.addEventListener('click', () => setView('more'));
+  document.querySelectorAll('.bn-item').forEach((item) => {
+    item.addEventListener('click', () => setView(item.dataset.nav));
+  });
 }
 
 function toast(message) {

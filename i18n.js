@@ -78,11 +78,6 @@ const DICT = {
     'model.done': 'Download mukammal: {file}',
     'model.loadFail': 'Model load fail: {message}',
     'model.newOne': 'Naya model — "Model load karein" dabaein.',
-    'model.cacheReady':
-      'Model device par mehfooz hai ({size}) — app update ke baad dobara download nahi hoga.',
-    'model.cacheFiles': 'Model cache me {count} files mehfooz hain.',
-    'model.cacheNone':
-      'Model abhi download nahi hua — pehli recording par aayega, phir mehfooz rahega.',
     'audio.heading': 'Audio',
     'audio.file': 'Recording ki jagah file chunein',
     'audio.loaded': 'Audio file lagi hai.',
@@ -221,8 +216,6 @@ const DICT = {
     'status.preparing': 'Audio taiyar ho raha hai…',
     'status.transcribing': 'Transcribe ho raha hai (device par)…',
     'status.nothing': 'Kuch sunai nahi diya — dobara padhein.',
-    'status.unclear':
-      'Awaaz saaf nahi thi — khamosh jagah par, mic ke qareeb dobara padhein.',
     'status.short': 'Audio bohot chhota hai — poora padhein.',
     'status.silent': 'Audio khamosh hai — mic ke qareeb padhein.',
     'status.empty': 'Recording khali rahi — dobara koshish karein.',
@@ -329,11 +322,6 @@ const DICT = {
     'model.done': 'ڈاؤن لوڈ مکمل: {file}',
     'model.loadFail': 'ماڈل لوڈ نہیں ہوا: {message}',
     'model.newOne': 'نیا ماڈل — "ماڈل لوڈ کریں" دبائیں۔',
-    'model.cacheReady':
-      'ماڈل ڈیوائس پر محفوظ ہے ({size}) — ایپ اپ ڈیٹ کے بعد دوبارہ ڈاؤن لوڈ نہیں ہوگا۔',
-    'model.cacheFiles': 'ماڈل کیشے میں {count} فائلیں محفوظ ہیں۔',
-    'model.cacheNone':
-      'ماڈل ابھی ڈاؤن لوڈ نہیں ہوا — پہلی ریکارڈنگ پر آئے گا، پھر محفوظ رہے گا۔',
     'audio.heading': 'آڈیو',
     'audio.file': 'ریکارڈنگ کی جگہ فائل چنیں',
     'audio.loaded': 'آڈیو فائل لگ گئی۔',
@@ -470,7 +458,6 @@ const DICT = {
     'status.silentAlert': 'آواز نہیں آ رہی — مائیک کے قریب پڑھیں۔',
     'status.preparing': 'آڈیو تیار ہو رہی ہے…',
     'status.nothing': 'کچھ سنائی نہیں دیا — دوبارہ پڑھیں۔',
-    'status.unclear': 'آواز واضح نہیں تھی — خاموش جگہ پر، مائیک کے قریب دوبارہ پڑھیں۔',
     'status.short': 'آڈیو بہت مختصر ہے — پوری پڑھیں۔',
     'status.silent': 'آڈیو خاموش ہے — مائیک کے قریب پڑھیں۔',
     'status.empty': 'ریکارڈنگ خالی رہی — دوبارہ کوشش کریں۔',
@@ -577,11 +564,6 @@ const DICT = {
     'model.done': 'Downloaded: {file}',
     'model.loadFail': 'The model did not load: {message}',
     'model.newOne': 'New model — tap "Load model".',
-    'model.cacheReady':
-      'The model is saved on this device ({size}) — an app update will not download it again.',
-    'model.cacheFiles': 'The model cache holds {count} files.',
-    'model.cacheNone':
-      'The model is not downloaded yet — it arrives on the first recording and stays after that.',
     'audio.heading': 'Audio',
     'audio.file': 'Choose a file instead of recording',
     'audio.loaded': 'The audio file is loaded.',
@@ -719,8 +701,6 @@ const DICT = {
     'status.preparing': 'Preparing the audio…',
     'status.transcribing': 'Transcribing (on device)…',
     'status.nothing': 'Nothing was heard — please recite again.',
-    'status.unclear':
-      'The audio was not clear — record again in a quiet place, closer to the mic.',
     'status.short': 'Audio is too short — recite the whole aya.',
     'status.silent': 'The audio is silent — move closer to the microphone.',
     'status.empty': 'The recording was empty — please try again.',
@@ -818,6 +798,12 @@ export function applyLanguage(next = language) {
   document.querySelectorAll('[data-lang-select]').forEach((select) => {
     select.value = next;
   });
+}
+
+/** Add extra strings to a language (used by strings-v2.js). */
+export function addStrings(lang, strings) {
+  if (!DICT[lang]) return;
+  Object.assign(DICT[lang], strings);
 }
 
 /** Translate a key, with optional {placeholders}. */

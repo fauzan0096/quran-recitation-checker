@@ -11,7 +11,7 @@
 // (one letter off, e.g. ص/س confusion) is reported as "close" rather than
 // "wrong", which is what a learner needs to see.
 
-import { compareDistance, normalizeArabic, phoneticDistance } from './normalize.js';
+import { compareDistance, normalizeArabic } from './normalize.js';
 
 export const WORD_STATUS = {
   CORRECT: 'correct',
@@ -98,19 +98,14 @@ export function alignWords(expectedWords, heardWords) {
       const b = heardNorm[j - 1];
       const distance = distanceOf(i - 1, b);
       const longest = Math.max(a.length, b.length) || 1;
-      // Sound-alike letters and a dropped prefix only soften "wrong" into
-      // "close"; a word stays "correct" only when the letters really match.
-      const soundDistance = distance === 0 ? 0 : Math.min(distance, phoneticDistance(a, b));
-      const sim = 1 - soundDistance / longest;
-      // Longer words may carry one extra slip and still be the same word.
-      const closeLimit = Math.max(CLOSE_MAX_EDITS, Math.min(3, Math.floor(longest / 4)));
+      const sim = 1 - distance / longest;
 
       let status = 2; // wrong
       let cost = COST.wrong;
       if (distance === 0) {
         status = 0;
         cost = COST.correct;
-      } else if (sim >= CLOSE_MIN_SIMILARITY && soundDistance <= closeLimit) {
+      } else if (sim >= CLOSE_MIN_SIMILARITY && distance <= CLOSE_MAX_EDITS) {
         status = 1;
         cost = COST.close;
       }

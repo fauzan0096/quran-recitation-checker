@@ -69,29 +69,6 @@ export function libraryVersion() {
 }
 
 /**
- * What the browser has kept of the model weights. Transformers.js stores them
- * in a Cache API bucket called "transformers-cache"; as long as that survives,
- * an app update never downloads the model again.
- */
-export async function modelCacheInfo() {
-  try {
-    if (!('caches' in window)) return null;
-    const cache = await caches.open('transformers-cache');
-    const keys = await cache.keys();
-    if (!keys.length) return { files: 0, bytes: 0 };
-    let bytes = 0;
-    for (const request of keys) {
-      const response = await cache.match(request);
-      if (!response) continue;
-      bytes += Number(response.headers.get('content-length') || 0);
-    }
-    return { files: keys.length, bytes };
-  } catch (error) {
-    return null;
-  }
-}
-
-/**
  * Create the ASR pipeline.
  * @param {string} modelId Hugging Face repo id of the ONNX Quran model.
  * @param {(progress: object) => void} onProgress Transformers.js progress event.
@@ -139,8 +116,8 @@ export async function loadModel(modelId, onProgress = () => {}) {
 /** Transcribe 16 kHz mono Float32 audio and return plain text. */
 export async function transcribe(instance, audioFloat32) {
   if (!instance) throw new Error('Model load nahi hua');
-  const audio = prepareAudio(audioFloat32);
-  let timer = null;  const timeout = new Promise((_, reject) => {
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
     timer = setTimeout(
       () => reject(new Error('Transcribe 3 minute me mukammal nahi hua — dobara koshish karein.')),
       180000
@@ -148,15 +125,11 @@ export async function transcribe(instance, audioFloat32) {
   });
   try {
     const output = await Promise.race([
-      // One aya fits inside Whisper's 30-second window, and giving it the whole
-      // take at once keeps the words in one context. Only longer recordings
-      // (a whole mushaf page) are split into overlapping windows.
-      instance(audio, {
+      instance(audioFloat32, {
         language: 'ar',
         task: 'transcribe',
-        ...(audio.length / TARGET_RATE > 29
-          ? { chunk_length_s: 30, stride_length_s: 5 }
-          : {}),
+        chunk_length_s: 30,
+        stride_length_s: 5,
       }),
       timeout,
     ]);
@@ -265,53 +238,6 @@ export function peakOf(samples) {
   return peak;
 }
 
-/**
- * Trim the silence at both ends and even out the level before the recogniser
- * sees the audio. Whisper does better on a clean take: leading/trailing silence
- * only wastes its 30-second windows, and a quiet recording loses detail.
- */
-export function prepareAudio(samples, sampleRate = 16000) {
-  if (!samples || !samples.length) return samples;
-
-  const frame = Math.max(160, Math.round(sampleRate * 0.02));
-  const threshold = 0.006;
-  let first = -1;
-  let last = -1;
-
-  for (let start = 0; start < samples.length; start += frame) {
-    const end = Math.min(samples.length, start + frame);
-    let sum = 0;
-    for (let i = start; i < end; i += 1) sum += samples[i] * samples[i];
-    const rms = Math.sqrt(sum / (end - start));
-    if (rms > threshold) {
-      if (first < 0) first = start;
-      last = end;
-    }
-  }
-
-  if (first < 0) return samples;
-
-  const pad = Math.round(sampleRate * 0.12);
-  const from = Math.max(0, first - pad);
-  const to = Math.min(samples.length, last + pad);
-  const trimmed = samples.subarray(from, to);
-
-  const peak = peakOf(trimmed);
-  if (peak <= 0) return trimmed;
-
-  // Bring the loudest sample to about 0.92 of full scale, but never amplify a
-  // hiss-filled take by more than 8x.
-  const gain = Math.min(8, 0.92 / peak);
-  if (gain > 1.02 || gain < 0.98) {
-    const out = new Float32Array(trimmed.length);
-    for (let i = 0; i < trimmed.length; i += 1) {
-      out[i] = Math.max(-1, Math.min(1, trimmed[i] * gain));
-    }
-    return out;
-  }
-  return trimmed;
-}
-
 function pickMimeType() {
   if (typeof MediaRecorder === 'undefined' || !MediaRecorder.isTypeSupported) return '';
   const candidates = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg;codecs=opus'];
@@ -360,9 +286,7 @@ async function openMicStream() {
   const md = navigator.mediaDevices;
   try {
     return await md.getUserMedia({
-      // The browser's own noise suppression and echo cancellation chew up the
-      // fine detail Whisper needs; a clean, unprocessed mono take works better.
-      audio: { channelCount: 1, echoCancellation: false, noiseSuppression: false },
+      audio: { channelCount: 1, echoCancellation: true, noiseSuppression: true },
     });
   } catch (error) {
     // Some phones/WebViews reject the extra settings: retry with the plain request.

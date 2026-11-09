@@ -95,44 +95,6 @@ export function runSelfTest(context = {}) {
     return 'distance = 0';
   });
 
-  check('Sune mein milte harf (ص/س) "close" hote hain, "sahi" nahi', () => {
-    const alignment = alignWords(['السراط'], ['الصراط']);
-    assertEqual(alignment.results[0].status, WORD_STATUS.CLOSE, 'status');
-    return `status ${alignment.results[0].status}`;
-  });
-
-  check('Hamza ki kami-beshi chalti hai (ءامنا / آمنا / امنا)', () => {
-    for (const heard of ['ءامنا', 'آمنا', 'امنا']) {
-      const alignment = alignWords(['ءَامَنَّا'], [heard]);
-      assertEqual(alignment.results[0].status, WORD_STATUS.CORRECT, `status for ${heard}`);
-    }
-    const shay = alignWords(['شَيْءٍ'], ['شي']);
-    assertEqual(shay.results[0].status, WORD_STATUS.CORRECT, 'شيء / شي');
-    return 'ءامنا / آمنا / امنا / شيء = sahi';
-  });
-
-  check('Do hamze wale lafz (ءأنذرتهم = أأنذرتهم)', () => {
-    const ank = alignWords(['ءَأَنذَرْتَهُمْ'], ['أأنذرتهم']);
-    assertEqual(ank.results[0].status, WORD_STATUS.CORRECT, 'ءأنذرتهم');
-    const ula = alignWords(['أُو۟لَٰٓئِكَ'], ['أولئك']);
-    assertEqual(ula.results[0].status, WORD_STATUS.CORRECT, 'أولئك');
-    const wula = alignWords(['ءُولَٰئِكَ'], ['أولئك']);
-    assertEqual(wula.results[0].status, WORD_STATUS.CORRECT, 'ءولئك');
-    return 'ءأنذرتهم / أولئك / ءولئك = sahi';
-  });
-
-  check('Uthmani rasm aur aam imla barabar (الصلوة = الصلاة)', () => {
-    for (const heard of ['الصلاة', 'الصلوة']) {
-      const alignment = alignWords(['ٱلصَّلَوٰةَ'], [heard]);
-      assertEqual(alignment.results[0].status, WORD_STATUS.CORRECT, `status for ${heard}`);
-    }
-    for (const heard of ['الزكاة', 'الزكوة']) {
-      const alignment = alignWords(['ٱلزَّكَوٰةَ'], [heard]);
-      assertEqual(alignment.results[0].status, WORD_STATUS.CORRECT, `status for ${heard}`);
-    }
-    return 'الصلوة / الصلاة / الزكوة / الزكاة = sahi';
-  });
-
   check('Bilkul durust tilawat = 100', () => {
     const expected = ['الحمد', 'لله', 'رب', 'العالمين'];
     const alignment = alignWords(expected, expected);
