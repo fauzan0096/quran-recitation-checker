@@ -146,6 +146,16 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 - Alignment/tajweed ka koi bhi hissa server-side nahi hai — sirf model ka ek
   dafa download, uske baad app offline chalti hai.
 
+## Install (PWA)
+
+- `install.js` + `sw.js`: app home screen par install ho jati hai aur shell (Quran
+  text, page data, JS/CSS) offline cache ho jata hai.
+- Android/Chrome: `beforeinstallprompt` pakar kar neeche chhoti **Install** card aati
+  hai, jo asli install prompt kholti hai (`appinstalled` par band ho jati hai).
+- iOS/Safari: wahi card **Share → Add to Home Screen** ke steps dikhata hai.
+- Settings me bhi **"Install app"** card hai (banner dismiss karne ke baad bhi).
+- Installed app ka naam **بيّن** hi dikhta hai (manifest `short_name` + `lang: ar`).
+
 ## Design / icon / naam
 
 - Naam: **Bayyin (بيّن)** — launcher/manifest me Arabic **بيّن** hi dikhta hai.- Palette: **mushaf leather (burgundy/plum) + copper + parchment** — green/blue se alag,
