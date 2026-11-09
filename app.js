@@ -130,6 +130,7 @@ async function init() {
   }
   updatePageTotal();
   await showList();
+  setView('home');
   hideSplash();
   maybeWelcome();
 }
@@ -213,6 +214,7 @@ function cacheElements() {
     'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
     'resume-aya', 'progress-stats', 'progress-lists', 'progress-reset',
     'open-more', 'close-more', 'view-more', 'more-tasbeeh', 'more-qibla', 'more-calendar',
+    'home-surah', 'home-mushaf', 'home-search',
     'more-daily', 'view-daily', 'close-daily', 'daily-root',
     'view-tasbeeh', 'close-tasbeeh', 'tasbeeh-root',
     'view-qibla', 'close-qibla', 'qibla-root',
@@ -1759,6 +1761,24 @@ function wireEvents() {
 
   if (els.openMore) els.openMore.addEventListener('click', () => setView('more'));
   if (els.closeMore) els.closeMore.addEventListener('click', () => setView('reader'));
+  if (els.homeSurah) {
+    els.homeSurah.addEventListener('click', () => {
+      setView('reader');
+      setMode('surah');
+    });
+  }
+  if (els.homeMushaf) {
+    els.homeMushaf.addEventListener('click', () => {
+      setView('reader');
+      setMode('page');
+    });
+  }
+  if (els.homeSearch) {
+    els.homeSearch.addEventListener('click', () => {
+      setView('reader');
+      setMode('search');
+    });
+  }
   if (els.moreDaily) els.moreDaily.addEventListener('click', () => setView('daily'));
   if (els.moreTasbeeh) els.moreTasbeeh.addEventListener('click', () => setView('tasbeeh'));
   if (els.moreQibla) els.moreQibla.addEventListener('click', () => setView('qibla'));
