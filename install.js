@@ -5,6 +5,8 @@
 // small install card. On iOS, where no such event exists, it explains the
 // Share → Add to Home Screen route instead.
 
+import { t } from './i18n.js';
+
 (function () {
   const DISMISS_KEY = 'bayyin.installDismissed';
   const isStandalone = () =>
@@ -99,19 +101,19 @@
     title.dir = 'rtl';
     title.textContent = 'بيّن';
     const sub = document.createElement('span');
-    sub.textContent = 'Home screen par install karein — bina browser, tez aur offline.';
+    sub.textContent = t('install.card.sub');
     text.append(title, sub);
 
     const install = document.createElement('button');
     install.type = 'button';
     install.className = 'btn primary small';
-    install.textContent = 'Install';
+    install.textContent = t('install.card.button');
     install.addEventListener('click', () => openInstall());
 
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'install-close';
-    close.setAttribute('aria-label', 'Band karein');
+    close.setAttribute('aria-label', t('install.close'));
     close.textContent = '×';
     close.addEventListener('click', () => {
       hideCard();
@@ -153,20 +155,12 @@
     box.className = 'install-guide';
 
     const title = document.createElement('h3');
-    title.textContent = 'App install karein';
+    title.textContent = t('install.heading');
 
     const steps = document.createElement('ol');
     const list = isIOS
-      ? [
-          'Safari me neeche Share button (□↑) dabaein.',
-          'List me "Add to Home Screen" chunein.',
-          'Naam "بيّن" rahega — "Add" dabaein.',
-        ]
-      : [
-          'Browser menu (⋮) kholein.',
-          '"Install app" ya "Add to Home screen" chunein.',
-          'Home screen par بيّن ka icon aa jayega.',
-        ];
+      ? [t('install.ios.1'), t('install.ios.2'), t('install.ios.3')]
+      : [t('install.and.1'), t('install.and.2'), t('install.and.3')];
     for (const step of list) {
       const li = document.createElement('li');
       li.textContent = step;
@@ -176,7 +170,7 @@
     const close = document.createElement('button');
     close.type = 'button';
     close.className = 'btn primary';
-    close.textContent = 'Samajh gaya';
+    close.textContent = t('install.ok');
     close.addEventListener('click', () => overlay.remove());
 
     box.append(title, steps, close);

@@ -32,12 +32,14 @@ import {
   libraryVersion,
 } from './asr.js';
 import { runSelfTest } from './selftest.js';
+import { LANGUAGES, initLanguage, getLanguage, setLanguage, t } from './i18n.js';
 
 const STORAGE = {
   selection: 'tc.selection',
   model: 'tc.modelId',
   hidden: 'tc.textHidden',
   reading: 'tc.reading',
+  welcomed: 'tc.welcomed',
 };
 const CHUNK = 25;
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
@@ -75,21 +77,30 @@ const state = {
 
 const els = {};
 let toastTimer = null;
+const bootAt = Date.now();
+let splashGone = false;
 
 init();
 
 async function init() {
   cacheElements();
+  initLanguage();
+  fillLanguages();
   fillSurahs();
   fillModels();
   restoreSelection();
   wireEvents();
   setGlobalStatus('');
 
+  // If the Quran text or the page data never arrives, the splash must not stay
+  // in front of the app.
+  window.setTimeout(hideSplash, 6000);
+
   try {
     await loadQuran();
   } catch (error) {
-    showError('Quran text load nahi hua — page dobara kholein ya internet check karein.');
+    showError(t('error.quranLoad'));
+    hideSplash();
     return;
   }
   try {
@@ -98,6 +109,65 @@ async function init() {
     console.warn('page data failed', error);
   }
   updatePageTotal();
+  await showList();
+  hideSplash();
+  maybeWelcome();
+}
+
+// ---------------------------------------------------------------- boot UIs
+
+/** Fade the logo splash away — but never so fast that it just flashes. */
+function hideSplash() {
+  const splash = els.splash || document.getElementById('splash');
+  if (splashGone || !splash) {
+    splashGone = true;
+    return;
+  }
+  splashGone = true;
+  const wait = Math.max(0, 900 - (Date.now() - bootAt));
+  window.setTimeout(() => {
+    splash.classList.add('is-gone');
+    window.setTimeout(() => splash.remove(), 420);
+  }, wait);
+}
+
+/** Very first visit: one short welcome screen, in the language they pick. */
+function maybeWelcome() {
+  const welcome = els.welcome;
+  if (!welcome) return;
+  let seen = '1'; // private mode: don't nag on every open
+  try {
+    seen = localStorage.getItem(STORAGE.welcomed) || '';
+  } catch (error) {
+    seen = '1';
+  }
+  if (seen === '1') return;
+  welcome.hidden = false;
+  document.body.classList.add('has-overlay');
+}
+
+function closeWelcome() {
+  if (!els.welcome) return;
+  els.welcome.hidden = true;
+  document.body.classList.remove('has-overlay');
+  try {
+    localStorage.setItem(STORAGE.welcomed, '1');
+  } catch (error) {
+    /* private mode */
+  }
+}
+
+/** Switch language and redraw whatever is on screen. */
+async function changeLanguage(value) {
+  setLanguage(value);
+  els.toggleText.textContent = state.textHidden ? t('text.show') : t('text.hide');
+  applyReading(false);
+  renderTajweed();
+  if (!isLoaded()) return;
+  if (state.mode === 'search') {
+    els.listTitle.textContent = t('list.searchTitle');
+    return;
+  }
   await showList();
 }
 
@@ -115,6 +185,7 @@ function cacheElements() {
     'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
     'mic-check', 'mic-check-output', 'player', 'tajweed', 'run-tests',
     'test-results', 'toast',
+    'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
   ];
   for (const id of ids) {
     const name = id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -123,6 +194,20 @@ function cacheElements() {
 }
 
 // ------------------------------------------------------------------ setup
+
+function fillLanguages() {
+  for (const select of [els.welcomeLang, els.langSelect]) {
+    if (!select) continue;
+    select.innerHTML = '';
+    for (const language of LANGUAGES) {
+      const option = document.createElement('option');
+      option.value = language.id;
+      option.textContent = language.label;
+      select.appendChild(option);
+    }
+    select.value = getLanguage();
+  }
+}
 
 function fillSurahs() {
   els.surahSelect.innerHTML = '';
@@ -165,7 +250,7 @@ function restoreSelection() {
   els.surahSelect.value = String(state.surah);
   els.mushafSelect.value = state.mushaf;
   els.pageNumber.value = String(state.page);
-  els.toggleText.textContent = state.textHidden ? 'Text dikhayein' : 'Text chhupayein';
+  els.toggleText.textContent = state.textHidden ? t('text.show') : t('text.hide');
 
   try {
     const reading = JSON.parse(localStorage.getItem(STORAGE.reading) || 'null');
@@ -211,10 +296,10 @@ function clamp(value, min, max) {
 }
 
 function weightLabel() {
-  if (state.fontWeight <= 350) return 'patla';
-  if (state.fontWeight <= 500) return 'aam';
-  if (state.fontWeight <= 650) return 'mota';
-  return 'bohot mota';
+  if (state.fontWeight <= 350) return t('weight.thin');
+  if (state.fontWeight <= 500) return t('weight.normal');
+  if (state.fontWeight <= 650) return t('weight.bold');
+  return t('weight.black');
 }
 
 function applyReading(persist = true) {
@@ -257,7 +342,7 @@ function stepWeight(delta) {
 function toggleTheme() {
   state.theme = state.theme === 'dark' ? 'light' : 'dark';
   applyReading();
-  toast(state.theme === 'dark' ? 'Night mode on' : 'Night mode off');
+  toast(state.theme === 'dark' ? t('theme.on') : t('theme.off'));
 }
 
 // ---------------------------------------------------------------- listing
@@ -279,7 +364,7 @@ function applyMode() {
 
 function updatePageTotal() {
   const total = pageMax();
-  els.pageTotal.textContent = `${total} pages`;
+  els.pageTotal.textContent = t('page.total', { total });
   els.pageNumber.max = String(total);
 }
 
@@ -298,21 +383,27 @@ async function showList() {
   try {
     if (state.mode === 'page') {
       if (state.mushaf === 'indopak') {
-        setGlobalStatus(`IndoPak page ${state.page} load ho raha hai…`);
+        setGlobalStatus(t('status.indopak', { page: state.page }));
         const list = await indopakPage(state.page);
         state.verses = list.map((entry) => verseFromText(entry.surah, entry.aya, entry.text));
         setGlobalStatus('');
-        els.listTitle.textContent = `Mushaf IndoPak — page ${state.page} / ${INDOPAK_PAGES}`;
+        els.listTitle.textContent = t('list.pageIndopak', {
+          page: state.page,
+          total: INDOPAK_PAGES,
+        });
       } else {
         const list = pageAyahs(state.page);
-        if (!list.length) throw new Error('Is page ka text nahi mila.');
+        if (!list.length) throw new Error(t('error.pageText'));
         state.verses = list.map(({ surah, aya }) => getVerses(surah, aya, aya)[0]).filter(Boolean);
-        els.listTitle.textContent = `Mushaf Madani — page ${state.page} / 604`;
+        els.listTitle.textContent = t('list.pageMadani', { page: state.page, total: pageMax() });
       }
     } else {
       const total = Math.max(1, ayaCount(state.surah));
       state.verses = getVerses(state.surah, 1, total);
-      els.listTitle.textContent = `${surahName(state.surah)} — ${total} ayaat`;
+      els.listTitle.textContent = t('list.surah', {
+        name: surahName(state.surah),
+        total,
+      });
     }
     els.pageNumber.value = String(state.page);
   } catch (error) {
@@ -362,7 +453,7 @@ function renderList() {
   if (!verses.length) {
     const empty = document.createElement('p');
     empty.className = 'hint';
-    empty.textContent = 'Yahan koi aya nahi mili.';
+    empty.textContent = t('list.none');
     els.ayaList.appendChild(empty);
   }
   for (const verse of verses) els.ayaList.appendChild(ayaCard(verse));
@@ -391,7 +482,7 @@ function ayaCard(verse) {
   const share = document.createElement('button');
   share.type = 'button';
   share.className = 'icon-btn small';
-  share.title = 'Share this aya';
+  share.title = t('share.aya');
   share.textContent = '↗';
   share.addEventListener('click', () => shareAya(verse));
 
@@ -419,8 +510,8 @@ function ayaCard(verse) {
   record.type = 'button';
   record.className = 'btn primary record-aya';
   record.dataset.recId = key;
-  record.dataset.label = 'Record';
-  record.textContent = 'Record';
+  record.dataset.label = t('record');
+  record.textContent = t('record');
   record.addEventListener('click', () => toggleRecording(key, [key]));
   actions.appendChild(record);
 
@@ -459,18 +550,18 @@ function renderMushafPage() {
 
       const label = document.createElement('span');
       label.className = 'selection-label';
-      label.textContent = `Aya ${state.selectedKey}`;
+      label.textContent = t('selection.aya', { ref: state.selectedKey });
 
       const share = document.createElement('button');
       share.type = 'button';
       share.className = 'btn ghost small';
-      share.textContent = 'Share';
+      share.textContent = t('share');
       share.addEventListener('click', () => shareAya(selected));
 
       const clear = document.createElement('button');
       clear.type = 'button';
       clear.className = 'btn ghost small';
-      clear.textContent = 'Cancel';
+      clear.textContent = t('cancel');
       clear.addEventListener('click', () => {
         state.selectedKey = null;
         renderList();
@@ -480,8 +571,8 @@ function renderMushafPage() {
       record.type = 'button';
       record.className = 'btn primary small';
       record.dataset.recId = `sel-${state.selectedKey}`;
-      record.dataset.label = 'Record this aya';
-      record.textContent = 'Record this aya';
+      record.dataset.label = t('record.aya');
+      record.textContent = t('record.aya');
       const key = state.selectedKey;
       record.addEventListener('click', () => toggleRecording(`sel-${key}`, [key]));
 
@@ -562,8 +653,8 @@ function renderMushafPage() {
   record.type = 'button';
   record.className = 'btn primary record-aya';
   record.dataset.recId = 'page';
-  record.dataset.label = 'Is poore page ko record karein';
-  record.textContent = 'Is poore page ko record karein';
+  record.dataset.label = t('record.page');
+  record.textContent = t('record.page');
   record.addEventListener('click', () => {
     const keys = state.verses.map((verse) => keyOf(verse.surah, verse.aya));
     toggleRecording('page', keys);
@@ -596,7 +687,11 @@ function mistakeBlock(key, problems) {
     const tag = document.createElement('span');
     tag.className = 'tag';
     tag.textContent =
-      r.status === WORD_STATUS.CLOSE ? 'qareeb' : r.status === WORD_STATUS.MISSING ? 'chhoot gaya' : 'galat';
+      r.status === WORD_STATUS.CLOSE
+        ? t('count.close')
+        : r.status === WORD_STATUS.MISSING
+          ? t('note.missing')
+          : t('count.wrong');
 
     const expected = document.createElement('span');
     expected.className = 'aya-word';
@@ -608,7 +703,7 @@ function mistakeBlock(key, problems) {
 
     const heard = document.createElement('span');
     heard.className = r.heard ? 'spoken-word' : 'spoken-word muted';
-    heard.textContent = r.heard || 'nahi padha';
+    heard.textContent = r.heard || t('note.unread');
 
     li.append(tag, expected, arrow, heard);
     list.appendChild(li);
@@ -660,24 +755,26 @@ function renderAyaText(target, verse, alignment) {
     extra.className = 'extra-line';
     extra.lang = 'ar';
     extra.dir = 'rtl';
-    extra.textContent = `aya me nahi: ${alignment.extras.map((e) => e.heard).join(' ')}`;
+    extra.textContent = t('extra.line', {
+      words: alignment.extras.map((e) => e.heard).join(' '),
+    });
     target.appendChild(extra);
   }
 }
 
 function noteFor(result) {
-  if (result.status === WORD_STATUS.MISSING || !result.heard) return 'chhoot gaya';
-  if (result.status === WORD_STATUS.CLOSE) return `qareeb: ${result.heard}`;
-  return `padha: ${result.heard}`;
+  if (result.status === WORD_STATUS.MISSING || !result.heard) return t('note.missing');
+  if (result.status === WORD_STATUS.CLOSE) return t('note.closeHeard', { word: result.heard });
+  return t('note.readHeard', { word: result.heard });
 }
 
 function countsLine(c) {
   return [
-    `${c.correct} sahi`,
-    c.close ? `${c.close} qareeb` : '',
-    c.wrong ? `${c.wrong} galat` : '',
-    c.missing ? `${c.missing} chhoote` : '',
-    c.extra ? `${c.extra} zaid` : '',
+    `${c.correct} ${t('count.correct')}`,
+    c.close ? `${c.close} ${t('count.close')}` : '',
+    c.wrong ? `${c.wrong} ${t('count.wrong')}` : '',
+    c.missing ? `${c.missing} ${t('count.missing')}` : '',
+    c.extra ? `${c.extra} ${t('count.extra')}` : '',
   ]
     .filter(Boolean)
     .join(' · ');
@@ -707,9 +804,7 @@ function renderAyaResult(target, alignment) {
     const ok = document.createElement('p');
     ok.className = 'hint';
     ok.textContent =
-      alignment.score === 100
-        ? 'Sab alfaz aya ke mutabiq sune gaye. (Tajweed ki bareek ghalti ASR se nahi pakdi jati.)'
-        : 'Lafz ke mutabiq koi ghalti nahi mili.';
+      alignment.score === 100 ? t('hint.allWords') : t('hint.noWordErrors');
     target.appendChild(ok);
     return;
   }
@@ -755,10 +850,14 @@ function updateRecordButtons() {
     button.disabled = locked || (state.recording !== null && !isActive);
     if (isActive) {
       button.classList.add('recording');
-      if (!button.textContent.startsWith('Stop')) button.textContent = 'Stop · 0:00';
+      if (button.dataset.active !== '1') {
+        button.dataset.active = '1';
+        button.textContent = `${t('stop')} · 0:00`;
+      }
     } else {
       button.classList.remove('recording');
-      button.textContent = button.dataset.label || 'Record';
+      delete button.dataset.active;
+      button.textContent = button.dataset.label || t('record');
     }
   });
 }
@@ -772,13 +871,13 @@ async function toggleRecording(id, keys) {
 
   state.recording = { id, keys };
   state.levelState = '';
-  setStatus(id, 'Mic khul raha hai…');
+  setStatus(id, t('status.mic'));
   updateRecordButtons();
 
   try {
     state.recorder = await startRecording({ maxSeconds: 180 });
     state.recordingStarted = Date.now();
-    setStatus(id, 'Recording… padhein, phir Stop dabaein.');
+    setStatus(id, t('status.recording'));
     startTimer(id);
   } catch (error) {
     state.recording = null;
@@ -797,17 +896,17 @@ async function finishRecording(byItself) {
   state.recording = null;
   stopTimer();
   updateRecordButtons();
-  setStatus(current.id, byItself ? 'Recording khud ruki — audio taiyar ho raha hai…' : 'Audio taiyar ho raha hai…');
+  setStatus(current.id, t(byItself ? 'status.byItself' : 'status.preparing'));
 
   let blob = null;
   try {
     blob = await recorder.stop();
   } catch (error) {
-    setStatus(current.id, `Recording error: ${error.message}`, 'error');
+    setStatus(current.id, t('status.recordError', { message: error.message }), 'error');
     return;
   }
   if (!blob || !blob.size) {
-    setStatus(current.id, 'Recording khali rahi — dobara koshish karein.', 'error');
+    setStatus(current.id, t('status.empty'), 'error');
     return;
   }
   await checkTarget(current.id, current.keys, blob);
@@ -819,7 +918,7 @@ function startTimer(id) {
     if (!state.recording) return;
     const seconds = Math.floor((Date.now() - state.recordingStarted) / 1000);
     const button = document.querySelector(`[data-rec-id="${id}"]`);
-    if (button) button.textContent = `Stop · ${formatClock(seconds)}`;
+    if (button) button.textContent = `${t('stop')} · ${formatClock(seconds)}`;
     const recorder = state.recorder;
     if (recorder && typeof recorder.getState === 'function' && recorder.getState() === 'inactive') {
       finishRecording(true);
@@ -829,10 +928,10 @@ function startTimer(id) {
     if (peak >= 0) {
       if (peak >= 0.01 && state.levelState !== 'ok') {
         state.levelState = 'ok';
-        setStatus(id, 'Recording… awaaz aa rahi hai. Mukammal hone par Stop dabaein.');
+        setStatus(id, t('status.hearing'));
       } else if (peak < 0.002 && seconds >= 3 && state.levelState !== 'silent') {
         state.levelState = 'silent';
-        setStatus(id, 'Awaaz nahi aa rahi — mic ke qareeb padhein.', 'error');
+        setStatus(id, t('status.silentAlert'), 'error');
       }
     }
   }, 300);
@@ -861,21 +960,21 @@ async function checkTarget(id, keys, blob) {
   updateRecordButtons();
 
   try {
-    setStatus(id, 'Audio taiyar ho raha hai…');
+    setStatus(id, t('status.preparing'));
     const audio = await decodeToMono16k(blob);
-    if (audio.length < 6400) throw new Error('Audio bohot chhota hai — poora padhein.');
-    if (peakOf(audio) < 0.003) throw new Error('Audio khamosh hai — mic ke qareeb padhein.');
+    if (audio.length < 6400) throw new Error(t('status.short'));
+    if (peakOf(audio) < 0.003) throw new Error(t('status.silent'));
 
     if (!state.model) {
-      setGlobalStatus('Speech model download ho raha hai… (pehli dafa ~105 MB)');
+      setGlobalStatus(t('status.modelDownload'));
       const loaded = await handleLoadModel();
-      if (!loaded) throw new Error('Model load nahi hua — Settings me dobara koshish karein.');
+      if (!loaded) throw new Error(t('status.modelFailed'));
       setGlobalStatus('');
     }
 
-    setStatus(id, 'Transcribe ho raha hai (device par)…');
+    setStatus(id, t('status.transcribing'));
     const text = await transcribe(state.model, audio);
-    if (!text) throw new Error('Kuch sunai nahi diya — dobara padhein.');
+    if (!text) throw new Error(t('status.nothing'));
 
     const expected = [];
     const wordVerse = [];
@@ -940,14 +1039,14 @@ function summarise(results, extras) {
   score -= Math.min(15, extras.length * 2);
   score = Math.max(0, Math.min(100, Math.round(score)));
 
-  let verdict = 'Kuch suna nahi gaya';
+  let verdict = t('verdict.nothing');
   if (counted) {
     if (!counts.wrong && !counts.missing && !counts.extra) {
-      verdict = score === 100 ? 'Bilkul sahi' : 'Sahi (thori bariqi)';
-    } else if (score >= 85) verdict = 'Achha — chhoti ghaltiyan';
-    else if (score >= 65) verdict = 'Theek — kuch alfaaz durust karein';
-    else if (score >= 40) verdict = 'Dobara koshish karein';
-    else verdict = 'Is aya ko phir se seekhein';
+      verdict = score === 100 ? t('verdict.perfect') : t('verdict.near');
+    } else if (score >= 85) verdict = t('verdict.good');
+    else if (score >= 65) verdict = t('verdict.ok');
+    else if (score >= 40) verdict = t('verdict.retry');
+    else verdict = t('verdict.learn');
   }
 
   return { results, extras, counts, score, verdict };
@@ -965,13 +1064,15 @@ async function handleLoadModel() {
   els.modelSelect.disabled = true;
   els.modelProgress.hidden = false;
   setProgress(0);
-  els.modelStatus.textContent = 'Model download ho raha hai…';
+  els.modelStatus.textContent = t('model.downloading');
   updateRecordButtons();
 
   try {
     state.model = await loadModel(modelId, onModelProgress);
     state.modelId = modelId;
-    els.modelStatus.textContent = `Model tayyar hai${libraryVersion() ? ` (transformers ${libraryVersion()})` : ''}.`;
+    els.modelStatus.textContent = `${t('model.ready')}${
+      libraryVersion() ? ` (transformers ${libraryVersion()})` : ''
+    }`;
     setProgress(100);
     try {
       localStorage.setItem(STORAGE.model, modelId);
@@ -983,9 +1084,9 @@ async function handleLoadModel() {
   } catch (error) {
     state.model = null;
     state.modelId = null;
-    els.modelStatus.textContent = `Model load fail: ${error.message}`;
+    els.modelStatus.textContent = t('model.loadFail', { message: error.message });
     els.modelProgress.hidden = true;
-    setGlobalStatus(`Model load fail: ${error.message}`);
+    setGlobalStatus(t('model.loadFail', { message: error.message }));
     return false;
   } finally {
     state.modelLoading = false;
@@ -1002,11 +1103,11 @@ function onModelProgress(progress) {
     if (progress.file) els.modelStatus.textContent = `${progress.file} — ${pct}%`;
     if (progress.file && pct % 20 < 5) setGlobalStatus(`Model download: ${progress.file} ${pct}%`);
   } else if (progress.status === 'initiate' && progress.file) {
-    els.modelStatus.textContent = `Shuru: ${progress.file}`;
+    els.modelStatus.textContent = t('model.start', { file: progress.file });
   } else if (progress.status === 'done' && progress.file) {
-    els.modelStatus.textContent = `Download mukammal: ${progress.file}`;
+    els.modelStatus.textContent = t('model.done', { file: progress.file });
   } else if (progress.status === 'ready') {
-    els.modelStatus.textContent = 'Model ready…';
+    els.modelStatus.textContent = t('model.readying');
   }
 }
 
@@ -1036,7 +1137,7 @@ async function runSearch() {
     const juz = Number(juzMatch[1]);
     if (juz >= 1 && juz <= 30) {
       const list = juzAyahs(juz);
-      renderSearchResults(list, `Juz ${juz} — ${list.length} ayaat`);
+      renderSearchResults(list, t('list.juz', { juz, total: list.length }));
       return;
     }
   }
@@ -1046,7 +1147,7 @@ async function runSearch() {
     els.searchResults.innerHTML = '';
     const hint = document.createElement('p');
     hint.className = 'hint';
-    hint.textContent = 'Kam az kam 2 harf likhein (harakat ke baghair bhi chalega).';
+    hint.textContent = t('list.minChars');
     els.searchResults.appendChild(hint);
     return;
   }
@@ -1060,7 +1161,7 @@ async function runSearch() {
       if (normalizeArabic(text.ayaText || text.text).includes(needle)) found.push({ surah, aya });
     }
   }
-  renderSearchResults(found, `"${raw}" — ${found.length} nataij`);
+  renderSearchResults(found, t('list.results', { query: raw, total: found.length }));
 }
 
 function renderSearchResults(list, heading) {
@@ -1076,7 +1177,7 @@ function renderSearchResults(list, heading) {
   if (!list.length) {
     const empty = document.createElement('p');
     empty.className = 'hint';
-    empty.textContent = 'Kuch nahi mila. Doosra lafz ya aya number try karein.';
+    empty.textContent = t('list.noResults');
     els.searchResults.appendChild(empty);
     return;
   }
@@ -1127,7 +1228,7 @@ function openSettings() {
   els.viewReader.hidden = true;
   els.viewSettings.hidden = false;
   if (els.modelStatus && !els.modelStatus.textContent) {
-    els.modelStatus.textContent = 'Model abhi load nahi hua. Pehli recording par khud load hoga.';
+    els.modelStatus.textContent = t('model.status');
   }
   renderTajweed();
 }
@@ -1142,7 +1243,7 @@ function setTextHidden(hidden) {
   document.querySelectorAll('.aya-text, .page-text').forEach((element) => {
     element.classList.toggle('is-hidden', state.textHidden);
   });
-  els.toggleText.textContent = state.textHidden ? 'Text dikhayein' : 'Text chhupayein';
+  els.toggleText.textContent = state.textHidden ? t('text.show') : t('text.hide');
   els.toggleText.setAttribute('aria-pressed', String(state.textHidden));
   persistSelection();
 }
@@ -1163,13 +1264,13 @@ function showError(message) {
 async function shareApp() {
   await shareOrCopy({
     title: 'Bayyin (بيّن)',
-    text: 'Quran tilawat khud check karein — on-device, bina server ke.',
+    text: t('share.text'),
     url: location.href,
   });
 }
 
 async function shareAya(verse) {
-  const reference = `${surahName(verse.surah)} — aya ${verse.aya}`;
+  const reference = t('share.ref', { name: surahName(verse.surah), aya: verse.aya });
   await shareOrCopy({
     title: reference,
     text: `${reference}\n\n${verse.text}\n\n${location.href}`,
@@ -1188,9 +1289,9 @@ async function shareOrCopy(data) {
   }
   try {
     await navigator.clipboard.writeText(`${data.text}\n${data.url}`);
-    toast('Copy ho gaya — paste kar ke share karein.');
+    toast(t('share.copied'));
   } catch (error) {
-    toast('Share support nahi hai.');
+    toast(t('share.unsupported'));
   }
 }
 
@@ -1201,17 +1302,19 @@ function renderTajweed() {
   els.tajweed.innerHTML = '';
   const verse = state.verses[0];
   if (!verse) {
-    els.tajweed.textContent = 'Pehle koi aya chunein.';
+    els.tajweed.textContent = t('tajweed.pick');
     return;
   }
   const hints = tajweedHints(verse.ayaText || verse.text, 8);
   if (!hints.length) {
-    els.tajweed.textContent = `${verse.surah}:${verse.aya} me koi tajweed hint nahi mila.`;
+    els.tajweed.textContent = t('tajweed.none', { ref: `${verse.surah}:${verse.aya}` });
     return;
   }
   const intro = document.createElement('p');
   intro.className = 'hint';
-  intro.textContent = `${surahName(verse.surah)} ${verse.aya} — script se milne wale hints:`;
+  intro.textContent = t('tajweed.intro', {
+    ref: `${surahName(verse.surah)} ${verse.aya}`,
+  });
   els.tajweed.appendChild(intro);
   const list = document.createElement('ul');
   list.className = 'hint-list';
@@ -1268,20 +1371,22 @@ async function runMicCheck() {
   };
 
   const support = micSupport();
-  push('Secure page', support.secure ? 'haan' : 'nahi', support.secure);
-  push('Microphone API', support.hasApi ? 'maujood' : 'nahi', support.hasApi);
-  push('Permission', await micPermissionState(), null);
+  push(t('diag.secure'), support.secure ? t('diag.yes') : t('diag.no'), support.secure);
+  push(t('diag.micApi'), support.hasApi ? t('diag.present') : t('diag.no'), support.hasApi);
+  push(t('diag.permission'), await micPermissionState(), null);
 
   try {
     const recorder = await startRecording({ maxSeconds: 8 });
-    push('Recording (2s)', 'chal rahi hai…', null);
+    push(t('diag.record'), t('diag.running'), null);
     await new Promise((resolve) => window.setTimeout(resolve, 2000));
     const peak = recorder.getPeak();
     const blob = await recorder.stop();
-    push('Recording (2s)', `${blob.size} bytes`, blob.size > 0);
-    if (peak >= 0) push('Awaaz ka level', peak >= 0.01 ? 'theek' : 'bohot halka', peak >= 0.01);
+    push(t('diag.record'), t('diag.bytes', { bytes: blob.size }), blob.size > 0);
+    if (peak >= 0) {
+      push(t('diag.sound'), peak >= 0.01 ? t('diag.good') : t('diag.low'), peak >= 0.01);
+    }
   } catch (error) {
-    push('Recording (2s)', error.message, false);
+    push(t('diag.record'), error.message, false);
   } finally {
     state.micChecking = false;
     updateRecordButtons();
@@ -1311,7 +1416,7 @@ function runEngineTests() {
     els.testResults.appendChild(li);
   }
   const passed = results.filter((result) => result.pass).length;
-  toast(`Self-test: ${passed}/${results.length} pass`);
+  toast(t('self.pass', { passed, total: results.length }));
 }
 
 // ----------------------------------------------------------------- events
@@ -1322,7 +1427,7 @@ function setMode(mode) {
   if (mode === 'search') {
     els.ayaList.hidden = true;
     els.searchResults.hidden = false;
-    els.listTitle.textContent = 'Talash';
+    els.listTitle.textContent = t('list.searchTitle');
     return;
   }
   els.searchResults.hidden = true;
@@ -1389,7 +1494,7 @@ function wireEvents() {
     if (state.model && state.modelId !== els.modelSelect.value) {
       state.model = null;
       state.modelId = null;
-      els.modelStatus.textContent = 'Naya model — "Model load karein" dabaein.';
+      els.modelStatus.textContent = t('model.newOne');
     }
   });
   els.loadModel.addEventListener('click', () => {
@@ -1401,11 +1506,19 @@ function wireEvents() {
     if (!file) return;
     els.player.src = URL.createObjectURL(file);
     els.player.hidden = false;
-    toast('Audio file lagi hai.');
+    toast(t('audio.loaded'));
   });
 
   els.micCheck.addEventListener('click', runMicCheck);
   els.runTests.addEventListener('click', runEngineTests);
+
+  if (els.welcomeStart) els.welcomeStart.addEventListener('click', closeWelcome);
+  if (els.welcomeLang) {
+    els.welcomeLang.addEventListener('change', () => changeLanguage(els.welcomeLang.value));
+  }
+  if (els.langSelect) {
+    els.langSelect.addEventListener('change', () => changeLanguage(els.langSelect.value));
+  }
 }
 
 function toast(message) {

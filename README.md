@@ -7,7 +7,8 @@ upload nahi hota**.
 
 ## Files (sab ek hi level par, koi folder nahi)
 
-`index.html`, `styles.css`, `app.js` (UI), `asr.js` (mic + model), `align.js`, `normalize.js`,
+`index.html`, `styles.css`, `app.js` (UI), `i18n.js` (zubaan / translations),
+`asr.js` (mic + model), `align.js`, `normalize.js`,
 `tajweed.js`, `quran.js`, `surahs.js`, `selftest.js`, `quran-tanzil.txt`.
 
 ## Kaam kaise karta hai (pipeline)
@@ -41,9 +42,10 @@ on-device.
 - Ye ek **zero-build plain web app** hai: `index.html` + ES modules, koi bundler nahi.
 - Pehli dafa model load karne ke liye internet chahiye (CDN se library aur
   Hugging Face se model weights). Uske baad model browser cache me rehta hai.
-- Reader do tarah se khulta hai: **Surah** (poori surah aya-ba-aya) aur
-  **Mushaf page** (604 pages ka page-wise data `quran-pages.xml` se). Har aya apne
-  card me hoti hai aur usi ke neeche apna **Record** button hota hai.
+- Reader teen tabs me khulta hai: **Surah** (poori surah aya-ba-aya), **Mushaf**
+  (page-wise, Madani ya IndoPak) aur **Talash** (lafz / aya / juz se). Surah aur
+  page dono me har aya apne card me (ya mushaf page par apni jagah) hoti hai aur
+  usi ke neeche apna **Record** button hota hai.
 - Settings ek alag page hai (gear icon): share, model, audio/mic, tajweed hints,
   self-test, about/privacy aur licenses.
 - Mic ke baghair engine test: **Settings → Engine self-test**.
@@ -75,6 +77,23 @@ on-device.
   liye. Phone already dark mode me ho to app khud dark khulti hai; pasand yaad rehti hai.
 - List ke neeche **A− / A+** se text ka size (18–44px) aur **− / +** se harf ki
   motai (300–800; patla / aam / mota / bohot mota). Dono settings yaad rehti hain.
+
+## Zubaan, splash aur khush aamdeed
+
+- Teen zubanein: **Roman Urdu**, **اردو** aur **English** — Settings → *Zubaan*, ya
+  pehli dafa ki welcome screen par. Chuni hui zubaan browser me yaad rehti hai
+  (`localStorage['tc.lang']`); phone ki zubaan Urdu ho to app khud Urdu me khulti hai.
+- Poora UI usi zubaan me badal jata hai: tabs, labels, status lines, score/verdict,
+  ghalti ke tags (`sahi / qareeb / galat / chhoot gaya`), share, install card — sab.
+  **Quran ka text kabhi translate nahi hota** — har haal me mushaf ke usi Uthmani
+  lafz me rehta hai.
+- Har dafa app khulne par **splash**: logo + بيّن + ek chhoti loader line; ~1 second
+  baad app aa jati hai. Kuch load na ho to bhi splash 6 second me khud hat jata hai.
+- Pehli dafa sirf ek **welcome screen**: app kya karti hai (teen points), zubaan
+  chunne ka option aur **"Shuru karein"**. Uske baad dobara nahi aati
+  (`localStorage['tc.welcomed']`).
+- Sab strings `i18n.js` me hain: static text `index.html` me `data-i18n="key"` se,
+  dynamic text `t('key')` se. Nayi zubaan chahiye to usi file me ek table barha dein.
 
 ## Nateeja kahan dikhta hai
 

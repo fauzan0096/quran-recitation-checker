@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#4b1b21" />
     <meta
       name="description"
-      content="Quran tilawat aya-ba-aya khud check karein — on-device, bina server, bina account."
+      content="Bayyin — Quran tilawat aya-ba-aya khud check karein, on-device, bina server."
     />
     <title>بيّن — Bayyin | Quran Recitation</title>
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -15,15 +15,18 @@
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
     <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
-    <link
-      rel="apple-touch-icon"
-      sizes="180x180"
-      href="apple-touch-icon-180.png?v=2"
-    />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180.png?v=2" />
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <div id="splash" class="splash" role="status" aria-live="polite">
+      <img class="splash-logo" src="icon-192.png" alt="" width="104" height="104" />
+      <div class="splash-title" lang="ar" dir="rtl">بيّن</div>
+      <div class="splash-sub">Bayyin</div>
+      <div class="splash-loader" aria-hidden="true"><span></span></div>
+    </div>
+
     <header class="app-bar">
       <div class="brand">
         <img class="brand-mark" src="icon-192.png" alt="" width="42" height="42" />
@@ -32,16 +35,12 @@
             <span class="brand-ar" lang="ar" dir="rtl">بيّن</span>
             <span class="brand-en">Bayyin</span>
           </h1>
-          <p class="tagline">Aya padhein · Record dabaein · ghalti wahin dekhein</p>
+          <p class="tagline" data-i18n="app.tagline">
+            Aya padhein, Record dabaein, ghalti wahin dekhein.
+          </p>
         </div>
       </div>
-      <button
-        type="button"
-        id="toggle-theme"
-        class="icon-btn"
-        aria-label="Night mode"
-        title="Night mode"
-      >
+      <button type="button" id="toggle-theme" class="icon-btn" aria-label="Night mode" title="Night mode">
         🌙
       </button>
       <button type="button" id="open-settings" class="icon-btn" aria-label="Settings" title="Settings">
@@ -52,29 +51,29 @@
     <main>
       <section id="view-reader">
         <div class="tabs" role="tablist">
-          <button type="button" id="tab-surah" class="tab is-active" data-mode="surah">Surah</button>
-          <button type="button" id="tab-page" class="tab" data-mode="page">Mushaf</button>
-          <button type="button" id="tab-search" class="tab" data-mode="search">Search</button>
+          <button type="button" id="tab-surah" class="tab is-active" data-mode="surah" data-i18n="tab.surah">Surah</button>
+          <button type="button" id="tab-page" class="tab" data-mode="page" data-i18n="tab.mushaf">Mushaf</button>
+          <button type="button" id="tab-search" class="tab" data-mode="search" data-i18n="tab.search">Talash</button>
         </div>
 
         <div class="picker" id="picker-surah">
           <label class="field">
-            <span>Surah</span>
+            <span data-i18n="tab.surah">Surah</span>
             <select id="surah-select"></select>
           </label>
         </div>
 
         <div class="picker" id="picker-page" hidden>
           <label class="field small">
-            <span>Mushaf</span>
+            <span data-i18n="mushaf.label">Mushaf</span>
             <select id="mushaf-select">
-              <option value="madani">Madani (604 pages)</option>
-              <option value="indopak">IndoPak (610 pages)</option>
+              <option value="madani">Madani (604)</option>
+              <option value="indopak">IndoPak (610)</option>
             </select>
           </label>
           <button type="button" id="page-prev" class="btn ghost small">◀</button>
           <label class="field small">
-            <span>Page</span>
+            <span data-i18n="page.label">Page</span>
             <input id="page-number" type="number" min="1" max="610" step="1" value="1" inputmode="numeric" />
           </label>
           <button type="button" id="page-next" class="btn ghost small">▶</button>
@@ -83,22 +82,30 @@
 
         <div class="picker" id="picker-search" hidden>
           <label class="field">
-            <span>Talash — lafz, aya (2:255) ya juz (5)</span>
-            <input id="search-input" type="search" inputmode="search" placeholder="رحمن  ·  2:255  ·  5" />
+            <span data-i18n="search.label">Talash — lafz, aya ya juz</span>
+            <input
+              id="search-input"
+              type="search"
+              inputmode="search"
+              data-i18n-placeholder="search.placeholder"
+              placeholder="rahman · 2:255 · 5"
+            />
           </label>
-          <button type="button" id="search-go" class="btn">Dhoondein</button>
+          <button type="button" id="search-go" class="btn" data-i18n="search.button">Dhoondein</button>
         </div>
 
         <div class="toolbar">
           <span id="list-title" class="list-title"></span>
-          <button type="button" id="toggle-text" class="btn ghost small">Text chhupayein</button>
+          <button type="button" id="toggle-text" class="btn ghost small" data-i18n="text.hide">
+            Text chhupayein
+          </button>
         </div>
 
         <div class="reader-controls">
-          <span class="rc-label">Text</span>
+          <span class="rc-label" data-i18n="font.size">Text</span>
           <button type="button" id="font-smaller" class="rc-btn" aria-label="Chhota text">A−</button>
           <button type="button" id="font-larger" class="rc-btn" aria-label="Bara text">A+</button>
-          <span class="rc-label">Motai</span>
+          <span class="rc-label" data-i18n="font.weight">Motai</span>
           <button type="button" id="weight-lighter" class="rc-btn" aria-label="Patla harf">−</button>
           <button type="button" id="weight-bolder" class="rc-btn" aria-label="Mota harf">+</button>
           <span id="reading-meta" class="rc-meta"></span>
@@ -111,42 +118,51 @@
         <div id="search-results" class="search-results" hidden></div>
 
         <div id="list-footer" class="list-footer" hidden>
-          <button type="button" id="load-more" class="btn ghost">Aur ayaat dikhayein</button>
+          <button type="button" id="load-more" class="btn ghost" data-i18n="list.more">
+            Aur ayaat dikhayein
+          </button>
         </div>
       </section>
 
       <section id="view-settings" hidden>
         <div class="settings-head">
-          <button type="button" id="close-settings" class="btn ghost small">◀ Wapas</button>
-          <h2>Settings</h2>
+          <button type="button" id="close-settings" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2 data-i18n="settings.title">Settings</h2>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="welcome.lang">Zubaan</h3>
+          <select data-lang-select id="lang-select" aria-label="Zubaan">
+            <option value="roman">Roman Urdu</option>
+            <option value="ur">اردو</option>
+            <option value="en">English</option>
+          </select>
         </div>
 
         <div class="card" id="install-card">
-          <h3>App install karein</h3>
-          <p class="hint">
-            Home screen par <strong lang="ar" dir="rtl">بيّن</strong> ka icon — bina browser, tez
-            aur offline.
+          <h3 data-i18n="install.heading">App install karein</h3>
+          <p class="hint" data-i18n="install.hint">
+            Home screen par icon — bina browser, tez aur offline.
           </p>
-          <button type="button" id="install-app" class="btn primary">Install app</button>
+          <button type="button" id="install-app" class="btn primary" data-i18n="install.button">
+            Install app
+          </button>
         </div>
 
         <div class="card">
-          <h3>App share karein</h3>
-          <p class="hint">Doston ko yeh app bhejein — bas is link se khul jati hai.</p>
-          <button type="button" id="share-app" class="btn primary">Share app</button>
+          <h3 data-i18n="share.heading">App share karein</h3>
+          <p class="hint" data-i18n="share.hint">Doston ko yeh app bhejein — bas is link se khul jati hai.</p>
+          <button type="button" id="share-app" class="btn primary" data-i18n="share.button">Share app</button>
         </div>
 
         <div class="card">
-          <h3>Speech model (on-device)</h3>
-          <p class="hint">
-            Pehli dafa ~105 MB download hota hai, phir browser cache se chalta hai. Internet sirf
-            download ke liye chahiye.
-          </p>
+          <h3 data-i18n="model.heading">Speech model (on-device)</h3>
+          <p class="hint" data-i18n="model.hint">Pehli dafa ~105 MB download hota hai, phir cache se chalta hai.</p>
           <label class="field">
-            <span>Model</span>
+            <span data-i18n="model.label">Model</span>
             <select id="model-select"></select>
           </label>
-          <button type="button" id="load-model" class="btn">Model load karein</button>
+          <button type="button" id="load-model" class="btn" data-i18n="model.load">Model load karein</button>
           <div class="progress" id="model-progress" hidden>
             <div class="progress-bar" id="model-progress-bar"></div>
           </div>
@@ -154,29 +170,31 @@
         </div>
 
         <div class="card">
-          <h3>Audio</h3>
+          <h3 data-i18n="audio.heading">Audio</h3>
           <label class="field file">
-            <span>Recording ki jagah file chunein</span>
+            <span data-i18n="audio.file">Recording ki jagah file chunein</span>
             <input id="audio-file" type="file" accept="audio/*" />
           </label>
-          <button type="button" id="mic-check" class="btn ghost small">Mic jaanch</button>
+          <button type="button" id="mic-check" class="btn ghost small" data-i18n="mic.check">Mic jaanch</button>
           <ul id="mic-check-output" class="diag" hidden></ul>
           <audio id="player" controls hidden></audio>
         </div>
 
         <div class="card">
-          <h3>Tajweed hints (script se)</h3>
+          <h3 data-i18n="tajweed.heading">Tajweed hints (script se)</h3>
           <div id="tajweed"></div>
         </div>
 
         <div class="card">
-          <h3>Engine self-test</h3>
-          <button type="button" id="run-tests" class="btn ghost small">Self-test chalayein</button>
+          <h3 data-i18n="test.heading">Engine self-test</h3>
+          <button type="button" id="run-tests" class="btn ghost small" data-i18n="test.button">
+            Self-test chalayein
+          </button>
           <ul id="test-results" class="tests"></ul>
         </div>
 
         <details class="card">
-          <summary>About &amp; privacy</summary>
+          <summary data-i18n="about.summary">About &amp; privacy</summary>
           <div class="prose">
             <p>
               <strong>Bayyin (بيّن)</strong> aap ki tilawat ko aya ke Uthmani text se mila kar
@@ -194,7 +212,7 @@
         </details>
 
         <details class="card">
-          <summary>Licenses / Open source</summary>
+          <summary data-i18n="licenses.summary">Licenses / Open source</summary>
           <div class="prose">
             <p>
               <strong>Quran text — Tanzil Project</strong><br />
@@ -220,11 +238,8 @@
             </ul>
             <p>
               Mushaf page data: Tanzil Quran metadata (CC-BY). Updates:
-              <a href="https://tanzil.net/updates/" target="_blank" rel="noreferrer"
-                >tanzil.net/updates</a
-              >.
+              <a href="https://tanzil.net/updates/" target="_blank" rel="noreferrer">tanzil.net/updates</a>.
             </p>
-
             <p>
               <strong>Quran-tuned Whisper</strong> — <code>tarteel-ai/whisper-base-ar-quran</code>,
               <code>tarteel-ai/whisper-tiny-ar-quran</code> (Tarteel AI) aur unke ONNX exports
@@ -234,12 +249,10 @@
                 >apache.org/licenses/LICENSE-2.0</a
               >. Distributed on an "AS IS" BASIS, without warranties.
             </p>
-
             <p>
               <strong>Whisper</strong> (OpenAI) — MIT. <strong>Transformers.js</strong> (Hugging
               Face) — Apache-2.0. <strong>ONNX Runtime</strong> (Microsoft) — MIT.
             </p>
-
             <p>
               MIT License: Permission is hereby granted, free of charge, to any person obtaining a
               copy of this software and associated documentation files (the "Software"), to deal in
@@ -254,8 +267,34 @@
       </section>
     </main>
 
+    <div id="welcome" class="welcome" hidden>
+      <div class="welcome-card">
+        <img class="welcome-logo" src="icon-192.png" alt="" width="88" height="88" />
+        <h2 data-i18n="welcome.title">Khush aamdeed</h2>
+        <p class="welcome-sub" data-i18n="welcome.sub">
+          Bayyin — aap ki tilawat ka apna check, poori tarah phone par.
+        </p>
+        <ul class="welcome-points">
+          <li data-i18n="welcome.p1">Aya ya page chunein, Record dabaein aur padhein.</li>
+          <li data-i18n="welcome.p2">Har lafz par rang — sahi, qareeb, galat, chhoot gaya.</li>
+          <li data-i18n="welcome.p3">Sab kuch device par — na server, na account.</li>
+        </ul>
+        <label class="field">
+          <span data-i18n="welcome.lang">Zubaan</span>
+          <select data-lang-select id="welcome-lang">
+            <option value="roman">Roman Urdu</option>
+            <option value="ur">اردو</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button type="button" id="welcome-start" class="btn primary wide" data-i18n="welcome.start">
+          Shuru karein
+        </button>
+      </div>
+    </div>
+
     <div id="toast" class="toast" hidden></div>
-    <script src="install.js" defer></script>
+    <script type="module" src="install.js"></script>
     <script type="module" src="app.js"></script>
   </body>
 </html>

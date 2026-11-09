@@ -2,12 +2,13 @@
 // the phone on the next load, with the cached copy as the offline fallback.
 // CDN / model / Quran.com requests are left to the network.
 
-const CACHE = 'bayyin-v4';
+const CACHE = 'bayyin-v5';
 const SHELL = [
   './',
   'index.html',
   'styles.css',
   'app.js',
+  'i18n.js',
   'asr.js',
   'align.js',
   'normalize.js',
