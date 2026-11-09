@@ -19,8 +19,8 @@ const TARGET_RATE = 16000;
 
 export const MODELS = [
   {
-    id: 'YunusZJ/whisper-base-ar-quran-ONNX',
-    label: 'Whisper Base — Quran (behtar accuracy, ~150 MB)',
+    id: 'nael239/tasme3-whisper-base-ar-quran-web',
+    label: 'Whisper Base — Quran (behtar accuracy, ~105 MB)',
   },
   {
     id: 'Sharjeelbaig/whisper-tiny-ar-quran-onnx',
@@ -86,7 +86,28 @@ export async function loadModel(modelId, onProgress = () => {}) {
   if (lib.env && lib.env.backends) options.dtype = 'q8';
   else options.quantized = true;
 
-  return lib.pipeline('automatic-speech-recognition', modelId, options);
+  // A stalled download or a model too big for the phone must end with a message,
+  // not an endless "load ho raha hai".
+  let timer = null;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(
+      () =>
+        reject(
+          new Error(
+            'Model 6 minute me tayyar nahi hua — internet slow hai ya model is phone ke liye bara hai. Chhota (Tiny) model chunein.'
+          )
+        ),
+      360000
+    );
+  });
+  try {
+    return await Promise.race([
+      lib.pipeline('automatic-speech-recognition', modelId, options),
+      timeout,
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 /** Transcribe 16 kHz mono Float32 audio and return plain text. */
