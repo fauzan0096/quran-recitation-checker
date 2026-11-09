@@ -787,9 +787,6 @@ audio {
 }
 
 @media (max-width: 420px) {
-  .aya-text {
-    font-size: 23px;
-  }
   .tagline {
     display: none;
   }
