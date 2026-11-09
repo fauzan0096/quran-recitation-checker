@@ -21,6 +21,61 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
+    <svg class="ui-sprite" aria-hidden="true" focusable="false" width="0" height="0">
+      <defs>
+        <symbol id="i-dua" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 16c0 6.1 4.9 11 11 11s11-4.9 11-11" />
+          <path d="M5 16c4.4.2 8.2 2.2 11 5.4 2.8-3.2 6.6-5.2 11-5.4" />
+          <path d="M16 21.4V26" />
+          <path class="ai-accent" d="M16 4l1.3 3.1 3.1 1.3-3.1 1.3L16 12.8l-1.3-3.1L11.6 8.4l3.1-1.3z" />
+          <path class="ai-accent" d="M7.4 9.2l.9 1.8M24.6 9.2l-.9 1.8" />
+        </symbol>
+        <symbol id="i-daily" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 13.4c-2.7-1.9-6.2-2.6-9.8-2v14.2c3.6-.5 7.1.2 9.8 2 2.7-1.8 6.2-2.5 9.8-2V11.4c-3.6-.6-7.1.1-9.8 2z" />
+          <path d="M16 13.4v14.2" />
+          <path class="ai-accent" d="M16 8.6V4.2M10.4 7.6L8.6 4.6M21.6 7.6l1.8-3" />
+        </symbol>
+        <symbol id="i-tasbeeh" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="16" cy="6.8" r="2.3" class="ai-accent" />
+          <circle cx="21.4" cy="8.6" r="1.5" />
+          <circle cx="24.8" cy="13.2" r="1.5" />
+          <circle cx="24.8" cy="18.8" r="1.5" />
+          <circle cx="21.4" cy="23.4" r="1.5" />
+          <circle cx="16" cy="25.2" r="1.5" />
+          <circle cx="10.6" cy="23.4" r="1.5" />
+          <circle cx="7.2" cy="18.8" r="1.5" />
+          <circle cx="7.2" cy="13.2" r="1.5" />
+          <circle cx="10.6" cy="8.6" r="1.5" />
+          <path d="M16 9.1v3.3" />
+        </symbol>
+        <symbol id="i-qibla" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="16" cy="17" r="10.6" />
+          <path d="M16 9.4l3 5.2h-6z" class="ai-accent" />
+          <path d="M16 24.6l-3-5.2h6z" />
+          <rect x="13.9" y="14.9" width="4.2" height="4.2" rx="1" class="ai-accent" />
+        </symbol>
+        <symbol id="i-calendar" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="7.4" width="22" height="19.8" rx="4" />
+          <path d="M11 4.6v4.4M21 4.6v4.4M5 13.2h22" />
+          <path class="ai-accent" d="M18.9 17.6a3.7 3.7 0 1 0 2.7 6 3.1 3.1 0 0 1-2.7-6z" />
+        </symbol>
+        <symbol id="i-surah" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6.5" y="4" width="19" height="24" rx="3.5" />
+          <path d="M11 4v24" />
+          <path class="ai-accent" d="M15.5 10.5h6M15.5 15.5h6M15.5 20.5h3.6" />
+        </symbol>
+        <symbol id="i-mushaf" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 10.4c-2.8-2-6.4-2.7-10.1-2.1v15.9c3.7-.6 7.3.1 10.1 2.1 2.8-2 6.4-2.7 10.1-2.1V8.3c-3.7-.6-7.3.1-10.1 2.1z" />
+          <path d="M16 10.4v15.9" />
+          <path class="ai-accent" d="M9.4 13.4h3.6M9.4 17h3.6M19 13.4h3.6M19 17h3.6" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="14.4" cy="14.4" r="8.4" />
+          <path d="M20.8 20.8L27 27" class="ai-accent" />
+        </symbol>
+      </defs>
+    </svg>
+
     <div id="splash" class="splash" role="status" aria-live="polite">
       <img class="splash-logo" src="icon-192.png" alt="" width="104" height="104" />
       <div class="splash-title" lang="ar" dir="rtl">بيّن</div>
@@ -43,7 +98,17 @@
       </div>
       <div class="app-tools">
         <button type="button" id="open-more" class="icon-btn" aria-label="Mazeed" title="Mazeed">
-          ⋯
+          <svg viewBox="0 0 24 24" aria-hidden="true" width="20" height="20" fill="currentColor">
+            <circle cx="6" cy="6" r="1.9" />
+            <circle cx="12" cy="6" r="1.9" />
+            <circle cx="18" cy="6" r="1.9" />
+            <circle cx="6" cy="12" r="1.9" />
+            <circle cx="12" cy="12" r="1.9" />
+            <circle cx="18" cy="12" r="1.9" />
+            <circle cx="6" cy="18" r="1.9" />
+            <circle cx="12" cy="18" r="1.9" />
+            <circle cx="18" cy="18" r="1.9" />
+          </svg>
         </button>
         <button type="button" id="toggle-theme" class="icon-btn" aria-label="Night mode" title="Night mode">
           🌙
@@ -57,9 +122,18 @@
     <main>
       <section id="view-reader">
         <div class="tabs" role="tablist">
-          <button type="button" id="tab-surah" class="tab is-active" data-mode="surah" data-i18n="tab.surah">Surah</button>
-          <button type="button" id="tab-page" class="tab" data-mode="page" data-i18n="tab.mushaf">Mushaf</button>
-          <button type="button" id="tab-search" class="tab" data-mode="search" data-i18n="tab.search">Talash</button>
+          <button type="button" id="tab-surah" class="tab is-active" data-mode="surah">
+            <svg class="tab-ic" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-surah" /></svg>
+            <span data-i18n="tab.surah">Surah</span>
+          </button>
+          <button type="button" id="tab-page" class="tab" data-mode="page">
+            <svg class="tab-ic" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-mushaf" /></svg>
+            <span data-i18n="tab.mushaf">Mushaf</span>
+          </button>
+          <button type="button" id="tab-search" class="tab" data-mode="search">
+            <svg class="tab-ic" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-search" /></svg>
+            <span data-i18n="tab.search">Talash</span>
+          </button>
         </div>
 
         <div class="picker" id="picker-surah">
@@ -307,27 +381,27 @@
 
         <div class="more-grid">
           <button type="button" class="more-card" id="more-daily">
-            <span class="more-mark">❖</span>
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-daily" /></svg></span>
             <strong data-i18n="more.daily">Roz ka Noor</strong>
             <span data-i18n="more.dailyHint">Roz ek aya, ek hadith, ek sunnah</span>
           </button>
           <a class="more-card" href="dua.html">
-            <span class="more-mark">☰</span>
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-dua" /></svg></span>
             <strong data-i18n="more.dua">Duaein</strong>
             <span data-i18n="more.duaHint">Masnoon duaein aur azkar</span>
           </a>
           <button type="button" class="more-card" id="more-tasbeeh">
-            <span class="more-mark">◉</span>
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-tasbeeh" /></svg></span>
             <strong data-i18n="more.tasbeeh">Tasbeeh</strong>
             <span data-i18n="more.tasbeehHint">Zikr ginein, round aur daily total</span>
           </button>
           <button type="button" class="more-card" id="more-qibla">
-            <span class="more-mark">⌖</span>
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
             <strong data-i18n="more.qibla">Qibla</strong>
             <span data-i18n="more.qiblaHint">Kaaba ki simt, compass ke sath</span>
           </button>
           <button type="button" class="more-card" id="more-calendar">
-            <span class="more-mark">▤</span>
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-calendar" /></svg></span>
             <strong data-i18n="more.calendar">Islami calendar</strong>
             <span data-i18n="more.calendarHint">Hijri tareekh aur mahina</span>
           </button>
@@ -337,7 +411,10 @@
       <section id="view-daily" hidden>
         <div class="settings-head">
           <button type="button" id="close-daily" class="btn ghost small" data-i18n="back">◀ Wapas</button>
-          <h2 data-i18n="daily.heading">Roz ka Noor</h2>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-daily" /></svg></span>
+            <span data-i18n="daily.heading">Roz ka Noor</span>
+          </h2>
         </div>
         <div id="daily-root"></div>
       </section>
@@ -345,7 +422,10 @@
       <section id="view-tasbeeh" hidden>
         <div class="settings-head">
           <button type="button" id="close-tasbeeh" class="btn ghost small" data-i18n="back">◀ Wapas</button>
-          <h2 data-i18n="tasbeeh.heading">Tasbeeh</h2>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-tasbeeh" /></svg></span>
+            <span data-i18n="tasbeeh.heading">Tasbeeh</span>
+          </h2>
         </div>
         <div id="tasbeeh-root"></div>
       </section>
@@ -353,7 +433,10 @@
       <section id="view-qibla" hidden>
         <div class="settings-head">
           <button type="button" id="close-qibla" class="btn ghost small" data-i18n="back">◀ Wapas</button>
-          <h2 data-i18n="qibla.heading">Qibla</h2>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
+            <span data-i18n="qibla.heading">Qibla</span>
+          </h2>
         </div>
         <div id="qibla-root"></div>
       </section>
@@ -361,7 +444,10 @@
       <section id="view-calendar" hidden>
         <div class="settings-head">
           <button type="button" id="close-calendar" class="btn ghost small" data-i18n="back">◀ Wapas</button>
-          <h2 data-i18n="cal.heading">Islami calendar</h2>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-calendar" /></svg></span>
+            <span data-i18n="cal.heading">Islami calendar</span>
+          </h2>
         </div>
         <div id="calendar-root"></div>
       </section>

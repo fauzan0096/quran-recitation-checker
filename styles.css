@@ -176,6 +176,10 @@ main {
 }
 
 .tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   font: inherit;
   font-size: 14px;
   font-weight: 600;
@@ -185,6 +189,17 @@ main {
   background: transparent;
   color: var(--muted);
   cursor: pointer;
+}
+
+.tab-ic {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
+  opacity: 0.75;
+}
+
+.tab.is-active .tab-ic {
+  opacity: 1;
 }
 
 .tab.is-active {
@@ -623,6 +638,20 @@ button:focus-visible {
 .settings-head h2 {
   margin: 0;
   font-size: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.h-ic {
+  display: inline-flex;
+  color: var(--gold);
+}
+
+.h-ic svg {
+  width: 21px;
+  height: 21px;
+  display: block;
 }
 
 .card {
@@ -2273,4 +2302,52 @@ body[data-theme='dark'] .tasbeeh-big {
 
 body[data-theme='dark'] .cp-hub {
   background: #2a1d20;
+}
+
+
+
+/* ------------------------------------------------------------- ui icons */
+
+.ui-sprite {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+}
+
+.ui-sprite .ai-accent {
+  stroke: var(--gold);
+  fill: var(--gold);
+  fill-opacity: 0.28;
+}
+
+.more-mark {
+  background: linear-gradient(180deg, #fbf3e4, #f2e7d6);
+  border-color: rgba(176, 122, 60, 0.45);
+  color: var(--green);
+}
+
+.more-mark svg {
+  width: 21px;
+  height: 21px;
+  display: block;
+}
+
+.more-card:active .more-mark {
+  transform: translateY(-50%) scale(0.94);
+}
+
+.more-mark {
+  transition: transform 0.12s ease;
+}
+
+.icon-btn svg {
+  display: block;
+  margin: 0 auto;
+}
+
+body[data-theme='dark'] .more-mark {
+  background: linear-gradient(180deg, #2e2023, #271a1d);
+  border-color: #433034;
+  color: var(--gold);
 }
