@@ -83,10 +83,28 @@ body {
 }
 
 .brand-text h1 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
   margin: 0;
   font-family: 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, serif;
   font-size: 19px;
   letter-spacing: -0.2px;
+}
+
+.brand-ar {
+  font-family: var(--arabic);
+  font-size: 23px;
+  line-height: 1.2;
+  color: var(--green-dark);
+}
+
+.brand-en {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--muted);
 }
 
 .tagline {

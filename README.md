@@ -1,4 +1,4 @@
-# Quran Recitation Checker (on-device)
+# Bayyin (بيّن) — on-device Quran recitation checker
 
 Ayaat chunein, mic par tilawat karein, aur foran dekhein kaunsa lafz sahi tha,
 kaunsa qareeb tha, kaun galat suna gaya aur kya chhoot gaya. Poori processing
@@ -148,12 +148,12 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 
 ## Design / icon / naam
 
-- Palette: **mushaf leather (burgundy/plum) + copper + parchment** — green/blue se alag,
+- Naam: **Bayyin (بيّن)** — launcher/manifest me Arabic **بيّن** hi dikhta hai.- Palette: **mushaf leather (burgundy/plum) + copper + parchment** — green/blue se alag,
   raat ke liye alag mahogany dark theme.
 - Icon: `icon.svg` (rounded mushaf + mihrab arch + ayah medallion) aur
   `icon-maskable.svg`; `manifest.webmanifest` me dono register hain. Play Store ke liye
   in SVG se 512×512 PNG export karna hoga (`apple-touch-icon` bhi PNG leta hai).
-- App ka naam abhi "Tilawat Check" hai; Play Store par "Qirat Check" ya "Harf Mizan"
+- App ka naam **Bayyin (بيّن)** hai. Play Store par "Qirat Check" ya "Harf Mizan"
   bhi check kiye gaye — dono ke exact naam ka koi listing search me nahi mila.
 
 ## Licenses (Play Store ke liye)

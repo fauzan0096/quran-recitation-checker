@@ -1,7 +1,7 @@
 {
-  "name": "Tilawat Check — Quran Recitation",
-  "short_name": "Tilawat Check",
-  "description": "Quran tilawat aya-ba-aya khud check karein — on-device, bina server.",
+  "name": "بيّن — Bayyin",
+  "short_name": "بيّن",
+  "description": "بيّن — Quran tilawat aya-ba-aya khud check karein, on-device, bina server.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

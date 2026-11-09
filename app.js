@@ -1,4 +1,4 @@
-// Tilawat Check — Quran reader with recitation checking.
+// Bayyin (بيّن) — Quran reader with recitation checking.
 //
 // Surah tab: every aya its own card with a Record button.
 // Mushaf tab: a whole page as one continuous mushaf (Madani 604 pages from
@@ -1130,7 +1130,7 @@ function showError(message) {
 
 async function shareApp() {
   await shareOrCopy({
-    title: 'Tilawat Check',
+    title: 'Bayyin (بيّن)',
     text: 'Quran tilawat khud check karein — on-device, bina server ke.',
     url: location.href,
   });
