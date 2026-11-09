@@ -3,20 +3,20 @@
 // Tasbeeh: big dial, presets, own target, Aaj / Kul / Round, undo, zero,
 // vibration, sound and screen-on. Everything stays on the device (tc.tasbeeh).
 
-import { t } from './i18n.js';
+import { getLanguage, t } from './i18n.js';
 
 const KEY = 'tc.tasbeeh';
 
 const PRESETS = [
-  { id: 'subhanallah', ar: 'سُبْحَانَ اللّٰهِ', ro: 'SubhanAllah', target: 33 },
-  { id: 'alhamdulillah', ar: 'الْحَمْدُ لِلّٰهِ', ro: 'Alhamdulillah', target: 33 },
-  { id: 'allahuakbar', ar: 'اللّٰهُ أَكْبَرُ', ro: 'Allahu Akbar', target: 34 },
-  { id: 'tahlil', ar: 'لَا إِلٰهَ إِلَّا اللّٰهُ', ro: 'La ilaha illallah', target: 100 },
-  { id: 'istighfar', ar: 'أَسْتَغْفِرُ اللّٰهَ', ro: 'Astaghfirullah', target: 100 },
-  { id: 'salawat', ar: 'اللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ', ro: 'Durood', target: 100 },
-  { id: 'bihamdihi', ar: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ', ro: 'SubhanAllahi wa bihamdihi', target: 100 },
-  { id: 'hawqala', ar: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ', ro: 'La hawla wa la quwwata', target: 100 },
-  { id: 'hasbunallah', ar: 'حَسْبُنَا اللّٰهُ وَنِعْمَ الْوَكِيلُ', ro: 'Hasbunallah', target: 100 },
+  { id: 'subhanallah', mean: { ro: 'Allah paak hai', ur: 'اللہ پاک ہے', en: 'Allah is pure' }, ar: 'سُبْحَانَ اللّٰهِ', ro: 'SubhanAllah', target: 33 },
+  { id: 'alhamdulillah', mean: { ro: 'Sab tareef Allah ke liye hai', ur: 'تمام تعریف اللہ کے لیے ہے', en: 'All praise is for Allah' }, ar: 'الْحَمْدُ لِلّٰهِ', ro: 'Alhamdulillah', target: 33 },
+  { id: 'allahuakbar', mean: { ro: 'Allah sabse bada hai', ur: 'اللہ سب سے بڑا ہے', en: 'Allah is the Greatest' }, ar: 'اللّٰهُ أَكْبَرُ', ro: 'Allahu Akbar', target: 34 },
+  { id: 'tahlil', mean: { ro: 'Allah ke siwa koi maabood nahi', ur: 'اللہ کے سوا کوئی معبود نہیں', en: 'There is no god but Allah' }, ar: 'لَا إِلٰهَ إِلَّا اللّٰهُ', ro: 'La ilaha illallah', target: 100 },
+  { id: 'istighfar', mean: { ro: 'Main Allah se bakhshish maangta hoon', ur: 'میں اللہ سے مغفرت مانگتا ہوں', en: "I seek Allah's forgiveness" }, ar: 'أَسْتَغْفِرُ اللّٰهَ', ro: 'Astaghfirullah', target: 100 },
+  { id: 'salawat', mean: { ro: 'Ya Allah, Muhammad ﷺ par rehmat bhej', ur: 'اے اللہ! محمد ﷺ پر رحمت بھیج', en: 'O Allah, send blessings upon Muhammad ﷺ' }, ar: 'اللّٰهُمَّ صَلِّ عَلَىٰ مُحَمَّدٍ', ro: 'Durood', target: 100 },
+  { id: 'bihamdihi', mean: { ro: 'Allah paak hai aur usi ki tareef', ur: 'اللہ پاک ہے اور اسی کی تعریف', en: 'Glory and praise to Allah' }, ar: 'سُبْحَانَ اللّٰهِ وَبِحَمْدِهِ', ro: 'SubhanAllahi wa bihamdihi', target: 100 },
+  { id: 'hawqala', mean: { ro: 'Taqat aur himmat sab Allah hi se hai', ur: 'طاقت اور ہمت سب اللہ ہی سے ہے', en: 'No power or strength except with Allah' }, ar: 'لَا حَوْلَ وَلَا قُوَّةَ إِلَّا بِاللّٰهِ', ro: 'La hawla wa la quwwata', target: 100 },
+  { id: 'hasbunallah', mean: { ro: 'Humein Allah kaafi hai, wohi behtareen kaarsaz', ur: 'ہمیں اللہ کافی ہے، وہی بہترین کارساز', en: 'Allah is enough for us, the best Disposer' }, ar: 'حَسْبُنَا اللّٰهُ وَنِعْمَ الْوَكِيلُ', ro: 'Hasbunallah', target: 100 },
 ];
 
 function dayKey() {
@@ -73,7 +73,9 @@ function save(store) {
 }
 
 const targetOf = (store, preset) => {
-  const custom = Number(store.targets[preset.id]);
+  const v = store.targets[preset.id];
+  if (v === 'inf') return Infinity;
+  const custom = Number(v);
   return custom >= 1 ? Math.min(custom, 100000) : preset.target;
 };
 const countOf = (store, preset) => Number(store.counts[preset.id]) || 0;
@@ -100,20 +102,18 @@ function beep(freq, ms, gain = 0.06, delay = 0) {
   }
 }
 
-const SVG_NS = 'http://www.w3.org/2000/svg';
 const RING_R = 92;
-const CIRC = 2 * Math.PI * RING_R;
+const BEADS = 100;
+const PRESET_TARGETS = [33, 99, 100];
 
 export function mountTasbeeh(root) {
   if (!root) return { refresh() {}, stop() {} };
-
   let wakeLock = null;
 
   async function setAwake(on) {
     try {
-      if (on && 'wakeLock' in navigator) {
-        wakeLock = await navigator.wakeLock.request('screen');
-      } else if (wakeLock) {
+      if (on && 'wakeLock' in navigator) wakeLock = await navigator.wakeLock.request('screen');
+      else if (wakeLock) {
         await wakeLock.release();
         wakeLock = null;
       }
@@ -121,192 +121,197 @@ export function mountTasbeeh(root) {
       wakeLock = null;
     }
   }
-
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && !root.closest('[hidden]')) {
-      const store = load();
-      if (store.awake) setAwake(true);
-    }
+    if (document.visibilityState === 'visible' && root.offsetParent !== null && load().awake) setAwake(true);
   });
 
   function build() {
     const store = load();
     const preset = PRESETS.find((p) => p.id === store.preset) || PRESETS[0];
     const target = targetOf(store, preset);
-    const count = countOf(store, preset);
-
+    const inf = target === Infinity;
+    const lang = getLanguage();
     root.innerHTML = '';
     root.className = 'tasbeeh tsb';
 
-    // presets
-    const presets = document.createElement('div');
-    presets.className = 'tsb-presets';
+    const el = (tag, cls, text) => {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text !== undefined) n.textContent = text;
+      return n;
+    };
+
+    const top = el('div', 'tsb-top');
+    const todayBox = el('div', 'tsb-today');
+    todayBox.append(el('span', 'tsb-today-l', t('tasbeeh.aaj')), el('strong', 'tsb-today-n', '0'));
+    top.appendChild(todayBox);
+    root.appendChild(top);
+
+    const presets = el('div', 'tsb-presets');
     for (const item of PRESETS) {
-      const chip = document.createElement('button');
+      const chip = el('button', 'tsb-chip');
       chip.type = 'button';
-      chip.className = 'tsb-chip';
       chip.setAttribute('aria-pressed', String(item.id === preset.id));
       if (item.id === preset.id) chip.dataset.on = '1';
-      chip.innerHTML = `<span class="tsb-chip-ar" lang="ar" dir="rtl"></span><span class="tsb-chip-ro"></span>`;
-      chip.querySelector('.tsb-chip-ar').textContent = item.ar;
-      chip.querySelector('.tsb-chip-ro').textContent = item.ro;
+      const ar = el('span', 'tsb-chip-ar', item.ar);
+      ar.lang = 'ar';
+      ar.dir = 'rtl';
+      chip.appendChild(ar);
       chip.addEventListener('click', () => {
-        const next = load();
-        next.preset = item.id;
-        save(next);
+        const n = load();
+        n.preset = item.id;
+        save(n);
         build();
       });
       presets.appendChild(chip);
     }
     root.appendChild(presets);
 
-    // the dhikr in large Arabic
-    const phrase = document.createElement('p');
-    phrase.className = 'tsb-phrase';
+    const phrase = el('p', 'tsb-phrase', preset.ar);
     phrase.lang = 'ar';
     phrase.dir = 'rtl';
-    phrase.textContent = preset.ar;
-    root.appendChild(phrase);
+    root.append(phrase, el('p', 'tsb-ro', preset.ro), el('p', 'tsb-mean', preset.mean[lang] || preset.mean.ro));
 
-    // dial
-    const dial = document.createElement('button');
+    // dial with bead ring
+    const wrap = el('div', 'tsb-wrap');
+    wrap.appendChild(el('span', 'tsb-pointer', '▼'));
+    const dial = el('button', 'tsb-dial');
     dial.type = 'button';
-    dial.className = 'tsb-dial';
-    dial.setAttribute('aria-label', t('tasbeeh.tap'));
-
-    const useBeads = target <= 40;
+    dial.setAttribute('aria-label', t('tasbeeh.tapHere'));
     let beads = '';
-    if (useBeads) {
-      for (let i = 0; i < target; i += 1) {
-        const a = ((360 / target) * i - 90) * (Math.PI / 180);
-        const x = 100 + RING_R * Math.cos(a);
-        const y = 100 + RING_R * Math.sin(a);
-        beads += `<circle class="tsb-bead" cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${target > 34 ? 3.4 : 4.1}"></circle>`;
-      }
+    for (let i = 0; i < BEADS; i += 1) {
+      const a = ((360 / BEADS) * i - 90) * (Math.PI / 180);
+      beads += `<circle class="tsb-bead" cx="${(100 + RING_R * Math.cos(a)).toFixed(1)}" cy="${(100 + RING_R * Math.sin(a)).toFixed(1)}" r="2.7"></circle>`;
     }
-    dial.innerHTML = `
-      <svg class="tsb-svg" viewBox="0 0 200 200" aria-hidden="true">
-        <circle class="tsb-track" cx="100" cy="100" r="${RING_R}"></circle>
-        ${
-          useBeads
-            ? beads
-            : `<circle class="tsb-arc" cx="100" cy="100" r="${RING_R}" stroke-dasharray="${CIRC.toFixed(1)}" stroke-dashoffset="${CIRC.toFixed(1)}" transform="rotate(-90 100 100)"></circle>`
-        }
-      </svg>
-      <span class="tsb-core">
-        <span class="tsb-count">0</span>
-        <span class="tsb-of"></span>
-        <span class="tsb-hint"></span>
-      </span>`;
-    root.appendChild(dial);
-
+    dial.innerHTML = `<svg class="tsb-svg" viewBox="0 0 200 200" aria-hidden="true">${beads}</svg>
+      <span class="tsb-core"><span class="tsb-count">0</span><span class="tsb-of"></span><span class="tsb-hint"></span></span>`;
+    wrap.appendChild(dial);
+    root.appendChild(wrap);
     const countEl = dial.querySelector('.tsb-count');
     const ofEl = dial.querySelector('.tsb-of');
     const hintEl = dial.querySelector('.tsb-hint');
     const beadEls = Array.from(dial.querySelectorAll('.tsb-bead'));
-    const arc = dial.querySelector('.tsb-arc');
 
-    // stats
-    const stats = document.createElement('div');
-    stats.className = 'tsb-stats';
-    stats.innerHTML = `
-      <div><strong class="s-aaj">0</strong><span>${t('tasbeeh.aaj')}</span></div>
+    // targets row
+    const targets = el('div', 'tsb-targets');
+    const mk = (label, active, onPick) => {
+      const b = el('button', 'tsb-tgt' + (active ? ' is-on' : ''), label);
+      b.type = 'button';
+      b.addEventListener('click', onPick);
+      targets.appendChild(b);
+    };
+    const customVal = Number(store.targets[preset.id]);
+    const isCustom = !inf && customVal >= 1 && !PRESET_TARGETS.includes(customVal);
+    for (const n of PRESET_TARGETS) {
+      mk(String(n), !inf && target === n, () => {
+        const s2 = load();
+        s2.targets[preset.id] = n;
+        save(s2);
+        build();
+      });
+    }
+    mk('∞', inf, () => {
+      const s2 = load();
+      s2.targets[preset.id] = 'inf';
+      save(s2);
+      build();
+    });
+    mk(isCustom ? String(customVal) : t('tasbeeh.target'), isCustom, () => {
+      const v = Math.floor(Number(window.prompt(t('tasbeeh.target'), t('tasbeeh.targetHint'))));
+      if (v >= 1) {
+        const s2 = load();
+        s2.targets[preset.id] = Math.min(v, 100000);
+        save(s2);
+        build();
+      }
+    });
+    root.appendChild(targets);
+
+    if (['subhanallah', 'alhamdulillah', 'allahuakbar'].includes(preset.id)) {
+      root.appendChild(el('p', 'tsb-tip', t('tasbeeh.afterNamaz')));
+    }
+
+    // action tiles
+    const tiles = el('div', 'tsb-tiles');
+    const tile = (icon, label, onClick, field) => {
+      const b = el('button', 'tsb-tile');
+      b.type = 'button';
+      b.append(el('span', 'tsb-tile-i', icon), el('span', 'tsb-tile-l', label));
+      if (field) b.dataset.on = load()[field] ? '1' : '0';
+      b.addEventListener('click', () => onClick(b));
+      tiles.appendChild(b);
+      return b;
+    };
+    tile('↶', t('tasbeeh.undo'), () => {
+      const s2 = load();
+      const c = countOf(s2, preset);
+      if (c <= 0) return;
+      s2.counts[preset.id] = c - 1;
+      s2.allTime = Math.max(0, s2.allTime - 1);
+      if (!inf && c % target === 0 && (Number(s2.rounds[preset.id]) || 0) > 0) s2.rounds[preset.id] -= 1;
+      save(s2);
+      paint();
+    });
+    tile('⟲', t('tasbeeh.zero'), () => {
+      const s2 = load();
+      const c = countOf(s2, preset);
+      if (c === 0 || !window.confirm(t('tasbeeh.zeroAsk'))) return;
+      s2.allTime = Math.max(0, s2.allTime - c);
+      s2.counts[preset.id] = 0;
+      s2.rounds[preset.id] = 0;
+      save(s2);
+      paint();
+    });
+    const toggle = (icon, label, field) =>
+      tile(icon, label, (b) => {
+        const s2 = load();
+        s2[field] = !s2[field];
+        save(s2);
+        b.dataset.on = s2[field] ? '1' : '0';
+        if (field === 'awake') setAwake(s2.awake);
+        if (field === 'snd' && s2.snd) beep(660, 90);
+        if (field === 'vib' && s2.vib && navigator.vibrate) navigator.vibrate(30);
+      }, field);
+    toggle('📳', t('tasbeeh.vibration'), 'vib');
+    toggle('🔔', t('tasbeeh.sound'), 'snd');
+    toggle('☀️', t('tasbeeh.screen'), 'awake');
+    root.appendChild(tiles);
+
+    const stats = el('div', 'tsb-stats');
+    stats.innerHTML = `<div><strong class="s-aaj">0</strong><span>${t('tasbeeh.aaj')}</span></div>
       <div><strong class="s-round">0</strong><span>${t('tasbeeh.roundDone')}</span></div>
       <div><strong class="s-kul">0</strong><span>${t('tasbeeh.kul')}</span></div>`;
     root.appendChild(stats);
 
-    // action row
-    const actions = document.createElement('div');
-    actions.className = 'tsb-actions';
-    const undo = document.createElement('button');
-    undo.type = 'button';
-    undo.className = 'tsb-btn';
-    undo.textContent = '↶ ' + t('tasbeeh.undo');
-    const zero = document.createElement('button');
-    zero.type = 'button';
-    zero.className = 'tsb-btn is-quiet';
-    zero.textContent = '⟲ ' + t('tasbeeh.zero');
-    actions.append(undo, zero);
-    root.appendChild(actions);
-
-    // toggles
-    const toggles = document.createElement('div');
-    toggles.className = 'tsb-toggles';
-    const makeToggle = (field, label) => {
-      const btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'tsb-toggle';
-      const paint = () => {
-        const on = load()[field];
-        btn.setAttribute('aria-pressed', String(on));
-        btn.dataset.on = on ? '1' : '0';
-      };
-      btn.innerHTML = `<span class="tsb-switch"></span><span>${label}</span>`;
-      btn.addEventListener('click', () => {
-        const s = load();
-        s[field] = !s[field];
-        save(s);
-        paint();
-        if (field === 'awake') setAwake(s.awake);
-        if (field === 'snd' && s.snd) beep(660, 90);
-        if (field === 'vib' && s.vib && navigator.vibrate) navigator.vibrate(30);
-      });
-      paint();
-      return btn;
-    };
-    toggles.append(
-      makeToggle('vib', t('tasbeeh.vibration')),
-      makeToggle('snd', t('tasbeeh.sound')),
-      makeToggle('awake', t('tasbeeh.screen'))
-    );
-    root.appendChild(toggles);
-
-    // own target
-    const custom = document.createElement('form');
-    custom.className = 'tsb-custom';
-    custom.innerHTML = `
-      <label for="tsb-target-input">${t('tasbeeh.target')}</label>
-      <input id="tsb-target-input" type="number" inputmode="numeric" min="1" max="100000" placeholder="${t('tasbeeh.targetHint')}" />
-      <button type="submit" class="tsb-btn">${t('tasbeeh.setTarget')}</button>`;
-    custom.addEventListener('submit', (event) => {
-      event.preventDefault();
-      const value = Math.floor(Number(custom.querySelector('input').value));
-      const s = load();
-      if (value >= 1) s.targets[preset.id] = Math.min(value, 100000);
-      else delete s.targets[preset.id];
-      save(s);
-      build();
-    });
-    root.appendChild(custom);
-
-    // ---- painting ----
-    const paint = () => {
-      const s = load();
-      const c = countOf(s, preset);
-      const inRound = c % target;
-      const doneRounds = Math.floor(c / target);
+    function paint() {
+      const s2 = load();
+      const c = countOf(s2, preset);
+      const inRound = inf ? c : c % target;
       countEl.textContent = String(inRound);
-      ofEl.textContent = `/ ${target}`;
-      hintEl.textContent = doneRounds > 0 ? t('tasbeeh.roundOf', { n: doneRounds + 1 }) : t('tasbeeh.tapHere');
-      if (useBeads) beadEls.forEach((b, i) => b.classList.toggle('is-on', i < inRound));
-      else if (arc) arc.style.strokeDashoffset = String(CIRC * (1 - inRound / target));
-      stats.querySelector('.s-aaj').textContent = String(sum(s.counts));
-      stats.querySelector('.s-round').textContent = String(sum(s.rounds));
-      stats.querySelector('.s-kul').textContent = String(s.allTime);
-    };
+      ofEl.textContent = inf ? '∞' : `/ ${target}`;
+      const rn = inf ? 0 : Math.floor(c / target);
+      hintEl.textContent = inf ? t('tasbeeh.tapHere') : rn > 0 ? t('tasbeeh.roundOf', { n: rn + 1 }) : t('tasbeeh.tapHere');
+      const lit = inf ? c % BEADS : Math.round((inRound / target) * BEADS);
+      beadEls.forEach((b, i) => b.classList.toggle('is-on', i < lit));
+      const aaj = sum(s2.counts);
+      stats.querySelector('.s-aaj').textContent = String(aaj);
+      todayBox.querySelector('.tsb-today-n').textContent = String(aaj);
+      stats.querySelector('.s-round').textContent = String(sum(s2.rounds));
+      stats.querySelector('.s-kul').textContent = String(s2.allTime);
+    }
     paint();
 
     dial.addEventListener('click', () => {
-      const s = load();
-      const before = countOf(s, preset);
-      s.counts[preset.id] = before + 1;
-      s.allTime += 1;
-      const completed = (before + 1) % target === 0;
-      if (completed) s.rounds[preset.id] = (Number(s.rounds[preset.id]) || 0) + 1;
-      save(s);
+      const s2 = load();
+      const before = countOf(s2, preset);
+      s2.counts[preset.id] = before + 1;
+      s2.allTime += 1;
+      const completed = !inf && (before + 1) % target === 0;
+      if (completed) s2.rounds[preset.id] = (Number(s2.rounds[preset.id]) || 0) + 1;
+      save(s2);
       paint();
-      if (s.vib && navigator.vibrate) navigator.vibrate(completed ? [30, 60, 30, 60, 60] : 10);
-      if (s.snd) {
+      if (s2.vib && navigator.vibrate) navigator.vibrate(completed ? [30, 60, 30, 60, 60] : 10);
+      if (s2.snd) {
         if (completed) {
           beep(660, 140, 0.08);
           beep(880, 220, 0.08, 0.16);
@@ -319,29 +324,6 @@ export function mountTasbeeh(root) {
         dial.classList.add('is-done');
         window.setTimeout(() => dial.classList.remove('is-done'), 900);
       }
-    });
-
-    undo.addEventListener('click', () => {
-      const s = load();
-      const c = countOf(s, preset);
-      if (c <= 0) return;
-      s.counts[preset.id] = c - 1;
-      s.allTime = Math.max(0, s.allTime - 1);
-      if (c % target === 0 && (Number(s.rounds[preset.id]) || 0) > 0) s.rounds[preset.id] -= 1;
-      save(s);
-      paint();
-    });
-
-    zero.addEventListener('click', () => {
-      const s = load();
-      const c = countOf(s, preset);
-      if (c === 0) return;
-      if (!window.confirm(t('tasbeeh.zeroAsk'))) return;
-      s.allTime = Math.max(0, s.allTime - c);
-      s.counts[preset.id] = 0;
-      s.rounds[preset.id] = 0;
-      save(s);
-      paint();
     });
 
     if (store.awake) setAwake(true);

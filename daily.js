@@ -51,12 +51,6 @@ export function mountDaily(root, options = {}) {
     label.textContent = title;
     head.appendChild(label);
 
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'btn ghost small';
-    button.textContent = t('daily.share');
-    button.addEventListener('click', () => share(button, { title, arabic, text, reference }));
-    head.appendChild(button);
     box.appendChild(head);
 
     if (arabic) {
@@ -90,7 +84,7 @@ export function mountDaily(root, options = {}) {
     const hijri = todayHijri();
     const strip = document.createElement('div');
     strip.className = 'daily-date';
-    strip.textContent = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} · ${hijri.day} ${t(
+    strip.textContent = `${now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${hijri.day} ${t(
       `hm.${hijri.month}`
     )} ${hijri.year}`;
     root.appendChild(strip);
@@ -142,6 +136,27 @@ export function mountDaily(root, options = {}) {
       })
     );
 
+    const parts = [t('home.noor')];
+    for (const box of sheet.querySelectorAll('.daily-card')) {
+      parts.push(
+        [...box.querySelectorAll('.daily-arabic,.daily-text,.daily-ref')].map((n) => n.textContent).join('\n')
+      );
+    }
+    const shareAll = document.createElement('button');
+    shareAll.type = 'button';
+    shareAll.className = 'btn small noor-share';
+    shareAll.textContent = '↗ ' + t('daily.shareAll');
+    shareAll.addEventListener('click', async () => {
+      const text = parts.join('\n\n') + '\n\n— Bayyin (بيّن)';
+      try {
+        if (navigator.share) await navigator.share({ text });
+        else await navigator.clipboard.writeText(text);
+      } catch (error) {
+        /* cancelled */
+      }
+    });
+    sheet.appendChild(shareAll);
+
     if (compact) return;
 
     const details = document.createElement('details');
@@ -165,19 +180,7 @@ export function mountDaily(root, options = {}) {
       ref.className = 'daily-ref';
       ref.textContent = item.ref;
       body.append(line, ref);
-      const shareButton = document.createElement('button');
-      shareButton.type = 'button';
-      shareButton.className = 'icon-btn small';
-      shareButton.textContent = '↗';
-      shareButton.title = t('daily.share');
-      shareButton.addEventListener('click', () =>
-        share(shareButton, {
-          title: t('daily.sunnah'),
-          text: meaning(item),
-          reference: item.ref,
-        })
-      );
-      row.append(number, body, shareButton);
+      row.append(number, body);
       details.appendChild(row);
     }
     root.appendChild(details);

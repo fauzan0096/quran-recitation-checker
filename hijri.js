@@ -75,8 +75,41 @@ export function todayJDN() {
   return gregorianToJDN(now.getFullYear(), now.getMonth() + 1, now.getDate());
 }
 
+const OFFSET_KEY = 'tc.hijriOffset';
+const SOUTH_ASIA = /^Asia\/(Kolkata|Calcutta|Karachi|Dhaka|Colombo|Kathmandu)$/;
+
+/** Hijri day shift for this place: saved choice, else South Asia (moon sighted later) = -1, else 0. */
+export function hijriOffset() {
+  try {
+    const saved = localStorage.getItem(OFFSET_KEY);
+    if (saved !== null && saved !== 'auto') return Math.max(-2, Math.min(2, Number(saved) || 0));
+  } catch (error) {
+    /* ignore */
+  }
+  let zone = '';
+  try {
+    zone = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+  } catch (error) {
+    /* ignore */
+  }
+  return SOUTH_ASIA.test(zone) ? -1 : 0;
+}
+
+export function setHijriOffset(value) {
+  try {
+    if (value === 'auto') localStorage.removeItem(OFFSET_KEY);
+    else localStorage.setItem(OFFSET_KEY, String(value));
+  } catch (error) {
+    /* ignore */
+  }
+}
+
+export function hijriOf(jdn) {
+  return jdnToHijri(jdn + hijriOffset());
+}
+
 export function todayHijri() {
-  return jdnToHijri(todayJDN());
+  return hijriOf(todayJDN());
 }
 
 /** Degrees clockwise from true north to the Kaaba. */

@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / model / Quran.com requests are left to the network.
 
-const CACHE = 'bayyin-v16';
+const CACHE = 'bayyin-v17';
 
 const SHELL = [
   './',

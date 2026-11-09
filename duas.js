@@ -13,7 +13,6 @@ const CATS = ['namaz', 'subah', 'mushkil', 'bimari', 'sone', 'roz', 'ruqya'];
 const LANGS = [
   { id: 'ur', label: 'اردو' },
   { id: 'ro', label: 'Roman' },
-  { id: 'hi', label: 'हिंदी' },
   { id: 'en', label: 'EN' },
 ];
 
@@ -63,7 +62,7 @@ export function mountDuas(root) {
   const state = {
     cat: 'all',
     query: '',
-    lang: readJSON(LANG_KEY, null) || appLangToDua(),
+    lang: (['ur', 'ro', 'en'].includes(readJSON(LANG_KEY, null)) ? readJSON(LANG_KEY, null) : appLangToDua()),
     translit: readJSON(TL_KEY, true),
     favs: new Set(readJSON(FAV_KEY, [])),
     data: null,
@@ -80,7 +79,7 @@ export function mountDuas(root) {
   }
 
   function titleOf(dua) {
-    return state.lang === 'hi' ? dua.t.hi : state.lang === 'en' ? dua.t.en : dua.t.ro;
+    return state.lang === 'en' ? dua.t.en : dua.t.ro;
   }
 
   function matches(dua) {
@@ -92,7 +91,7 @@ export function mountDuas(root) {
     const q = state.query.trim();
     if (!q) return true;
     const low = q.toLowerCase();
-    const hay = [dua.t.ro, dua.t.hi, dua.t.en, dua.tl, dua.m.ro, dua.m.ur, dua.m.hi, dua.m.en]
+    const hay = [dua.t.ro, dua.t.en, dua.tl, dua.m.ro, dua.m.ur, dua.m.en]
       .join(' ')
       .toLowerCase();
     if (hay.includes(low)) return true;
