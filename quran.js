@@ -9,6 +9,9 @@ const ROW = /^(\d+)\|(\d+)\|(.+)$/;
 // that Tanzil puts at the head of the first aya of a surah.
 const BASMALA_WORDS = ['بسم', 'الله', 'الرحمن', 'الرحيم'];
 
+export const TOTAL_AYAS = 6236;
+export const TOTAL_SURAHS = 114;
+
 let store = null;
 
 export async function loadQuran(url = 'quran-tanzil.txt') {
@@ -33,13 +36,40 @@ export async function loadQuran(url = 'quran-tanzil.txt') {
     if (!match) continue;
     const surah = Number(match[1]);
     const aya = Number(match[2]);
-    const text = match[3].trim();
+    const text = match[3];
     let ayahs = bySurah.get(surah);
     if (!ayahs) {
       ayahs = [];
       bySurah.set(surah, ayahs);
     }
     ayahs[aya - 1] = text;
+  }
+
+  // Strict integrity check: the Quran is never shown altered or incomplete.
+  // If anything does not add up, refuse to load instead of displaying a guess.
+  if (bySurah.size !== TOTAL_SURAHS) {
+    throw new Error(
+      `Quran text adhoora hai: ${bySurah.size} surah mili, ${TOTAL_SURAHS} chahiye thi.`
+    );
+  }
+  let total = 0;
+  for (let surah = 1; surah <= TOTAL_SURAHS; surah += 1) {
+    const ayahs = bySurah.get(surah);
+    if (!Array.isArray(ayahs) || !ayahs.length) {
+      throw new Error(`Quran text me surah ${surah} ghaib hai.`);
+    }
+    for (let i = 0; i < ayahs.length; i += 1) {
+      if (typeof ayahs[i] !== 'string' || !ayahs[i].trim()) {
+        throw new Error(`Quran text adhoora: surah ${surah}, aya ${i + 1}.`);
+      }
+      total += 1;
+    }
+  }
+  if (total !== TOTAL_AYAS) {
+    throw new Error(`Quran text me ${total} ayaat hain, ${TOTAL_AYAS} honi chahiye thi.`);
+  }
+  if (bySurah.get(1).length !== 7 || bySurah.get(2).length !== 286 || bySurah.get(114).length !== 6) {
+    throw new Error('Quran text ki surah-wise ginti durust nahi (1:7, 2:286, 114:6 honi chahiye).');
   }
 
   store = { bySurah };

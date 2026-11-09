@@ -280,34 +280,47 @@ function verseOf(key) {
 
 // ---------------------------------------------------------------- rendering
 
+// The aya is rendered from its exact Uthmani string. Words are only wrapped in
+// spans when a result exists; whitespace is re-emitted as-is so the text on
+// screen is character-for-character the Tanzil text.
 function renderAyaText(target, verse, alignment) {
-  target.innerHTML = '';
-  const space = () => target.appendChild(document.createTextNode(' '));
+  target.textContent = '';
+  // No result yet: show the exact aya string, untouched.
+  if (!alignment) {
+    target.textContent = verse.text;
+    return;
+  }
 
-  verse.words.forEach((word, i) => {
-    const result = alignment ? alignment.results[i] : null;
-    if (!result || result.status === WORD_STATUS.CORRECT) {
-      const span = document.createElement('span');
-      span.className = result ? 'w is-correct' : 'w';
-      span.textContent = word;
-      target.appendChild(span);
-      space();
-      return;
+  const tokens = verse.text.split(/(\s+)/);
+  let wordIndex = -1;
+
+  for (const token of tokens) {
+    if (!token) continue;
+    if (/^\s+$/.test(token)) {
+      target.appendChild(document.createTextNode(token));
+      continue;
     }
-    const wrap = document.createElement('span');
-    wrap.className = `w-wrap is-${result.status}`;
+    wordIndex += 1;
+    const result = alignment.results[wordIndex];
+
+    if (!result || result.status === WORD_STATUS.CORRECT) {
+      // Correct words stay plain text: the reading text is never rebuilt.
+      target.appendChild(document.createTextNode(token));
+      continue;
+    }
+
     const span = document.createElement('span');
     span.className = `w is-${result.status}`;
-    span.textContent = word;
+    span.textContent = token;
+
     const note = document.createElement('span');
     note.className = 'w-note';
-    note.textContent = noteFor(result);
-    wrap.append(span, note);
-    target.appendChild(wrap);
-    space();
-  });
+    note.textContent = ` (${noteFor(result)})`;
 
-  if (alignment && alignment.extras.length) {
+    target.append(span, note);
+  }
+
+  if (alignment.extras.length) {
     const extra = document.createElement('div');
     extra.className = 'extra-line';
     extra.lang = 'ar';

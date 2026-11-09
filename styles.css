@@ -17,7 +17,8 @@
   --miss-ink: #7b7364;
   --radius: 16px;
   --shadow: 0 1px 2px rgba(16, 38, 31, 0.05), 0 8px 24px rgba(16, 38, 31, 0.05);
-  --arabic: 'Amiri Quran', 'Scheherazade New', 'Noto Naskh Arabic', 'Geeza Pro', serif;
+  --arabic: 'SF Arabic', 'Geeza Pro', 'Noto Naskh Arabic', 'Amiri Quran', 'Scheherazade New',
+    'Traditional Arabic', serif;
 }
 
 * {
@@ -335,10 +336,10 @@ button:focus-visible {
 }
 
 .w {
-  display: inline-block;
-  padding: 0 3px;
-  border-radius: 7px;
-  border: 1px solid transparent;
+  display: inline;
+  padding: 0 1px;
+  border-radius: 6px;
+  border: 0;
 }
 
 .w.is-correct {
@@ -378,17 +379,18 @@ button:focus-visible {
 .w-note {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 11px;
-  line-height: 1.35;
   color: var(--bad-ink);
   background: rgba(255, 255, 255, 0.85);
   border-radius: 6px;
-  padding: 1px 5px;
-  margin-top: 1px;
+  padding: 1px 4px;
   white-space: nowrap;
   direction: ltr;
-  max-width: 100%;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  unicode-bidi: isolate;
+}
+
+.w-note,
+.w {
+  unicode-bidi: isolate;
 }
 
 .w-wrap.is-close .w-note {
