@@ -167,6 +167,14 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 - App ka naam **Bayyin (بيّن)** hai. Play Store par "Qirat Check" ya "Harf Mizan"
   bhi check kiye gaye — dono ke exact naam ka koi listing search me nahi mila.
 
+## Apna icon lagana ho to
+
+Repo me apni image `icon-source.png` naam se upload kar dein (koi bhi size,
+PNG/JPG). Workflow `.github/workflows/icons-from-source.yml` usi se saare icons
+bana deta hai — `icon-512.png`, `icon-192.png`, `icon-maskable-512.png` (icon ke
+apne background par padded) aur `apple-touch-icon.png` (180, iPhone). Manifest aur
+index.html pehle se inhi filenames par set hain, is liye kuch aur badalna nahi padta.
+
 ## Licenses (Play Store ke liye)
 
 App ke andar **Settings → Licenses / Open source** me poore notices hain, aur

@@ -488,7 +488,8 @@ function renderMushafPage() {
 
     const marker = document.createElement('span');
     marker.className = 'aya-marker';
-    marker.textContent = `۝ ${toArabicDigits(verse.aya)}`;
+    marker.textContent = toArabicDigits(verse.aya);
+    marker.setAttribute('aria-label', `Aya ${verse.aya}`);
     seg.appendChild(document.createTextNode(' '));
     seg.appendChild(marker);
     seg.appendChild(document.createTextNode(' '));
