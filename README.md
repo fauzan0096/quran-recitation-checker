@@ -48,12 +48,14 @@ on-device.
   self-test, about/privacy aur licenses.
 - Mic ke baghair engine test: **Settings → Engine self-test**.
 
-## Ek waqt me ek aya
+## Aya-ba-aya, page-ba-page
 
-- Surah chunein, aya number likhein (ya **Pichli / Agli** se badlein) — ek waqt me
-  sirf ek aya check hoti hai, poori surah nahi.
-- Har aya ka apna nateeja, apne rang aur apni ghaltiyon ki list hoti hai; agli aya
-  par jaate hi nateeja saaf ho jata hai.
+- **Surah** tab: chuni hui surah ki saari ayaat ek ke neeche ek — har aya apne card
+  me, Uthmani text RTL me, aur usi ke neeche apna Record button.
+- **Mushaf page** tab: Tanzil ke page data se 604 pages; page chunein aur us page ki
+  ayaat wahi tarah aya-ba-aya dikhti hain.
+- Har aya ka natija alag: score, rang aur ghaltiyon ki list sirf usi card me; doosri
+  aya record karne se pehli ka natija barqarar rehta hai.
 
 ## Padhna hai ya yaad se azmaish?
 
