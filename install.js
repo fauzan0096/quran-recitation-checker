@@ -75,7 +75,7 @@
     card.setAttribute('aria-label', 'Install Bayyin');
 
     const icon = document.createElement('img');
-    icon.src = 'icon.svg';
+    icon.src = 'icon-192.png';
     icon.alt = '';
     icon.className = 'install-icon';
 

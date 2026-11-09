@@ -160,9 +160,10 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 
 - Naam: **Bayyin (بيّن)** — launcher/manifest me Arabic **بيّن** hi dikhta hai.- Palette: **mushaf leather (burgundy/plum) + copper + parchment** — green/blue se alag,
   raat ke liye alag mahogany dark theme.
-- Icon: `icon.svg` (rounded mushaf + mihrab arch + ayah medallion) aur
-  `icon-maskable.svg`; `manifest.webmanifest` me dono register hain. Play Store ke liye
-  in SVG se 512×512 PNG export karna hoga (`apple-touch-icon` bhi PNG leta hai).
+- Icon: `icon.svg` / `icon-maskable.svg` (rounded mushaf + mihrab arch + ayah
+  medallion) aur unse banaye gaye asli PNGs — `icon-512.png`, `icon-192.png`,
+  `icon-maskable-512.png` (Play Store / Android) aur `apple-touch-icon.png`
+  (180×180, iPhone home screen). Yehi manifest aur index.html me register hain.
 - App ka naam **Bayyin (بيّن)** hai. Play Store par "Qirat Check" ya "Harf Mizan"
   bhi check kiye gaye — dono ke exact naam ka koi listing search me nahi mila.
 

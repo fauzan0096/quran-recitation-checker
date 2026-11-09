@@ -1,7 +1,7 @@
 // Bayyin service worker: app shell offline, Quran text and page data cached.
 // Model weights and the IndoPak API stay network-first (they are large/remote).
 
-const CACHE = 'bayyin-v1';
+const CACHE = 'bayyin-v2';
 const SHELL = [
   './',
   'index.html',
@@ -20,6 +20,10 @@ const SHELL = [
   'manifest.webmanifest',
   'icon.svg',
   'icon-maskable.svg',
+  'icon-192.png',
+  'icon-512.png',
+  'icon-maskable-512.png',
+  'apple-touch-icon.png',
   'quran-tanzil.txt',
   'quran-pages.xml',
 ];
