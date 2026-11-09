@@ -60,9 +60,12 @@ on-device.
 ## Padhna hai ya yaad se azmaish?
 
 - Ayat ka text upar khula hota hai — dekh kar padh sakte hain.
-- **"Text chhupayein"** dabaein to ayat blur ho jati hai (yaad se padhne ke liye).
+- **Text chhupayein** dabaein to ayat blur ho jati hai (yaad se padhne ke liye).
   Record rukne par text khud wapas aa jata hai aur usi par rang + natija dikhta hai.
-- Dobara **"Text dikhayein"** se kabhi bhi wapas.
+- **🌙 (upar right)** se **night mode** — poori app dark ho jati hai, raat me padhne ke
+  liye. Phone already dark mode me ho to app khud dark khulti hai; pasand yaad rehti hai.
+- List ke neeche **A− / A+** se text ka size (18–44px) aur **− / +** se harf ki
+  motai (300–800; patla / aam / mota / bohot mota). Dono settings yaad rehti hain.
 
 ## Nateeja kahan dikhta hai
 
