@@ -8,6 +8,7 @@ import { AYAT, AHADITH, SUNNAHS } from './daily-content.js';
 import { getVerses, isLoaded } from './quran.js';
 import { surahName } from './surahs.js';
 import { shareStatus } from './status-card.js';
+import { todayHijri } from './hijri.js';
 
 const english = () => getLanguage() === 'en';
 const meaning = (item) => (english() ? item.en : item.rm);
@@ -83,6 +84,15 @@ export function mountDaily(root) {
   function build() {
     root.innerHTML = '';
     root.className = 'daily';
+
+    const now = new Date();
+    const hijri = todayHijri();
+    const strip = document.createElement('div');
+    strip.className = 'daily-date';
+    strip.textContent = `${now.getDate()}/${now.getMonth() + 1}/${now.getFullYear()} · ${hijri.day} ${t(
+      `hm.${hijri.month}`
+    )} ${hijri.year}`;
+    root.appendChild(strip);
 
     const ayah = AYAT[dayIndex(AYAT.length)];
     const hadith = AHADITH[dayIndex(AHADITH.length)];

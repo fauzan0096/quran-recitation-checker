@@ -2523,3 +2523,116 @@ body[data-theme='dark'] .tasbeeh-big {
 body[data-theme='dark'] .home-hero h2 {
   color: var(--gold);
 }
+
+
+
+/* ------------------------------------------- roz ka noor, one rich page */
+
+.daily-date {
+  text-align: center;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  padding: 4px 0 2px;
+}
+
+.daily-card.is-ayah {
+  position: relative;
+  overflow: hidden;
+  padding: 18px 16px 16px;
+  border: 2px solid rgba(216, 166, 107, 0.55);
+  background:
+    radial-gradient(circle at 50% -10%, rgba(216, 166, 107, 0.32), transparent 62%),
+    linear-gradient(180deg, #6b2233 0%, #5a1c2b 55%, #48151f 100%);
+  box-shadow: 0 18px 40px rgba(74, 22, 34, 0.28);
+}
+
+.daily-card.is-ayah::before {
+  content: '۞';
+  position: absolute;
+  top: -34px;
+  inset-inline-end: -10px;
+  font-size: 150px;
+  line-height: 1;
+  color: #d8a66b;
+  opacity: 0.14;
+  pointer-events: none;
+}
+
+.daily-card.is-ayah::after {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 1px solid rgba(216, 166, 107, 0.28);
+  border-radius: 12px;
+  pointer-events: none;
+}
+
+.daily-card.is-ayah .daily-label {
+  position: relative;
+  color: #e7c9a8;
+}
+
+.daily-card.is-ayah .daily-head {
+  position: relative;
+  z-index: 1;
+}
+
+.daily-card.is-ayah .daily-arabic {
+  position: relative;
+  z-index: 1;
+  color: #fdf6ea;
+  font-size: calc(var(--aya-size) * 1.02);
+  line-height: 2.15;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.22);
+  margin: 14px 0;
+}
+
+.daily-card.is-ayah .daily-ref {
+  position: relative;
+  z-index: 1;
+  color: #f0d9a8;
+  background: rgba(216, 166, 107, 0.2);
+  border-color: rgba(216, 166, 107, 0.55);
+}
+
+.daily-card.is-ayah .btn {
+  color: #f7f1e6;
+  border-color: rgba(216, 166, 107, 0.55);
+}
+
+.daily-card.is-hadith {
+  border-top: 4px solid var(--gold);
+  padding-top: 16px;
+}
+
+.daily-card.is-hadith .daily-arabic {
+  font-size: calc(var(--aya-size) * 0.86);
+  color: var(--green-dark);
+}
+
+.daily-card.is-sunnah {
+  border-top: 4px solid rgba(176, 122, 60, 0.5);
+  background:
+    linear-gradient(180deg, rgba(176, 122, 60, 0.12), transparent 70%),
+    var(--card);
+}
+
+.daily-card.is-sunnah .daily-text {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.daily-list {
+  border-top: 3px solid rgba(176, 122, 60, 0.45);
+}
+
+.daily .settings-head {
+  margin-bottom: 6px;
+}
+
+body[data-theme='dark'] .daily-card.is-ayah {
+  background:
+    radial-gradient(circle at 50% -10%, rgba(216, 166, 107, 0.22), transparent 62%),
+    linear-gradient(180deg, #5a1c2b 0%, #46161f 60%, #33101a 100%);
+}
