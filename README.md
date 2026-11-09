@@ -227,7 +227,7 @@ maujood rehni chahiye.
 
 App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
 
-- **© 2026 fauzan0096 — All rights reserved.** Poori shartein repo ki `LICENSE`
+- **© 2026 Fauzan Gorme — All rights reserved.** Poori shartein repo ki `LICENSE`
   file me hain: copy karna, badalna, kisi aur app / website / store listing me
   istemal karna ya bechna mana hai; sirf app ko apne istemal ke liye chalana
   jaiz hai.

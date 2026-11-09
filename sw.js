@@ -1,4 +1,4 @@
-// © 2026 fauzan0096 — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 
 // Bayyin service worker: network-first, so a new version of any app file reaches

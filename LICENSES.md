@@ -1,8 +1,8 @@
 # Licenses / Attributions
 
-## 0. App ka code, design aur naam — © 2026 fauzan0096
+## 0. App ka code, design aur naam — © 2026 Fauzan Gorme
 
-Bayyin (بيّن) ka **code, UI, theme, icon aur naam** © 2026 fauzan0096 hain.
+Bayyin (بيّن) ka **code, UI, theme, icon aur naam** © 2026 Fauzan Gorme hain.
 **Tamam huqooq mehfooz hain.** Copy karna, badalna, kisi doosri app ya website me
 istemal karna, ya bechna mana hai — poori shartein repo ki `LICENSE` file me
 hain. Woh notice har source file ke top par aur app ke andar Settings me bhi
