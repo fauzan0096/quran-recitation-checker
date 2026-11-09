@@ -116,20 +116,21 @@ Header ke **⋯ (Mazeed)** se teen sections khulte hain — reader saaf rehta ha
   Note: chand dekhne ki bina par mahina 1 din aage/peeche ho sakta hai — app yahi
   likhti hai, andaze se "aaj Eid hai" ka dawa nahi karti.
 
-## Roz ka Noor (daily aya / hadith / sunnah)
+## Noor (roz ki aya, hadith aur sunnah)
 
-Mazeed ke sab se pehle card par **Roz ka Noor**:
+Mazeed ke home grid par **Noor**:
 
 - **Aaj ki aya** — 60 ayaton ki list se roz badalti hai; text hamesha bundled Tanzil
-  mushaf se aata hai (kabhi retype nahi), saath reference (`Al-Baqarah 255`).
-- **Aaj ki hadith** — 30 chhoti, mashhoor ahadith (Arabic + Roman Urdu/English matlab +
-  hawala: Bukhari / Muslim / Tirmidhi waghera).
+  mushaf se aata hai (kabhi retype nahi), neeche **aasan matlab** (Roman Urdu ya
+  English, zubaan ke hisaab se) aur reference (`Al-Baqarah 255`).
+- **Aaj ki hadith** — 30 chhoti, mashhoor ahadith (Arabic + tarjuma + hawala:
+  Bukhari / Muslim / Tirmidhi waghera).
 - **Aaj ki sunnah** — 60 pyaari sunnatein, roz ek; neeche poori list khul jati hai
   (number, matlab, hawala, aur share button).
+- Teenon ek hi page par, ek sajaye hue burgundy/copper card me — oopar Gregorian +
+  Hijri tareekh.
 - **Status par lagayein** — har card ka share button ek **1080×1920 WhatsApp status**
-  image banata hai: app ke rangeen (burgundy/copper/parchment) frame me Arabic ya
-  Roman Urdu text, reference, Bayyin branding aur © line. Phone support kare to
-  seedha share sheet khulta hai, warna image download ho jati hai.
+  image banata hai: app ke rangon me Arabic text, reference, Bayyin branding aur © line.
 - Roz ka item **local date** se tay hota hai, is liye din badalte hi naya content
   aata hai.
 - **Zaroori note (app me bhi likha hai):** hadith/sunnah ke hawale kitab ki sath hain —

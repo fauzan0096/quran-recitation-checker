@@ -2636,3 +2636,16 @@ body[data-theme='dark'] .daily-card.is-ayah {
     radial-gradient(circle at 50% -10%, rgba(216, 166, 107, 0.22), transparent 62%),
     linear-gradient(180deg, #5a1c2b 0%, #46161f 60%, #33101a 100%);
 }
+
+
+
+.daily-card.is-ayah .daily-text {
+  position: relative;
+  z-index: 1;
+  color: #f6e8d4;
+  font-size: 14.5px;
+  line-height: 1.8;
+  text-align: start;
+  opacity: 0.94;
+  margin: 0 0 14px;
+}

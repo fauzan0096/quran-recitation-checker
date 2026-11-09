@@ -317,3 +317,255 @@ export const SUNNAHS = [
   { rm: 'Sote waqt "Bismika Allahumma amutu wa ahya".', en: 'Say the sleep dhikr when lying down.', ref: 'Bukhari 6324' },
   { rm: 'Har kaam ki shuruaat Bismillah se karna.', en: 'Begin every good act with Bismillah.', ref: 'Bukhari 5376' },
 ];
+
+
+/**
+ * Aasan matlab of each daily aya — a simple meaning, not an authorised
+ * translation. Keyed as "surah:aya".
+ */
+export const AYAT_MEANING = {
+  '1:1': {
+    rm: 'Allah ke naam se jo nihayat meharban, nihayat reham wala hai.',
+    en: 'In the name of Allah, the Most Merciful, the Most Compassionate.',
+  },
+  '1:5': {
+    rm: 'Hum sirf teri ibadat karte hain aur sirf tujh hi se madad chahte hain.',
+    en: 'You alone we worship, and You alone we ask for help.',
+  },
+  '2:152': {
+    rm: 'Mujhe yaad karo, main tumhein yaad rakhunga; mera shukr karo aur na-shukri na karo.',
+    en: 'Remember Me and I will remember you; be grateful and do not deny Me.',
+  },
+  '2:186': {
+    rm: 'Jab mere bande mere bare me poochein, to main qareeb hoon; pukarnewale ki pukar ka jawab deta hoon.',
+    en: 'When My servants ask about Me — I am near; I answer the call of the caller.',
+  },
+  '2:255': {
+    rm: 'Allah hi zinda hai, sab ko thamne wala; na use neend aati hai na oongh — us ki kursi aasmanon aur zameen ko ghere hue hai.',
+    en: 'Allah — the Ever-Living, the Sustainer; neither slumber nor sleep overtakes Him, and His Throne encompasses the heavens and the earth.',
+  },
+  '2:286': {
+    rm: 'Allah kisi jaan par us ki taaqat se barh kar bojh nahi dalta.',
+    en: 'Allah does not burden a soul beyond what it can bear.',
+  },
+  '3:8': {
+    rm: 'Ae hamare Rab! hidayat ke baad hamare dilon ko tedha na kar, aur apni taraf se rehmat ata farma.',
+    en: 'Our Lord, do not let our hearts deviate after You guided us, and grant us mercy from Yourself.',
+  },
+  '3:139': {
+    rm: 'Himmat na haaro aur gham na karo; tum hi ghalib rahoge agar momin ho.',
+    en: 'Do not lose hope and do not grieve; you will prevail if you are believers.',
+  },
+  '3:159': {
+    rm: 'Allah par bharosa rakho; beshak Allah bharose rakhne walon ko pasand karta hai.',
+    en: 'Place your trust in Allah; indeed Allah loves those who trust.',
+  },
+  '3:190': {
+    rm: 'Aasmanon aur zameen ki pedaish aur din-raat ke aane-jane me aql wale logon ke liye nishaniyan hain.',
+    en: 'In the creation of the heavens and the earth, and the alternation of night and day, are signs for people of understanding.',
+  },
+  '4:36': {
+    rm: 'Allah ki ibadat karo aur us ke sath kisi ko shareek na karo; walidain ke sath ehsan karo.',
+    en: 'Worship Allah and associate nothing with Him, and be good to your parents.',
+  },
+  '4:58': {
+    rm: 'Amanatein un ke haqdar logon ko do, aur jab faisla karo to insaf se karo.',
+    en: 'Return the trusts to their owners, and when you judge, judge with justice.',
+  },
+  '4:86': {
+    rm: 'Jab koi salam kahe to us se behtar jawab do ya wohi wapas do.',
+    en: 'When you are greeted, reply with a better greeting or return the same.',
+  },
+  '5:8': {
+    rm: 'Insaf par qaim raho aur Allah ke liye sachi gawahi do; kisi ki dushmani tumhein insaf se na roke.',
+    en: 'Stand firm for justice and bear true witness for Allah; let not hatred keep you from being just.',
+  },
+  '6:162': {
+    rm: 'Meri namaz, meri qurbani, meri zindagi aur meri maut sab Allah ke liye hai.',
+    en: 'My prayer, my sacrifice, my living and my dying are for Allah.',
+  },
+  '7:55': {
+    rm: 'Apne Rab ko aajizi se aur chupke se pukaro; woh hadd se barhne walon ko pasand nahi karta.',
+    en: 'Call upon your Lord humbly and quietly; He does not like those who overstep.',
+  },
+  '7:56': {
+    rm: 'Zameen me fasad na phailao is ki durusti ke baad.',
+    en: 'Do not spread corruption on the earth after it has been set right.',
+  },
+  '7:204': {
+    rm: 'Jab Quran padha jaye to khamosh ho kar ghaur se suno taake tum par reham kiya jaye.',
+    en: 'When the Quran is recited, listen to it attentively so that you may receive mercy.',
+  },
+  '8:46': {
+    rm: 'Allah aur us ke Rasool ki itaat karo aur apas me jhagda na karo, warna kamzor pad jaaoge.',
+    en: 'Obey Allah and His Messenger, and do not dispute, or you will lose strength.',
+  },
+  '9:51': {
+    rm: 'Hum par wohi aayega jo Allah ne hamare liye likh diya hai; wohi hamara madadgar hai.',
+    en: 'Nothing will befall us except what Allah has decreed for us; He is our Protector.',
+  },
+  '10:57': {
+    rm: 'Logon! tumhare Rab ki taraf se tumhare paas naseehat aur dilon ki shifa aa chuki hai.',
+    en: 'O mankind, there has come to you an admonition from your Lord, and healing for the hearts.',
+  },
+  '11:114': {
+    rm: 'Neki ki baatein buraiyon ko mita deti hain.',
+    en: 'Good deeds remove bad deeds.',
+  },
+  '12:87': {
+    rm: 'Allah ki rehmat se mayoos na ho; beshak kafir log hi mayoos hote hain.',
+    en: 'Do not despair of Allah\u2019s mercy; only the disbelieving people despair.',
+  },
+  '13:11': {
+    rm: 'Allah kisi qaum ki halat nahi badalta jab tak woh khud apni halat na badle.',
+    en: 'Allah does not change a people\u2019s condition until they change what is in themselves.',
+  },
+  '13:28': {
+    rm: 'Yaad rakho, dilon ko sukoon Allah ke zikr hi se milta hai.',
+    en: 'Surely, hearts find rest in the remembrance of Allah.',
+  },
+  '14:7': {
+    rm: 'Agar tum shukr karoge to main tumhein aur zyada dunga.',
+    en: 'If you are grateful, I will surely increase you.',
+  },
+  '16:90': {
+    rm: 'Allah insaf, ehsan aur rishtedaron ko dene ka hukm deta hai, aur be-hayai se rokta hai.',
+    en: 'Allah orders justice, good conduct and giving to relatives, and forbids indecency.',
+  },
+  '16:97': {
+    rm: 'Jo neek amal kare — mard ho ya aurat — magar momin ho, hum use paak zindagi denge.',
+    en: 'Whoever does good, male or female, and is a believer, We will give them a good life.',
+  },
+  '17:23': {
+    rm: 'Walidain ke sath ehsan karo; un ke barhape me unhein "oof" bhi na kaho.',
+    en: 'Be good to your parents; never say to them a word of contempt.',
+  },
+  '17:80': {
+    rm: 'Ae mere Rab! mujhe sacha daakhla aur sacha nikalna ata farma aur apni taraf se madadgar bana.',
+    en: 'My Lord, grant me a truthful entrance and a truthful exit, and give me support from Yourself.',
+  },
+  '18:46': {
+    rm: 'Baqi rehne wale neek amal tere Rab ke paas sawab aur umeed ke lehaz se behtar hain.',
+    en: 'Enduring good deeds are better in reward and better in hope.',
+  },
+  '20:114': {
+    rm: 'Ae mere Rab! mere ilm me izafa farma.',
+    en: 'My Lord, increase me in knowledge.',
+  },
+  '21:107': {
+    rm: 'Hum ne aap ko tamam jahano ke liye rehmat bana kar bheja hai.',
+    en: 'We have sent you only as a mercy to the worlds.',
+  },
+  '23:1': {
+    rm: 'Kamyab ho gaye momin.',
+    en: 'Successful indeed are the believers.',
+  },
+  '24:35': {
+    rm: 'Allah aasmanon aur zameen ka noor hai.',
+    en: 'Allah is the Light of the heavens and the earth.',
+  },
+  '25:63': {
+    rm: 'Rehman ke bande zameen par aajizi se chalte hain.',
+    en: 'The servants of the Most Merciful walk upon the earth humbly.',
+  },
+  '28:77': {
+    rm: 'Allah ne tujhe jo diya us se akhirat ka ghar talaash kar, aur duniya me bhi hissa na bhool.',
+    en: 'Seek the home of the Hereafter with what Allah has given you, and do not forget your share of this world.',
+  },
+  '29:45': {
+    rm: 'Beshak namaz be-hayai aur burai se rokti hai.',
+    en: 'Indeed, prayer restrains from indecency and wrongdoing.',
+  },
+  '30:21': {
+    rm: 'Us ki nishaniyon me se hai ke tumhare liye tum hi me se jode banaye taake tum sukoon pao.',
+    en: 'Among His signs is that He created for you mates from among yourselves, that you may find rest.',
+  },
+  '31:17': {
+    rm: 'Namaz qaim kar, neki ka hukm de, burai se rok aur jo museebat aaye us par sabr kar.',
+    en: 'Establish prayer, enjoin good, forbid evil, and be patient over what befalls you.',
+  },
+  '33:41': {
+    rm: 'Ae iman walo! Allah ko kasrat se yaad karo.',
+    en: 'O you who believe, remember Allah often.',
+  },
+  '33:56': {
+    rm: 'Allah aur us ke farishte Nabi par durood bhejte hain; ae iman walo, tum bhi durood aur salam bhejo.',
+    en: 'Allah and His angels send blessings on the Prophet; O believers, send blessings and peace upon him.',
+  },
+  '35:29': {
+    rm: 'Jo Allah ki kitab padhte hain, namaz qaim karte hain aur apne rizq se khair kharch karte hain.',
+    en: 'Those who recite the Book of Allah, establish prayer and spend from what We gave them.',
+  },
+  '39:53': {
+    rm: 'Apne nafson par zulm karne walo! Allah ki rehmat se mayoos na ho; woh saare gunah maaf karta hai.',
+    en: 'Do not despair of Allah\u2019s mercy, O you who have wronged yourselves; He forgives all sins.',
+  },
+  '40:60': {
+    rm: 'Mujhe pukaro, main tumhari dua qubool karunga.',
+    en: 'Call upon Me, and I will respond to you.',
+  },
+  '41:34': {
+    rm: 'Bhalai aur burai barabar nahi hoti; burai ko bhalai se door karo.',
+    en: 'Good and evil are not equal; repel evil with what is better.',
+  },
+  '42:43': {
+    rm: 'Jo sabr kare aur maaf kar de, yeh badi himmat ka kaam hai.',
+    en: 'Whoever is patient and forgives — that is a matter of true resolve.',
+  },
+  '49:10': {
+    rm: 'Momineen to aapas me bhai bhai hain; apne bhaiyon ke darmiyan sulah karwao.',
+    en: 'The believers are but brothers, so make peace between your brothers.',
+  },
+  '49:13': {
+    rm: 'Allah ke paas tum me sab se zyada izzat woh hai jo sab se zyada parhezgar ho.',
+    en: 'The most honoured among you before Allah is the most mindful of Him.',
+  },
+  '51:56': {
+    rm: 'Maine jinn aur insan sirf isi liye paida kiye ke woh meri ibadat karein.',
+    en: 'I created jinn and mankind only so that they would worship Me.',
+  },
+  '55:13': {
+    rm: 'Pas tum apne Rab ki kaun si nemat jhutlaoge?',
+    en: 'So which of the favours of your Lord will you deny?',
+  },
+  '57:28': {
+    rm: 'Allah aur us ke Rasool par iman lao; woh tumhein apni rehmat se dohra hissa ata karega.',
+    en: 'Believe in Allah and His Messenger, and He will give you a double share of His mercy.',
+  },
+  '59:22': {
+    rm: 'Woh Allah hai jis ke siwa koi mabood nahi — gaib aur hazir ka janne wala, nihayat meharban, reham wala.',
+    en: 'He is Allah, there is no god but He — Knower of the unseen and the seen, the Most Merciful.',
+  },
+  '62:9': {
+    rm: 'Ae iman walo! jab Jumma ke din namaz ki pukar ho to Allah ke zikr ki taraf daudo.',
+    en: 'O you who believe, when the call to prayer is given on Friday, hasten to remember Allah.',
+  },
+  '63:9': {
+    rm: 'Ae iman walo! tumhare maal aur aulad tumhein Allah ke zikr se ghaflat me na daalein.',
+    en: 'O you who believe, let not your wealth and children distract you from remembering Allah.',
+  },
+  '64:11': {
+    rm: 'Koi museebat Allah ki ijazat ke baghair nahi aati; jo Allah par iman laye, us ka dil hidayat pa jata hai.',
+    en: 'No calamity strikes except by Allah\u2019s permission; whoever believes, his heart is guided.',
+  },
+  '65:3': {
+    rm: 'Jo Allah par bharosa kare, usay Allah kaafi hai.',
+    en: 'Whoever puts his trust in Allah — He is sufficient for him.',
+  },
+  '67:2': {
+    rm: 'Jis ne maut aur zindagi paida ki taake tumhein aazmaye ke kaun behtar amal karta hai.',
+    en: 'He created death and life to test which of you is best in deeds.',
+  },
+  '73:8': {
+    rm: 'Apne Rab ka naam yaad karo aur sab se kat kar sirf usi ki ibadat me lage raho.',
+    en: 'Remember the name of your Lord and devote yourself to Him entirely.',
+  },
+  '94:5': {
+    rm: 'Yaqeenan mushkil ke sath aasani hai.',
+    en: 'Indeed, with hardship comes ease.',
+  },
+  '103:3': {
+    rm: 'Siway un ke jo iman laye, neek amal kiye aur ek doosre ko haq aur sabr ki naseehat ki.',
+    en: 'Except those who believe, do good, and advise one another to truth and patience.',
+  },
+};

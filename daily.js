@@ -4,7 +4,7 @@
 // The aya text always comes from the bundled mushaf — it is never retyped.
 
 import { getLanguage, t } from './i18n.js';
-import { AYAT, AHADITH, SUNNAHS } from './daily-content.js';
+import { AYAT, AHADITH, AYAT_MEANING, SUNNAHS } from './daily-content.js';
 import { getVerses, isLoaded } from './quran.js';
 import { surahName } from './surahs.js';
 import { shareStatus } from './status-card.js';
@@ -101,11 +101,13 @@ export function mountDaily(root) {
     const reference = `${surahName(ayah[0])} ${ayah[1]}`;
 
     if (verse) {
+      const tarjuma = AYAT_MEANING[`${ayah[0]}:${ayah[1]}`];
       root.appendChild(
         card({
           kind: 'ayah',
           title: t('daily.ayah'),
           arabic: verse.ayaText || verse.text,
+          text: tarjuma ? meaning(tarjuma) : '',
           reference,
         })
       );
