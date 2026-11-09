@@ -44,6 +44,13 @@ on-device.
 - Mic ke baghair engine test: **Engine self-test** (normalisation + alignment +
   tajweed + Quran data ke 16 assertions).
 
+## Ek waqt me ek aya
+
+- Surah chunein, aya number likhein (ya **Pichli / Agli** se badlein) — ek waqt me
+  sirf ek aya check hoti hai, poori surah nahi.
+- Har aya ka apna nateeja, apne rang aur apni ghaltiyon ki list hoti hai; agli aya
+  par jaate hi nateeja saaf ho jata hai.
+
 ## Padhna hai ya yaad se azmaish?
 
 - Ayat ka text upar khula hota hai — dekh kar padh sakte hain.

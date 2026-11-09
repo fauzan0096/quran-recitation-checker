@@ -28,22 +28,21 @@
 
     <main>
       <section class="panel" id="range-panel">
-        <h2><span class="step">1</span> Ayaat chunein</h2>
+        <h2><span class="step">1</span> Aya chunein (ek waqt me ek aya)</h2>
         <div class="row wrap">
           <label class="field">
             <span>Surah</span>
             <select id="surah-select"></select>
           </label>
           <label class="field small">
-            <span>Aya se</span>
-            <input id="aya-from" type="number" min="1" step="1" value="1" inputmode="numeric" />
+            <span>Aya</span>
+            <input id="aya-number" type="number" min="1" step="1" value="1" inputmode="numeric" />
           </label>
-          <label class="field small">
-            <span>Aya tak</span>
-            <input id="aya-to" type="number" min="1" step="1" value="7" inputmode="numeric" />
-          </label>
+          <button type="button" id="prev-aya" class="btn ghost small">◀ Pichli</button>
+          <button type="button" id="next-aya" class="btn ghost small">Agli ▶</button>
           <button type="button" id="load-range" class="btn">Load</button>
         </div>
+        <p id="aya-count-hint" class="hint"></p>
         <p id="range-error" class="error" hidden></p>
       </section>
 

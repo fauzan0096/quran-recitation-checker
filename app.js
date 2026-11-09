@@ -72,8 +72,10 @@ function init() {
 
 function cacheElements() {
   els.select = byId('surah-select');
-  els.from = byId('aya-from');
-  els.to = byId('aya-to');
+  els.aya = byId('aya-number');
+  els.prev = byId('prev-aya');
+  els.next = byId('next-aya');
+  els.countHint = byId('aya-count-hint');
   els.load = byId('load-range');
   els.error = byId('range-error');
   els.ref = byId('verse-ref');
@@ -121,8 +123,7 @@ function restoreSelection() {
     const stored = JSON.parse(localStorage.getItem(STORAGE.selection) || 'null');
     if (stored && Number.isInteger(stored.surah)) {
       els.select.value = String(Math.min(114, Math.max(1, stored.surah)));
-      els.from.value = String(Math.max(1, stored.from || 1));
-      els.to.value = String(Math.max(1, stored.to || stored.from || 1));
+      els.aya.value = String(Math.max(1, stored.aya || 1));
     }
   } catch (error) {
     console.warn('selection restore failed', error);
@@ -135,8 +136,7 @@ function persistSelection() {
       STORAGE.selection,
       JSON.stringify({
         surah: Number(els.select.value),
-        from: Number(els.from.value),
-        to: Number(els.to.value),
+        aya: Number(els.aya.value),
       })
     );
   } catch (error) {
@@ -154,30 +154,60 @@ function loadAya() {
   if (!isLoaded()) return;
   const surah = clamp(els.select.value, 1, 114);
   const total = Math.max(1, ayaCount(surah));
-  const from = clamp(els.from.value, 1, total);
-  const to = clamp(els.to.value, from, total);
+  const aya = clamp(els.aya.value, 1, total);
 
   els.select.value = String(surah);
-  els.from.value = String(from);
-  els.from.max = String(total);
-  els.to.max = String(total);
-  els.to.value = String(to);
+  els.aya.value = String(aya);
+  els.aya.max = String(total);
+  if (els.countHint) {
+    els.countHint.textContent = `Is surah me ${total} ayaat hain — ek waqt me sirf ek aya. Agli/Pichli se badlein.`;
+  }
+  if (els.prev) els.prev.disabled = aya <= 1;
+  if (els.next) els.next.disabled = aya >= total;
 
-  const verses = getVerses(surah, from, to);
+  const verses = getVerses(surah, aya, aya);
   if (!verses.length) {
-    els.error.textContent = 'Is range me Quran ka text nahi mila.';
+    els.error.textContent = 'Is aya ka Quran text nahi mila.';
     els.error.hidden = false;
     return;
   }
   els.error.hidden = true;
   state.verses = verses;
-  els.ref.textContent = `${surahName(surah)} — aya ${from === to ? from : `${from}–${to}`}`;
+  els.ref.textContent = `${surahName(surah)} — aya ${aya} / ${total}`;
 
   const entries = flatten(verses);
   renderVerse(els.verse, entries, null, []);
   renderTajweed();
   hideResult();
+
+  // A new aya starts clean: no leftover recording or result from the last one.
+  state.audioBlob = null;
+  if (state.audioUrl) {
+    URL.revokeObjectURL(state.audioUrl);
+    state.audioUrl = null;
+  }
+  if (els.player) {
+    try {
+      els.player.pause();
+    } catch (error) {
+      console.warn('player pause failed', error);
+    }
+    els.player.removeAttribute('src');
+    els.player.hidden = true;
+  }
+  if (els.audioStatus) setAudioStatus('Is aya ke liye Record dabaein.', 'info');
+  updateTranscribeButton();
+
   persistSelection();
+}
+
+/** Move one aya forward or back inside the current surah. */
+function stepAya(delta) {
+  if (!isLoaded()) return;
+  const surah = clamp(els.select.value, 1, 114);
+  const total = Math.max(1, ayaCount(surah));
+  els.aya.value = String(clamp(Number(els.aya.value) + delta, 1, total));
+  loadAya();
 }
 
 /** Blur the aya so it can be recited from memory, or show it again. */
@@ -947,9 +977,13 @@ function runEngineTests() {
 
 function wireEvents() {
   els.load.addEventListener('click', () => loadAya());
-  els.select.addEventListener('change', () => loadAya());
-  els.from.addEventListener('change', () => loadAya());
-  els.to.addEventListener('change', () => loadAya());
+  els.select.addEventListener('change', () => {
+    els.aya.value = '1';
+    loadAya();
+  });
+  if (els.aya) els.aya.addEventListener('change', () => loadAya());
+  if (els.prev) els.prev.addEventListener('click', () => stepAya(-1));
+  if (els.next) els.next.addEventListener('click', () => stepAya(1));
   els.record.addEventListener('click', () => {
     toggleRecording();
   });
