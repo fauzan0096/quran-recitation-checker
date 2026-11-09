@@ -62,7 +62,7 @@ self.addEventListener('fetch', (event) => {
     (async () => {
       const cache = await caches.open(CACHE);
       try {
-        const fresh = await fetch(request);
+        const fresh = await fetch(request, { cache: 'no-cache' });
         if (fresh && fresh.ok && fresh.type === 'basic') {
           cache.put(request, fresh.clone()).catch(() => {});
         }
