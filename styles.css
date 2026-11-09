@@ -1188,3 +1188,22 @@ body[data-theme='dark'] .page-mistake {
 .install-guide li {
   margin-bottom: 6px;
 }
+
+
+/* -------------------------------------------------------------- basmala */
+
+.basmala-line {
+  display: block;
+  text-align: center;
+  font-family: var(--arabic);
+  font-size: calc(var(--aya-size) * 0.82);
+  font-weight: var(--aya-weight);
+  color: var(--green-dark);
+  margin: 2px 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px dashed var(--line);
+}
+
+.aya-card .basmala-line {
+  margin-top: 0;
+}

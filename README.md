@@ -59,6 +59,10 @@ on-device.
 - Do mushaf: **Madani (604 pages, bundled Uthmani text)** aur **IndoPak (610 pages,
   Haram/Taj 15-line, Quran.com se page-wise text)**. IndoPak page pehli dafa internet
   se aata hai, phir cache se.
+- **Basmala alag**: har surah ki bismillah apni line me dikhti hai aur aya 1 ka
+  text uske baad se shuru hota hai (Fatihah me basmala khud aya 1 hai, Tawbah me
+  basmala nahi). Check karte waqt basmala bolna ya na bolna dono theek hai — ghalti
+  nahi ginti.
 - **Search** tab: lafz se (harakat ke baghair bhi), aya se (`2:255`) ya juz number se
   (`5`) talash karein; nateeja tap karne par wahi aya khulti hai.
 

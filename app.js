@@ -325,7 +325,10 @@ function verseFromText(surah, aya, text) {
     surah,
     aya,
     text,
+    ayaText: text,
+    basmala: null,
     words,
+    prefixWords: [],
     optional: words.map(() => false),
     hasBasmala: false,
   };
@@ -413,8 +416,20 @@ function ayaCard(verse) {
   record.addEventListener('click', () => toggleRecording(key, [key]));
   actions.appendChild(record);
 
-  card.append(head, text, status, result, actions);
+  card.append(head);
+  if (verse.basmala) card.appendChild(basmalaLine(verse.basmala));
+  card.append(text, status, result, actions);
   return card;
+}
+
+/** The surah's basmala as its own line, above the first aya. */
+function basmalaLine(text) {
+  const line = document.createElement('div');
+  line.className = 'basmala-line';
+  line.lang = 'ar';
+  line.dir = 'rtl';
+  line.textContent = text;
+  return line;
 }
 
 function idOf(key) {
@@ -478,6 +493,7 @@ function renderMushafPage() {
   if (state.textHidden) text.classList.add('is-hidden');
 
   state.verses.forEach((verse) => {
+    if (verse.basmala) text.appendChild(basmalaLine(verse.basmala));
     const key = keyOf(verse.surah, verse.aya);
     const seg = document.createElement('span');
     seg.className = 'aya-seg';
@@ -597,12 +613,13 @@ function mistakeBlock(key, problems) {
 
 function renderAyaText(target, verse, alignment) {
   target.textContent = '';
+  const source = verse.ayaText || verse.text;
   if (!alignment) {
-    target.textContent = verse.text;
+    target.textContent = source;
     return;
   }
 
-  const tokens = verse.text.split(/(\s+)/);
+  const tokens = source.split(/(\s+)/);
   let wordIndex = -1;
 
   for (const token of tokens) {
@@ -855,6 +872,11 @@ async function checkTarget(id, keys, blob) {
     const expected = [];
     const wordVerse = [];
     verses.forEach((verse, vi) => {
+      // A surah's basmala may be recited or skipped without it being an error.
+      (verse.prefixWords || []).forEach((word) => {
+        expected.push({ word, optional: true });
+        wordVerse.push(vi);
+      });
       verse.words.forEach((word, wi) => {
         expected.push({ word, optional: Boolean(verse.optional[wi]) });
         wordVerse.push(vi);
@@ -875,7 +897,8 @@ async function checkTarget(id, keys, blob) {
       slices[vi].push({ ...result, index: slices[vi].length });
     });
     verses.forEach((verse, vi) => {
-      state.results.set(keyOf(verse.surah, verse.aya), summarise(slices[vi], []));
+      const prefix = (verse.prefixWords || []).length;
+      state.results.set(keyOf(verse.surah, verse.aya), summarise(slices[vi].slice(prefix), []));
     });
 
     state.pageAlignment =
@@ -1026,7 +1049,7 @@ async function runSearch() {
     for (let aya = 1; aya <= total && found.length < 100; aya += 1) {
       const text = getVerses(surah, aya, aya)[0];
       if (!text) continue;
-      if (normalizeArabic(text.text).includes(needle)) found.push({ surah, aya });
+      if (normalizeArabic(text.ayaText || text.text).includes(needle)) found.push({ surah, aya });
     }
   }
   renderSearchResults(found, `"${raw}" — ${found.length} nataij`);
@@ -1063,7 +1086,7 @@ function renderSearchResults(list, heading) {
     text.className = 'search-hit-text';
     text.lang = 'ar';
     text.dir = 'rtl';
-    text.textContent = verse.text;
+    text.textContent = verse.ayaText || verse.text;
     button.append(ref, text);
     button.addEventListener('click', () => jumpToAya(item.surah, item.aya));
     els.searchResults.appendChild(button);
@@ -1173,7 +1196,7 @@ function renderTajweed() {
     els.tajweed.textContent = 'Pehle koi aya chunein.';
     return;
   }
-  const hints = tajweedHints(verse.text, 8);
+  const hints = tajweedHints(verse.ayaText || verse.text, 8);
   if (!hints.length) {
     els.tajweed.textContent = `${verse.surah}:${verse.aya} me koi tajweed hint nahi mila.`;
     return;

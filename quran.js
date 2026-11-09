@@ -94,11 +94,15 @@ export function getAyaText(surah, aya) {
 }
 
 /**
- * Ayaat of a range, each split into display words plus the "optional" flags
- * used by the alignment (a basmala at the start of a surah may be skipped
- * without it counting as a mistake — although reciting it is better).
+ * Ayaat of a range. The basmala that Tanzil keeps inside the first aya of a
+ * surah (except al-Fatihah and at-Tawbah) is split out: `basmala` holds it,
+ * `ayaText` is the aya itself, and `prefixWords` are its words as optional
+ * alignment input (reciting it is fine, skipping it is not a mistake).
  *
- * @returns {Array<{surah:number, aya:number, text:string, words:string[],
+ * `text` always stays the exact Tanzil string.
+ *
+ * @returns {Array<{surah:number, aya:number, text:string, ayaText:string,
+ *   basmala:string|null, words:string[], prefixWords:string[],
  *   optional:boolean[], hasBasmala:boolean}>}
  */
 export function getVerses(surah, from, to) {
@@ -106,19 +110,35 @@ export function getVerses(surah, from, to) {
   for (let aya = from; aya <= to; aya += 1) {
     const text = getAyaText(surah, aya);
     if (!text) continue;
-    const words = text.split(/\s+/).filter(Boolean);
-    const optional = words.map(() => false);
-    let hasBasmala = false;
 
-    if (surah !== 1 && surah !== 9 && aya === 1 && words.length >= 4) {
-      const head = words.slice(0, 4).map((word) => normalizeArabic(word));
-      if (head.every((word, index) => word === BASMALA_WORDS[index])) {
-        for (let i = 0; i < 4; i += 1) optional[i] = true;
-        hasBasmala = true;
+    const allWords = text.split(/\s+/).filter(Boolean);
+    let basmala = null;
+    let prefixWords = [];
+    let words = allWords;
+
+    if (surah !== 1 && surah !== 9 && aya === 1 && allWords.length > 4) {
+      const head = allWords.slice(0, 4);
+      const normalised = head.map((word) => normalizeArabic(word));
+      if (normalised.every((word, index) => word === BASMALA_WORDS[index])) {
+        prefixWords = head;
+        basmala = head.join(' ');
+        words = allWords.slice(4);
       }
     }
 
-    verses.push({ surah, aya, text, words, optional, hasBasmala });
+    const ayaText = basmala ? words.join(' ') : text;
+
+    verses.push({
+      surah,
+      aya,
+      text,
+      ayaText,
+      basmala,
+      words,
+      prefixWords,
+      optional: words.map(() => false),
+      hasBasmala: Boolean(basmala),
+    });
   }
   return verses;
 }

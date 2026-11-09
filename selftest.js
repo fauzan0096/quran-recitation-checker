@@ -192,12 +192,14 @@ export function runSelfTest(context = {}) {
       return '7 / 286 / 6';
     });
 
-    check('Surah ki pehli aya me basmala optional hai', () => {
+    check('Surah ki pehli aya me basmala alag hai', () => {
       const verses = quran.getVerses(2, 1, 1);
       assert(verses.length === 1, 'aya nahi mili');
       assertEqual(verses[0].hasBasmala, true, 'hasBasmala');
-      assert(verses[0].optional.slice(0, 4).every(Boolean), 'basmala optional nahi hui');
-      return verses[0].words.slice(0, 5).join(' ');
+      assert(verses[0].basmala && verses[0].basmala.length > 0, 'basmala text ghaib');
+      assertEqual(verses[0].prefixWords.length, 4, 'prefixWords');
+      assert(!verses[0].ayaText.startsWith(verses[0].basmala.split(' ')[0]), 'aya me basmala reh gayi');
+      return verses[0].ayaText.slice(0, 40);
     });
   }
 
