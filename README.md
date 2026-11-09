@@ -175,9 +175,11 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 ## Apna icon lagana ho to
 
 Repo me apni image `icon-source.png` naam se upload kar dein (koi bhi size,
-PNG/JPG). Workflow `.github/workflows/icons-from-source.yml` usi se saare icons
-bana deta hai — `icon-512.png`, `icon-192.png`, `icon-maskable-512.png` (icon ke
-apne background par padded) aur `apple-touch-icon.png` (180, iPhone). Manifest aur
+PNG/JPG). Workflow `.github/workflows/icons-from-source.yml` **ek hi source** se
+saare icons bana deta hai — `icon-512.png`, `icon-192.png`,
+`icon-maskable-512.png` (icon ke apne background par padded), `apple-touch-icon.png`
+(180, iPhone), `favicon-48.png` / `favicon-32.png` / `favicon.ico`, aur
+`icon.svg` / `icon-maskable.svg` (jo wahi PNG embed karte hain). Manifest aur
 index.html pehle se inhi filenames par set hain, is liye kuch aur badalna nahi padta.
 
 ## Licenses (Play Store ke liye)
