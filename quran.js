@@ -9,6 +9,38 @@ const ROW = /^(\d+)\|(\d+)\|(.+)$/;
 // that Tanzil puts at the head of the first aya of a surah.
 const BASMALA_WORDS = ['بسم', 'الله', 'الرحمن', 'الرحيم'];
 
+/** IndoPak script basmala (Quran.com Indopak 15 lines, aya 1:1). */
+export const INDOPAK_BASMALA = 'بِسۡمِ اللهِ الرَّحۡمٰنِ الرَّحِيۡمِ';
+
+/**
+ * Split a surah's basmala away from aya 1.
+ *
+ * Tanzil keeps it inside aya 1; the IndoPak pages from Quran.com do not, so a
+ * `fallback` can be passed for them. al-Fatihah keeps the basmala as its aya 1
+ * and at-Tawbah has none.
+ */
+export function splitBasmala(surah, aya, text, fallback = null) {
+  const allWords = text.split(/\s+/).filter(Boolean);
+  if (surah !== 1 && surah !== 9 && aya === 1) {
+    if (allWords.length > 4) {
+      const head = allWords.slice(0, 4);
+      if (head.map((word) => normalizeArabic(word)).every((word, i) => word === BASMALA_WORDS[i])) {
+        const words = allWords.slice(4);
+        return { basmala: head.join(' '), prefixWords: head, words, ayaText: words.join(' ') };
+      }
+    }
+    if (fallback) {
+      return {
+        basmala: fallback,
+        prefixWords: fallback.split(/\s+/).filter(Boolean),
+        words: allWords,
+        ayaText: text,
+      };
+    }
+  }
+  return { basmala: null, prefixWords: [], words: allWords, ayaText: text };
+}
+
 export const TOTAL_AYAS = 6236;
 export const TOTAL_SURAHS = 114;
 
@@ -111,22 +143,8 @@ export function getVerses(surah, from, to) {
     const text = getAyaText(surah, aya);
     if (!text) continue;
 
-    const allWords = text.split(/\s+/).filter(Boolean);
-    let basmala = null;
-    let prefixWords = [];
-    let words = allWords;
-
-    if (surah !== 1 && surah !== 9 && aya === 1 && allWords.length > 4) {
-      const head = allWords.slice(0, 4);
-      const normalised = head.map((word) => normalizeArabic(word));
-      if (normalised.every((word, index) => word === BASMALA_WORDS[index])) {
-        prefixWords = head;
-        basmala = head.join(' ');
-        words = allWords.slice(4);
-      }
-    }
-
-    const ayaText = basmala ? words.join(' ') : text;
+    const split = splitBasmala(surah, aya, text);
+    const { basmala, prefixWords, words, ayaText } = split;
 
     verses.push({
       surah,

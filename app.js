@@ -7,7 +7,14 @@
 // Search tab: find by word, by aya (2:255) or by juz (5).
 
 import { SURAHS, surahName } from './surahs.js';
-import { loadQuran, isLoaded, ayaCount, getVerses } from './quran.js';
+import {
+  loadQuran,
+  isLoaded,
+  ayaCount,
+  getVerses,
+  splitBasmala,
+  INDOPAK_BASMALA,
+} from './quran.js';
 import { loadPages, pageTotal, pageAyahs, juzAyahs } from './quran-pages.js';
 import { indopakPage, INDOPAK_PAGES } from './indopak.js';
 import { alignWords, WORD_STATUS } from './align.js';
@@ -320,17 +327,18 @@ async function showList() {
 }
 
 function verseFromText(surah, aya, text) {
-  const words = text.split(/\s+/).filter(Boolean);
+  // IndoPak pages don't carry the basmala inside aya 1, so it is supplied.
+  const split = splitBasmala(surah, aya, text, INDOPAK_BASMALA);
   return {
     surah,
     aya,
     text,
-    ayaText: text,
-    basmala: null,
-    words,
-    prefixWords: [],
-    optional: words.map(() => false),
-    hasBasmala: false,
+    ayaText: split.ayaText,
+    basmala: split.basmala,
+    words: split.words,
+    prefixWords: split.prefixWords,
+    optional: split.words.map(() => false),
+    hasBasmala: Boolean(split.basmala),
   };
 }
 

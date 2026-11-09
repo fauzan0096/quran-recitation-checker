@@ -5,6 +5,7 @@
 import { normalizeToWords, compareDistance } from './normalize.js';
 import { alignWords, WORD_STATUS } from './align.js';
 import { tajweedHints } from './tajweed.js';
+import { splitBasmala, INDOPAK_BASMALA } from './quran.js';
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
@@ -174,6 +175,20 @@ export function runSelfTest(context = {}) {
     const hints = tajweedHints('مِنْ بَعْدِ');
     assert(hints.some((hint) => hint.rule === 'Iqlab'), 'Iqlab hint nahi mila');
     return hints.map((hint) => hint.rule).join(', ');
+  });
+
+  check('IndoPak me basmala alag line ke liye milti hai', () => {
+    const split = splitBasmala(2, 1, 'الٓمٓ', INDOPAK_BASMALA);
+    assertEqual(split.basmala, INDOPAK_BASMALA, 'basmala');
+    assertEqual(split.ayaText, 'الٓمٓ', 'ayaText');
+    assertEqual(split.prefixWords.length, 4, 'prefixWords');
+    return split.prefixWords.join(' ');
+  });
+
+  check('Al-Fatihah me basmala alag nahi hoti', () => {
+    const split = splitBasmala(1, 1, 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ', INDOPAK_BASMALA);
+    assertEqual(split.basmala, null, 'basmala');
+    return split.ayaText.slice(0, 20);
   });
 
   const quran = context.quran;
