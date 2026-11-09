@@ -322,6 +322,8 @@ button:focus-visible {
   font-size: 26px;
   line-height: 2.05;
   text-align: right;
+  direction: rtl;
+  unicode-bidi: plaintext;
   transition: filter 0.2s ease, opacity 0.2s ease;
 }
 
@@ -519,6 +521,7 @@ button:focus-visible {
 .mistake .spoken-word {
   font-family: var(--arabic);
   font-size: 20px;
+  direction: rtl;
 }
 
 .mistake .spoken-word {

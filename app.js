@@ -234,6 +234,8 @@ function ayaCard(verse) {
 
   const text = document.createElement('div');
   text.className = 'aya-text';
+  text.lang = 'ar';
+  text.dir = 'rtl';
   if (state.textHidden) text.classList.add('is-hidden');
   renderAyaText(text, verse, alignment);
   text.addEventListener('dblclick', () => {
