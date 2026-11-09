@@ -48,14 +48,19 @@ on-device.
   self-test, about/privacy aur licenses.
 - Mic ke baghair engine test: **Settings → Engine self-test**.
 
-## Aya-ba-aya, page-ba-page
+## Aya-ba-aya, mushaf-ba-mushaf
 
 - **Surah** tab: chuni hui surah ki saari ayaat ek ke neeche ek — har aya apne card
-  me, Uthmani text RTL me, aur usi ke neeche apna Record button.
-- **Mushaf page** tab: Tanzil ke page data se 604 pages; page chunein aur us page ki
-  ayaat wahi tarah aya-ba-aya dikhti hain.
-- Har aya ka natija alag: score, rang aur ghaltiyon ki list sirf usi card me; doosri
-  aya record karne se pehli ka natija barqarar rehta hai.
+  me, usi ke neeche apna Record button.
+- **Mushaf** tab: poora page **ek musalsal mushaf** ki tarah (ayaat ko toda nahi
+  jata), aya number ke nishan ke saath. Page ke aakhir me **"Is poore page ko record
+  karein"** — poori page ki tilawat ka score aur aya-wise ghaltiyan. Kisi aya par tap
+  karein to woh select ho jati hai aur sirf usi aya ko record/share kar sakte hain.
+- Do mushaf: **Madani (604 pages, bundled Uthmani text)** aur **IndoPak (610 pages,
+  Haram/Taj 15-line, Quran.com se page-wise text)**. IndoPak page pehli dafa internet
+  se aata hai, phir cache se.
+- **Search** tab: lafz se (harakat ke baghair bhi), aya se (`2:255`) ya juz number se
+  (`5`) talash karein; nateeja tap karne par wahi aya khulti hai.
 
 ## Padhna hai ya yaad se azmaish?
 
