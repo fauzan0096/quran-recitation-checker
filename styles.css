@@ -19,6 +19,8 @@
   --shadow: 0 1px 2px rgba(16, 38, 31, 0.05), 0 8px 24px rgba(16, 38, 31, 0.05);
   --arabic: 'SF Arabic', 'Geeza Pro', 'Noto Naskh Arabic', 'Amiri Quran', 'Scheherazade New',
     'Traditional Arabic', serif;
+  --aya-size: 26px;
+  --aya-weight: 400;
 }
 
 * {
@@ -320,7 +322,8 @@ button:focus-visible {
 
 .aya-text {
   font-family: var(--arabic);
-  font-size: 26px;
+  font-size: var(--aya-size);
+  font-weight: var(--aya-weight);
   line-height: 2.05;
   text-align: right;
   direction: rtl;
@@ -790,4 +793,130 @@ audio {
   .tagline {
     display: none;
   }
+}
+
+
+/* ------------------------------------------------------ reading controls */
+
+.reader-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 2px 12px;
+}
+
+.rc-label {
+  font-size: 12px;
+  color: var(--muted);
+  margin-inline-start: 4px;
+}
+
+.rc-btn {
+  min-width: 38px;
+  height: 34px;
+  padding: 0 8px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.rc-btn:active {
+  transform: translateY(1px);
+}
+
+.rc-meta {
+  margin-inline-start: auto;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ------------------------------------------------------------ night mode */
+
+body[data-theme='dark'] {
+  --paper: #0e1512;
+  --card: #16211c;
+  --ink: #e9f1ec;
+  --muted: #9aa9a1;
+  --line: #26332c;
+  --green: #1d7a5c;
+  --green-dark: #8fd8b5;
+  --gold: #d8a94f;
+  --ok-bg: #12332a;
+  --ok-ink: #8edcb8;
+  --close-bg: #3a2f13;
+  --close-ink: #f0cd7f;
+  --bad-bg: #3b1f1c;
+  --bad-ink: #f4a79d;
+  --miss-bg: #232a26;
+  --miss-ink: #a5b0a9;
+  --shadow: none;
+  color-scheme: dark;
+}
+
+body[data-theme='dark'] .app-bar {
+  background: rgba(14, 21, 18, 0.92);
+}
+
+body[data-theme='dark'] .tabs {
+  background: #1b2621;
+}
+
+body[data-theme='dark'] .aya-badge {
+  background: #16302a;
+  border-color: #2b4b3f;
+}
+
+body[data-theme='dark'] .global-status {
+  border-color: #4a3c1c;
+}
+
+body[data-theme='dark'] .w-note {
+  background: rgba(0, 0, 0, 0.55);
+}
+
+body[data-theme='dark'] .aya-score,
+body[data-theme='dark'] .mistake,
+body[data-theme='dark'] .diag li,
+body[data-theme='dark'] .test {
+  background: #131c17;
+}
+
+body[data-theme='dark'] .prose code {
+  background: #1b2621;
+}
+
+body[data-theme='dark'] .progress {
+  background: #1b2621;
+}
+
+body[data-theme='dark'] .toast {
+  background: #e9f1ec;
+  color: #0e1512;
+}
+
+body[data-theme='dark'] .diag-ok {
+  border-color: #2c6b52;
+}
+
+body[data-theme='dark'] .diag-bad,
+body[data-theme='dark'] .test.fail {
+  border-color: #7a3a33;
+}
+
+body[data-theme='dark'] .aya-score.good {
+  border-color: #2c6b52;
+}
+
+body[data-theme='dark'] .aya-score.mid {
+  border-color: #6a5620;
+}
+
+body[data-theme='dark'] .aya-score.bad {
+  border-color: #7a3a33;
 }

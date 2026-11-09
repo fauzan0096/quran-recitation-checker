@@ -23,9 +23,19 @@ import {
 } from './asr.js';
 import { runSelfTest } from './selftest.js';
 
-const STORAGE = { selection: 'tc.selection', model: 'tc.modelId', hidden: 'tc.textHidden' };
+const STORAGE = {
+  selection: 'tc.selection',
+  model: 'tc.modelId',
+  hidden: 'tc.textHidden',
+  reading: 'tc.reading',
+};
 const CHUNK = 25;
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
+const SIZE_MIN = 18;
+const SIZE_MAX = 44;
+const WEIGHT_MIN = 300;
+const WEIGHT_MAX = 800;
+const WEIGHT_STEP = 100;
 
 const state = {
   mode: 'surah',
@@ -35,6 +45,9 @@ const state = {
   visible: CHUNK,
   results: new Map(),
   textHidden: false,
+  theme: 'light',
+  fontSize: 26,
+  fontWeight: 400,
   model: null,
   modelId: null,
   modelLoading: false,
@@ -79,6 +92,8 @@ async function init() {
 function cacheElements() {
   const ids = [
     'open-settings', 'close-settings', 'view-reader', 'view-settings',
+    'toggle-theme', 'font-smaller', 'font-larger', 'weight-lighter', 'weight-bolder',
+    'reading-meta',
     'tab-surah', 'tab-page', 'picker-surah', 'picker-page', 'surah-select',
     'page-prev', 'page-next', 'page-number', 'page-total',
     'toggle-text', 'list-title', 'global-status', 'range-error', 'aya-list',
@@ -134,7 +149,76 @@ function restoreSelection() {
   els.surahSelect.value = String(state.surah);
   els.pageNumber.value = String(state.page);
   els.toggleText.textContent = state.textHidden ? 'Text dikhayein' : 'Text chhupayein';
+
+  try {
+    const reading = JSON.parse(localStorage.getItem(STORAGE.reading) || 'null');
+    if (reading) {
+      if (reading.theme === 'dark' || reading.theme === 'light') state.theme = reading.theme;
+      if (Number.isFinite(reading.fontSize)) {
+        state.fontSize = Math.min(SIZE_MAX, Math.max(SIZE_MIN, reading.fontSize));
+      }
+      if (Number.isFinite(reading.fontWeight)) {
+        state.fontWeight = Math.min(WEIGHT_MAX, Math.max(WEIGHT_MIN, reading.fontWeight));
+      }
+    } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      state.theme = 'dark';
+    }
+  } catch (error) {
+    console.warn('reading prefs restore failed', error);
+  }
+  applyReading();
+
   applyMode();
+}
+
+function weightLabel() {
+  if (state.fontWeight <= 350) return 'patla';
+  if (state.fontWeight <= 500) return 'aam';
+  if (state.fontWeight <= 650) return 'mota';
+  return 'bohot mota';
+}
+
+function applyReading(persist = true) {
+  document.body.dataset.theme = state.theme;
+  document.documentElement.style.setProperty('--aya-size', `${state.fontSize}px`);
+  document.documentElement.style.setProperty('--aya-weight', String(state.fontWeight));
+  if (els.toggleTheme) {
+    els.toggleTheme.textContent = state.theme === 'dark' ? '☀' : '🌙';
+    els.toggleTheme.setAttribute('aria-pressed', String(state.theme === 'dark'));
+  }
+  if (els.readingMeta) {
+    els.readingMeta.textContent = `${state.fontSize}px · ${weightLabel()}`;
+  }
+  if (persist) {
+    try {
+      localStorage.setItem(
+        STORAGE.reading,
+        JSON.stringify({
+          theme: state.theme,
+          fontSize: state.fontSize,
+          fontWeight: state.fontWeight,
+        })
+      );
+    } catch (error) {
+      console.warn('reading prefs persist failed', error);
+    }
+  }
+}
+
+function stepFont(delta) {
+  state.fontSize = Math.min(SIZE_MAX, Math.max(SIZE_MIN, state.fontSize + delta));
+  applyReading();
+}
+
+function stepWeight(delta) {
+  state.fontWeight = Math.min(WEIGHT_MAX, Math.max(WEIGHT_MIN, state.fontWeight + delta));
+  applyReading();
+}
+
+function toggleTheme() {
+  state.theme = state.theme === 'dark' ? 'light' : 'dark';
+  applyReading();
+  toast(state.theme === 'dark' ? 'Night mode on' : 'Night mode off');
 }
 
 function persistSelection() {
@@ -883,6 +967,11 @@ function wireEvents() {
   });
 
   els.toggleText.addEventListener('click', () => setTextHidden(!state.textHidden));
+  els.toggleTheme.addEventListener('click', toggleTheme);
+  els.fontSmaller.addEventListener('click', () => stepFont(-1));
+  els.fontLarger.addEventListener('click', () => stepFont(1));
+  els.weightLighter.addEventListener('click', () => stepWeight(-WEIGHT_STEP));
+  els.weightBolder.addEventListener('click', () => stepWeight(WEIGHT_STEP));
   els.loadMore.addEventListener('click', () => {
     state.visible += CHUNK;
     renderList();

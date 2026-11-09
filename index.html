@@ -16,6 +16,15 @@
           <p class="tagline">Aya padhein · Record dabaein · ghalti wahin dekhein</p>
         </div>
       </div>
+      <button
+        type="button"
+        id="toggle-theme"
+        class="icon-btn"
+        aria-label="Night mode"
+        title="Night mode"
+      >
+        🌙
+      </button>
       <button type="button" id="open-settings" class="icon-btn" aria-label="Settings" title="Settings">
         ⚙
       </button>
@@ -48,6 +57,16 @@
         <div class="toolbar">
           <span id="list-title" class="list-title"></span>
           <button type="button" id="toggle-text" class="btn ghost small">Text chhupayein</button>
+        </div>
+
+        <div class="reader-controls">
+          <span class="rc-label">Text</span>
+          <button type="button" id="font-smaller" class="rc-btn" aria-label="Chhota text">A−</button>
+          <button type="button" id="font-larger" class="rc-btn" aria-label="Bara text">A+</button>
+          <span class="rc-label">Motai</span>
+          <button type="button" id="weight-lighter" class="rc-btn" aria-label="Patla harf">−</button>
+          <button type="button" id="weight-bolder" class="rc-btn" aria-label="Mota harf">+</button>
+          <span id="reading-meta" class="rc-meta"></span>
         </div>
 
         <div id="global-status" class="global-status" hidden></div>
