@@ -31,13 +31,22 @@ store listing text aur billing bridge ka code.
 
 ---
 
-## 0b. Jo pehle se maujood hai (repo me)
+## 0b. Play Console account ke faisle (jo ho gaye)
+
+- **Ads**: nahi. Play listing me "Contains ads: No".
+- **In-app purchase**: sirf **subscription** (`bayyin_pro_monthly`, `bayyin_pro_yearly`),
+  koi one-time product nahi.
+- Account ban gaya; card add karke **$25** one-time fee deni hai, phir Play 1–2 din me
+  verify karta hai. Payments profile (bank + PAN) subscription publish karne se pehle chahiye.
+- Onboarding me "kitne apps" ka jawab koi limit nahi lagata — jitne chahein bana sakte hain.
+
+## 0c. Jo pehle se maujood hai (repo me)
 
 | Cheez | File |
 | --- | --- |
 | Installable PWA + manifest + screenshots | `manifest.webmanifest`, `screenshots/` |
 | Paywall, trial, free limits, prices | `premium.js`, `premium-strings.js` |
-| Play Billing bridge contract | `billing.js` (`window.BayyinBilling`) |
+| Play Billing (TWA: Digital Goods API) | `billing.js` |
 | Privacy policy (Play ko URL chahiye) | `privacy.html` |
 | Icons 512 / maskable | `icon-512.png`, `icon-maskable-512.png` |
 | Subscription SKUs | `bayyin_pro_monthly`, `bayyin_pro_yearly` |
