@@ -39,6 +39,7 @@ import './strings-v2.js';
 import { mountTasbeeh } from './tasbeeh-v2.js';
 import { mountDuas } from './duas.js';
 import { mountHifz, mountKhatam, pendingToday, startReminderLoop } from './planners.js';
+import { mountHifzTest } from './hifz-test.js';
 import { hijriArabic, todayHijri } from './hijri.js';
 import { mountQibla } from './qibla.js';
 import { mountCalendar } from './calendar.js';
@@ -115,6 +116,7 @@ const moreViews = {
   duas: null,
   khatam: null,
   hifz: null,
+  hztest: null,
 };
 
 init();
@@ -273,6 +275,7 @@ function cacheElements() {
     'view-home', 'more-tasbeeh', 'more-qibla', 'more-calendar',
     'home-mushaf', 'home-dua', 'home-open-quran', 'home-todo', 'more-khatam', 'more-hifz',
     'view-khatam', 'view-hifz', 'khatam-root', 'hifz-root', 'close-khatam', 'close-hifz',
+    'more-hztest', 'view-hztest', 'hztest-root', 'close-hztest',
     'home-date', 'home-noor', 'view-dua', 'close-dua', 'dua-root', 'bottom-nav',
     'more-daily', 'view-daily', 'close-daily', 'daily-root',
     'view-tasbeeh', 'close-tasbeeh', 'tasbeeh-root',
@@ -1460,6 +1463,16 @@ function ensureMounted(name) {
   else if (name === 'duas') moreViews.duas = mountDuas(els.duaRoot);
   else if (name === 'khatam') moreViews.khatam = mountKhatam(els.khatamRoot);
   else if (name === 'hifz') moreViews.hifz = mountHifz(els.hifzRoot);
+  else if (name === 'hztest') {
+    moreViews.hztest = mountHifzTest(els.hztestRoot, {
+      ensureQuran: () => loadQuranInBackground(),
+      ensureModel: async () => {
+        if (state.model) return state.model;
+        const ok = await handleLoadModel();
+        return ok ? state.model : null;
+      },
+    });
+  }
 }
 
 /** Show exactly one section, keep the bottom bar in step, and stop what is not on screen. */
@@ -1475,10 +1488,12 @@ function setView(name) {
     calendar: els.viewCalendar,
     khatam: els.viewKhatam,
     hifz: els.viewHifz,
+    hztest: els.viewHztest,
   };
   if (currentView === 'qibla' && name !== 'qibla') moreViews.qibla?.stop();
   if (currentView === 'tasbeeh' && name !== 'tasbeeh') moreViews.tasbeeh?.stop();
   if (currentView === 'dua' && name !== 'dua') moreViews.duas?.stop();
+  if (currentView === 'hztest' && name !== 'hztest') moreViews.hztest?.stop();
   currentView = name;
 
   for (const [key, element] of Object.entries(sections)) {
@@ -1493,8 +1508,10 @@ function setView(name) {
   if (name === 'dua') ensureMounted('duas');
   if (name === 'khatam') ensureMounted('khatam');
   if (name === 'hifz') ensureMounted('hifz');
+  if (name === 'hztest') ensureMounted('hztest');
   if (name === 'khatam') moreViews.khatam?.refresh();
   if (name === 'hifz') moreViews.hifz?.refresh();
+  if (name === 'hztest') moreViews.hztest?.refresh();
   if (name === 'home') paintHomeTodo();
   if (name === 'daily') moreViews.daily?.refresh();
   if (name === 'tasbeeh') moreViews.tasbeeh?.refresh();
@@ -1806,6 +1823,12 @@ function paintHomeTodo() {
 }
 
 window.addEventListener('bayyin:planner', paintHomeTodo);
+window.addEventListener('bayyin:hztest', async (event) => {
+  const items = (event.detail && event.detail.items) || [];
+  setView('hztest');
+  await loadQuranInBackground();
+  moreViews.hztest?.startCustom(items);
+});
 window.addEventListener('bayyin:open', async (event) => {
   const detail = event.detail || {};
   setView('reader');
@@ -1933,6 +1956,7 @@ function wireEvents() {
   go(els.homeMushaf, 'reader');
   go(els.moreKhatam, 'khatam');
   go(els.moreHifz, 'hifz');
+  go(els.moreHztest, 'hztest');
   go(els.homeOpenQuran, 'reader');
   go(els.homeDua, 'dua');
   go(els.moreDaily, 'daily');
@@ -1947,6 +1971,7 @@ function wireEvents() {
     els.closeDua,
     els.closeKhatam,
     els.closeHifz,
+    els.closeHztest,
   ]) {
     go(closer, 'home');
   }

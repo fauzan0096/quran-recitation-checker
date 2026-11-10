@@ -1141,3 +1141,51 @@ body[data-theme='dark'] {
 .pl-text { padding: 14px; border-radius: 16px; font-family: var(--arabic); font-size: calc(var(--aya-size) * .95); line-height: 2.2; background: linear-gradient(180deg,rgba(176,122,60,.16),rgba(176,122,60,.04)); border: 1px solid rgba(176,122,60,.35); }
 .pl-line { margin: 0; padding: 8px 12px; border-radius: 10px; background: rgba(107,34,51,.07); font-size: 14px; }
 .pl-remind { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+
+/* ---- Hifz Test (murajaat) */
+.hz { display: grid; gap: 12px; }
+.hz-seg { display: flex; gap: 6px; padding: 4px; border-radius: 14px; background: var(--paper); border: 1px solid var(--line); }
+.hz-seg-b { flex: 1; font: inherit; font-weight: 700; font-size: 14px; padding: 9px 6px; border: 0; border-radius: 10px; background: transparent; color: var(--muted); cursor: pointer; }
+.hz-seg-b.is-on { background: var(--green); color: #fff6eb; }
+.hz-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hz-mode { display: grid; gap: 3px; text-align: start; font: inherit; padding: 11px 12px; border-radius: 14px; border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); cursor: pointer; }
+.hz-mode strong { font-size: 14.5px; color: var(--green-dark); }
+.hz-mode small { font-size: 11.5px; color: var(--muted); line-height: 1.35; }
+.hz-mode.is-on { border-color: var(--gold); background: rgba(176,122,60,.14); box-shadow: 0 0 0 2px rgba(176,122,60,.25); }
+.hz-top { display: flex; align-items: center; gap: 10px; }
+.hz-bar { flex: 1; height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.hz-bar-fill { display: block; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #d8a66b, #b07a3c); transition: width .3s ease; }
+.hz-count { font-size: 13px; font-weight: 700; color: var(--muted); min-width: 44px; text-align: end; }
+.hz-ctx, .hz-target { display: grid; gap: 6px; padding: 14px 16px; border-radius: 18px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.hz-ctx { opacity: .96; }
+.hz-target { border-top: 4px solid var(--gold); background: linear-gradient(180deg, rgba(176,122,60,.12), var(--card)); }
+.hz-label { font-size: 12px; font-weight: 700; color: var(--green); letter-spacing: .02em; }
+.hz-aya { margin: 0; }
+.hz-banner { text-align: center; }
+.hz-banner-name { font-family: var(--arabic); font-size: 30px; color: var(--green-dark); line-height: 1.8; }
+.hz-prompt { margin: 0; font-size: 13px; color: var(--muted); }
+.hz-placeholder { display: grid; place-content: center; min-height: 110px; font-family: var(--arabic); font-size: 64px; color: var(--gold); opacity: .8; animation: hzPulse 1.8s ease-in-out infinite; }
+@keyframes hzPulse { 50% { opacity: .35; } }
+.hz-w { display: inline; padding: 0 2px; border-radius: 6px; unicode-bidi: isolate; transition: filter .25s ease, background .25s ease; }
+.hz-w.is-blur { filter: blur(7px); opacity: .65; user-select: none; }
+.hz-w.is-blank { color: transparent; user-select: none; border-bottom: 3px dashed var(--gold); }
+.hz-w.is-blank .hz-first { color: var(--ink); }
+.hz-w.is-badmark { border-bottom: 3px dashed var(--bad-ink); }
+.hz-w.is-blur.is-badmark { box-shadow: 0 3px 0 -1px var(--bad-ink); }
+.hz-w.is-ok { background: var(--ok-bg); color: var(--ok-ink); }
+.hz-w.is-close { background: var(--close-bg); color: var(--close-ink); }
+.hz-w.is-bad { background: var(--bad-bg); color: var(--bad-ink); }
+.hz-w.is-hinted { background: var(--close-bg); }
+.hz-status { padding: 10px 12px; border-radius: 12px; font-size: 13.5px; background: rgba(176,122,60,.14); border: 1px dashed rgba(176,122,60,.55); }
+.hz-status.is-error { background: var(--bad-bg); color: var(--bad-ink); border-color: var(--bad-ink); }
+.hz-status.is-warn { background: var(--close-bg); color: var(--close-ink); }
+.hz-heard { margin: 0; font-size: 12.5px; color: var(--muted); }
+.hz-heard span { font-family: var(--arabic); font-size: 16px; }
+.hz-controls { display: grid; gap: 10px; }
+.hz-mic.is-rec { background: #a02e24; border-color: #a02e24; animation: hzRec 1.2s ease-in-out infinite; }
+@keyframes hzRec { 50% { box-shadow: 0 0 0 8px rgba(160,46,36,.22); } }
+.hz-verdict { padding: 12px 14px; border-radius: 14px; font-weight: 700; font-size: 15px; }
+.hz-verdict.is-pass { background: var(--ok-bg); color: var(--ok-ink); }
+.hz-verdict.is-fail { background: var(--bad-bg); color: var(--bad-ink); }
+.hz-link { justify-self: start; font: inherit; font-size: 12.5px; color: var(--green); background: none; border: 0; padding: 4px 0; text-decoration: underline; cursor: pointer; }
+.hz-miss { display: flex; flex-wrap: wrap; gap: 8px; }

@@ -8,6 +8,7 @@ import { getLanguage } from './i18n.js';
 import { getVerses, isLoaded } from './quran.js';
 import { SURAHS, surahName } from './surahs.js';
 import { isPremium } from './premium.js';
+import { hifzTestDue } from './hifz-test.js';
 
 const L = (ro, ur, en) => ({ roman: ro, ur, en }[getLanguage()] || ro);
 const TOTAL_PAGES = 604;
@@ -331,8 +332,10 @@ function refRange(items, i, j) {
   if (!items[i]) return '';
   const a = items[i];
   const b = items[Math.min(j, items.length - 1)];
-  if (a[0] === b[0]) return a[1] === b[1] ? `${surahName(a[0])} ${a[1]}` : `${surahName(a[0])} ${a[1]}–${b[1]}`;
-  return `${surahName(a[0])} ${a[1]} → ${surahName(b[0])} ${b[1]}`;
+  // LRM after the Arabic name keeps "4–6" from flipping to "6–4" in the Latin line.
+  const nm = (n) => `${surahName(n)}\u200E`;
+  if (a[0] === b[0]) return a[1] === b[1] ? `${nm(a[0])} ${a[1]}` : `${nm(a[0])} ${a[1]}\u200E–\u200E${b[1]}`;
+  return `${nm(a[0])} ${a[1]} → ${nm(b[0])} ${b[1]}`;
 }
 
 function perDayAyat(unit, n) {
@@ -441,6 +444,79 @@ export function mountHifz(root) {
     paint();
   }
 
+  const RV_CYCLES = [5, 7, 10, 15, 30];
+
+  /** Murajaa (revision) of everything already memorised: one full cycle in N days. */
+  function murajaaCard(p, items, g, finished) {
+    const today = dayKey();
+    const M = finished ? items.length : g.startPos; // memorised before today's sabaq
+    const card = h('div', 'pl-card');
+    card.append(h('h3', '', L('Murajaa plan (dohrana)', 'مراجعہ پلان (دہرانا)', 'Murajaa plan (revision)')));
+    if (M <= 0) {
+      card.append(h('p', 'hint', L('Pehla sabaq yaad hone ke baad, kal se murajaa yahan shuru hoga.', 'پہلا سبق یاد ہونے کے بعد، کل سے مراجعہ یہاں شروع ہوگا۔', 'Revision starts here tomorrow, once your first sabaq is memorised.')));
+      return card;
+    }
+    const cycle = p.rvDays || 10;
+    const count = Math.max(1, Math.ceil(M / cycle));
+    if (!p.rvToday || p.rvToday.day !== today) {
+      const from = (p.rvPtr || 0) >= M ? 0 : p.rvPtr || 0;
+      p.rvToday = { day: today, from, count: Math.min(count, M - from), done: false };
+      hfSave(p);
+    }
+    const t = p.rvToday;
+    const last = t.from + t.count - 1;
+    card.append(h('p', 'hint', L(`Ab tak yaad: ${M} ayat. Sab ka ek chakkar ${cycle} din me — roz ~${count} ayat.`, `اب تک یاد: ${M} آیات۔ سب کا ایک چکر ${cycle} دن میں — روز ~${count} آیات۔`, `Memorised so far: ${M} ayat. One full round every ${cycle} days — about ${count} ayat a day.`)));
+
+    const chips = h('div', 'pl-chips');
+    for (const d of RV_CYCLES) {
+      const c = button(L(`${d} din`, `${d} دن`, `${d} days`), 'dua-chip' + (d === cycle ? ' is-on' : ''), () => {
+        p.rvDays = d;
+        if (!p.rvToday.done) p.rvToday = null;
+        hfSave(p);
+        build();
+      });
+      chips.appendChild(c);
+    }
+    card.appendChild(chips);
+
+    const box = h('div', 'pl-result');
+    box.append(
+      h('span', '', t.done ? L('Aaj ki murajaa ✓', 'آج کی مراجعہ ✓', 'Today’s murajaa ✓') : L('Aaj ki murajaa', 'آج کی مراجعہ', 'Today’s murajaa')),
+      h('strong', '', refRange(items, t.from, last)),
+      h('span', '', L(`${t.count} ayat • chakkar ${Math.round((t.from / M) * 100)}% • ${p.rvCycles || 0} chakkar mukammal`, `${t.count} آیات • چکر ${Math.round((t.from / M) * 100)}% • ${p.rvCycles || 0} چکر مکمل`, `${t.count} ayat • round ${Math.round((t.from / M) * 100)}% • ${p.rvCycles || 0} rounds completed`))
+    );
+    card.appendChild(box);
+
+    const act = h('div', 'pl-actions');
+    act.append(
+      button(L('Mushaf mein kholein', 'مصحف میں کھولیں', 'Open in Mushaf'), 'btn ghost', () => openAt(items[t.from][0], items[t.from][1])),
+      button(L('🎯 Hifz Test se jaanchein', '🎯 حفظ ٹیسٹ سے جانچیں', '🎯 Check with Hifz Test'), 'btn ghost', () =>
+        window.dispatchEvent(new CustomEvent('bayyin:hztest', { detail: { items: items.slice(t.from, last + 1) } }))
+      )
+    );
+    if (!t.done) {
+      act.append(
+        button('✓ ' + L('Murajaa poori', 'مراجعہ پوری', 'Murajaa done'), 'btn gold', () => {
+          let next = t.from + t.count;
+          if (next >= M) {
+            next = 0;
+            p.rvCycles = (p.rvCycles || 0) + 1;
+          }
+          p.rvPtr = next;
+          t.done = true;
+          hfSave(p);
+          window.dispatchEvent(new CustomEvent('bayyin:planner'));
+          build();
+        })
+      );
+    } else {
+      const nextFrom = (p.rvPtr || 0) >= M ? 0 : p.rvPtr || 0;
+      card.append(h('p', 'hint', L(`Kal: ${refRange(items, nextFrom, Math.min(M - 1, nextFrom + count - 1))}`, `کل: ${refRange(items, nextFrom, Math.min(M - 1, nextFrom + count - 1))}`, `Tomorrow: ${refRange(items, nextFrom, Math.min(M - 1, nextFrom + count - 1))}`)));
+    }
+    card.appendChild(act);
+    return card;
+  }
+
   function build() {
     const p = readJSON(HF);
     if (!p) return setup();
@@ -503,13 +579,9 @@ export function mountHifz(root) {
       rev.append(h('h4', '', L('Sabqi (pichhle 5 sabaq dohrayein)', 'سبقی (پچھلے 5 سبق دہرائیں)', 'Sabqi (revise the last 5 sabaq)')));
       if (sabqi.length) for (const e of sabqi) rev.append(h('p', 'pl-line', refRange(items, e.s, e.e)));
       else rev.append(h('p', 'hint', L('Kal se yahan pichhle sabaq aayenge.', 'کل سے یہاں پچھلے سبق آئیں گے۔', 'Previous sabaq will show here from tomorrow.')));
-      if (g.startPos > 0) {
-        const size = Math.max(10, per * 2);
-        const from = Math.min(p.mz || 0, g.startPos - 1);
-        rev.append(h('h4', '', L('Manzil (purana yaad kiya hua)', 'منزل (پرانا یاد کیا ہوا)', 'Manzil (older memorised part)')), h('p', 'pl-line', refRange(items, from, Math.min(g.startPos - 1, from + size - 1))));
-      }
       root.appendChild(rev);
     }
+    root.appendChild(murajaaCard(p, items, g, finished));
 
     root.appendChild(statRow([
       [remaining, L('Baaki ayat', 'باقی آیات', 'Ayat left')],
@@ -562,6 +634,17 @@ export function pendingToday() {
       const g = f.dayGoal && f.dayGoal.day === dayKey() ? f.dayGoal : { startPos: f.pos, count: perDayAyat(f.unit, f.n) };
       if (!hfDone(f, items, g) && true) out.push({ id: 'hifz', view: 'hifz', text: L(`Hifz: aaj ka sabaq ${refRange(items, g.startPos, g.startPos + g.count - 1)} baaki hai`, `حفظ: آج کا سبق ${refRange(items, g.startPos, g.startPos + g.count - 1)} باقی ہے`, `Hifz: today’s sabaq ${refRange(items, g.startPos, g.startPos + g.count - 1)} is left`) });
     }
+  }
+  const due = hifzTestDue();
+  if (due > 0) {
+    out.push({ id: 'hztest', view: 'hztest', text: L(`Hifz Test: ${due} ayaat ki murajaat due hai`, `حفظ ٹیسٹ: ${due} آیات کی مراجعت واجب ہے`, `Hifz Test: ${due} ayaat due for review`) });
+  }
+  if (f && isPremium() && f.pos > 0) {
+    const items = buildItems(f.scope);
+    const fin = f.pos >= items.length;
+    const M = fin ? items.length : f.dayGoal && f.dayGoal.day === dayKey() ? f.dayGoal.startPos : f.pos;
+    const done = f.rvToday && f.rvToday.day === dayKey() && f.rvToday.done;
+    if (M > 0 && !done) out.push({ id: 'murajaa', view: 'hifz', text: L('Murajaa: aaj ki dohrai baaki hai', 'مراجعہ: آج کی دہرائی باقی ہے', 'Murajaa: today’s revision is left') });
   }
   return out;
   function hfDone(p, items, g) {

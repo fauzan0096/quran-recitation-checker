@@ -43,7 +43,7 @@ on-device.
 - Ye ek **zero-build plain web app** hai: `index.html` + ES modules, koi bundler nahi.
 - Pehli dafa model load karne ke liye internet chahiye (CDN se library aur
   Hugging Face se model weights). Uske baad model browser cache me rehta hai.
-- Reader teen tabs me khulta hai: **Surah** (poori surah aya-ba-aya), **Mushaf**
+- App me ek hi **Mushaf** entry hai (neeche bar / Home ka "Quran padhein"). Andar teen tabs: **Aya ba aya** (poori surah aya-ba-aya), **Mushaf**
   (page-wise, Madani ya IndoPak) aur **Talash** (lafz / aya / juz se). Surah aur
   page dono me har aya apne card me (ya mushaf page par apni jagah) hoti hai aur
   usi ke neeche apna **Record** button hota hai.
@@ -68,6 +68,23 @@ on-device.
   nahi ginti.
 - **Search** tab: lafz se (harakat ke baghair bhi), aya se (`2:255`) ya juz number se
   (`5`) talash karein; nateeja tap karne par wahi aya khulti hai.
+
+## Hifz Test (murajaat) — `hifz-test.js`
+
+Home → **Hifz Test**. Yaad ki azmaish, teen andaaz me:
+
+- **Agli aya** — pichli aya dikhti hai, agli chhupi hoti hai (sirf "؟"). Mic par yaad se padhein.
+- **Beech ki aya blur** — aage aur peechhe ki ayaat dikhti hain, beech ki blur.
+- **Khali lafz** — aya me beech ke 1–3 lafz khali; poori aya ya sirf khali lafz bolein.
+- **Mix** — teeno random.
+
+Sahi padhne par aya poori khul jati hai (rang ke saath). Adhoori/ghalat padhne par sirf sahi lafz
+khulte hain, baaki chhupe rehte hain — dobara bolein, **Hint** lein (pehla harf) ya **Dikhao**.
+Mic ke baghair **khud check** mode (Dikhao → Yaad tha / Bhool gaya) bhi hai.
+
+Har aya ka Leitner box hota hai (1, 3, 7, 14, 30 din): sahi par aage, ghalti/hint par kal phir.
+"Smart" tarteeb due aur kamzor ayaat pehle laati hai; Home par "aaj due" dikhta hai. Sab data
+sirf device ke `localStorage` (`tc.hztest`) me rehta hai.
 
 ## Padhna hai ya yaad se azmaish?
 
