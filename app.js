@@ -47,6 +47,7 @@ import {
 } from './billing.js';
 import { download as backupDownload, restore as backupRestore } from './backup.js';
 import { mountBadges, checkBadges, celebrate } from './badges.js';
+import { mountMurajaa, dueCount, updateFromCheck } from './murajaa.js';
 import { mountTasbeeh } from './tasbeeh-v2.js';
 import { mountReport, recordReport } from './premium-tools.js';
 import { mountDuas } from './duas.js';
@@ -156,6 +157,14 @@ function announceBadges() {
   celebrate(fresh);
   if (els.viewBadges && !els.viewBadges.hidden) moreViews.badges?.refresh();
 }
+
+/** The little count on the More grid's Murajaa card (Premium, so free users never see it). */
+function paintMurajaaCount() {
+  if (!els.moreMurajaaCount) return;
+  const n = isPremium() ? dueCount() : 0;
+  els.moreMurajaaCount.textContent = String(n);
+  els.moreMurajaaCount.hidden = n === 0;
+}
 let toastTimer = null;
 const bootAt = Date.now();
 let splashGone = false;
@@ -174,6 +183,7 @@ const moreViews = {
   report: null,
   prayer: null,
   badges: null,
+  murajaa: null,
 };
 
 init();
@@ -204,7 +214,51 @@ async function init() {
   maybeWelcome();
   loadQuranInBackground();
   startReminderLoop();
+  handleLaunch();
   autoLoadModel();
+}
+
+/** Share target, web+bayyin: links and opened files all end in the Search tab. */
+async function openSearchWith(query) {
+  const text = String(query || '').replace(/\s+/g, ' ').trim().slice(0, 200);
+  if (!text) return;
+  setView('reader');
+  setMode('search');
+  els.searchInput.value = text;
+  try {
+    await loadQuranInBackground();
+  } catch (error) {
+    /* the search below reports it */
+  }
+  runSearch();
+}
+
+function handleLaunch() {
+  const params = new URLSearchParams(window.location.search);
+  const screens = ['dua', 'tasbeeh', 'daily', 'reader', 'qibla', 'calendar', 'prayer'];
+  let query = params.get('q') || params.get('text') || params.get('url') || params.get('title') || '';
+
+  const protocol = params.get('protocol');
+  if (protocol) {
+    const value = protocol.replace(/^web\+bayyin:\/*/i, '').trim();
+    if (screens.includes(value)) setView(value);
+    else query = value;
+  }
+  if (query) openSearchWith(query);
+
+  // File handler: a .txt file opened with the app searches its first line.
+  if ('launchQueue' in window && window.launchQueue) {
+    window.launchQueue.setConsumer(async (launchParams) => {
+      if (!launchParams.files || !launchParams.files.length) return;
+      try {
+        const file = await launchParams.files[0].getFile();
+        const first = (await file.text()).split(/\r?\n/).find((line) => line.trim());
+        if (first) openSearchWith(first);
+      } catch (error) {
+        /* unreadable file: ignore */
+      }
+    });
+  }
 }
 
 /** Quran text + page data load after first paint; the reader fills in when they arrive. */
@@ -345,6 +399,7 @@ function cacheElements() {
     'more-report', 'view-report', 'report-root', 'close-report', 'open-report',
     'more-prayer', 'view-prayer', 'prayer-root', 'close-prayer',
     'more-badges', 'view-badges', 'badges-root', 'close-badges',
+    'more-murajaa', 'view-murajaa', 'murajaa-root', 'close-murajaa', 'more-murajaa-count',
     'backup-export', 'backup-import', 'backup-file', 'error-log', 'errors-copy',
     'view-premium', 'close-premium', 'premium-root', 'open-premium', 'premium-status',
     'home-date', 'home-noor', 'view-dua', 'close-dua', 'dua-root', 'bottom-nav',
@@ -1277,6 +1332,8 @@ async function checkTarget(id, keys, blob) {
       });
     });
     recordReport(report);
+    updateFromCheck(report);
+    paintMurajaaCount();
     if (verses.length) setResume(keyOf(verses[0].surah, verses[0].aya));
     recordCheck();
     announceBadges();
@@ -1580,14 +1637,28 @@ function ensureMounted(name) {
     moreViews.prayer = mountPrayer(els.prayerRoot);
   } else if (name === 'badges') {
     moreViews.badges = mountBadges(els.badgesRoot);
+  } else if (name === 'murajaa') {
+    moreViews.murajaa = mountMurajaa(els.murajaaRoot, {
+      openAya: async (surah, aya) => {
+        setView('reader');
+        await jumpToAya(surah, aya);
+      },
+      onDone: ({ due }) => {
+        paintMurajaaCount();
+        toast(t('murajaa.doneToast', { date: due }));
+      },
+    });
   }
 }
 
 /** Show exactly one section, keep the bottom bar in step, and stop what is not on screen. */
 function setView(name) {
-  // The Hifz plan, the Hifz Test and the report are Premium: every way in (the
-  // More card, the home todo, a reminder) ends up here, so this is the one gate.
-  if ((name === 'hifz' || name === 'hztest' || name === 'report') && !isPremium()) {
+  // The Hifz plan, the Hifz Test, Murajaa and the report are Premium: every way
+  // in (the More card, the home todo, a reminder) ends up here, so this is the one gate.
+  if (
+    (name === 'hifz' || name === 'hztest' || name === 'report' || name === 'murajaa') &&
+    !isPremium()
+  ) {
     toast(t('premium.locked'));
     name = 'premium';
   }
@@ -1606,6 +1677,7 @@ function setView(name) {
     report: els.viewReport,
     prayer: els.viewPrayer,
     badges: els.viewBadges,
+    murajaa: els.viewMurajaa,
     premium: els.viewPremium,
   };
   if (currentView === 'qibla' && name !== 'qibla') moreViews.qibla?.stop();
@@ -1630,13 +1702,18 @@ function setView(name) {
   if (name === 'report') ensureMounted('report');
   if (name === 'prayer') ensureMounted('prayer');
   if (name === 'badges') ensureMounted('badges');
+  if (name === 'murajaa') ensureMounted('murajaa');
   if (name === 'khatam') moreViews.khatam?.refresh();
   if (name === 'hifz') moreViews.hifz?.refresh();
   if (name === 'hztest') moreViews.hztest?.refresh();
   if (name === 'report') moreViews.report?.refresh();
   if (name === 'prayer') moreViews.prayer?.refresh();
   if (name === 'badges') moreViews.badges?.refresh();
-  if (name === 'home') paintHomeTodo();
+  if (name === 'murajaa') moreViews.murajaa?.refresh();
+  if (name === 'home') {
+    paintHomeTodo();
+    paintMurajaaCount();
+  }
   if (name === 'settings') {
     renderPremiumCard();
     paintErrors();
@@ -1846,7 +1923,7 @@ function renderPremium() {
   const proTitle = document.createElement('h4');
   proTitle.textContent = t('premium.proHeading');
   const proList = document.createElement('ul');
-  for (const key of ['premium.pro1', 'premium.pro2', 'premium.pro3', 'premium.pro4']) {
+  for (const key of ['premium.pro1', 'premium.pro2', 'premium.pro3', 'premium.pro4', 'premium.pro5']) {
     proList.appendChild(premiumLine(t(key)));
   }
   proBox.append(proTitle, proList);
@@ -2133,6 +2210,18 @@ function setMode(mode) {
 function paintHomeTodo() {
   if (!els.homeTodo) return;
   els.homeTodo.textContent = '';
+
+  const due = isPremium() ? dueCount() : 0;
+  if (due) {
+    const row = document.createElement('button');
+    row.type = 'button';
+    row.className = 'todo-item';
+    row.innerHTML = '<span class="todo-dot"></span><span class="todo-text"></span><span aria-hidden="true">›</span>';
+    row.querySelector('.todo-text').textContent = t('murajaa.todo', { n: due });
+    row.addEventListener('click', () => setView('murajaa'));
+    els.homeTodo.appendChild(row);
+  }
+
   for (const item of pendingToday()) {
     const row = document.createElement('button');
     row.type = 'button';
@@ -2286,6 +2375,7 @@ function wireEvents() {
   go(els.moreReport, 'report');
   go(els.morePrayer, 'prayer');
   go(els.moreBadges, 'badges');
+  go(els.moreMurajaa, 'murajaa');
   go(els.homeOpenQuran, 'reader');
   go(els.homeDua, 'dua');
   go(els.moreDaily, 'daily');
@@ -2304,6 +2394,7 @@ function wireEvents() {
     els.closeReport,
     els.closePrayer,
     els.closeBadges,
+    els.closeMurajaa,
     els.closePremium,
   ]) {
     go(closer, 'home');

@@ -66,6 +66,22 @@ addStrings('roman', {
   'badges.celebrate': 'Mubarak ho! Naya inaam mila.',
   'badges.celebrateMore': '+{n} aur badges bhi!',
   'badges.ok': 'Shukriya',
+  'murajaa.heading': 'Murajaa',
+  'murajaa.more': 'Murajaa',
+  'murajaa.moreHint': 'Aaj ki dohrai — jo bhool rahe hain',
+  'murajaa.todo': 'Murajaa: {n} ayaat aaj',
+  'murajaa.hint': 'ayaat aaj dohraein — sahi padhne par agli murajaa kuch din baad',
+  'murajaa.empty': 'Koi murajaa baqi nahi — aaj ka kaam poora. Naye checks karein.',
+  'murajaa.read': 'Padhein',
+  'murajaa.done': 'Yaad tha',
+  'murajaa.doneToast': 'Murajaa kam ho gaya — agla {date}',
+  'murajaa.mistakes': 'ghaltiyan',
+  'murajaa.today': 'aaj',
+  'murajaa.daysAgo': '{days} din pehle',
+  'murajaa.weak': 'kam score',
+  'murajaa.old': 'purani talaawat',
+  'murajaa.repeat':
+    'Kam score wali ayaat roz aati hain; behtar score par agli murajaa 3, 7, 14, 30 din me.',
 });
 
 addStrings('ur', {
@@ -128,6 +144,22 @@ addStrings('ur', {
   'badges.celebrate': 'مبارک ہو! نیا انعام ملا۔',
   'badges.celebrateMore': '+{n} اور بیجز بھی!',
   'badges.ok': 'شکریہ',
+  'murajaa.heading': 'مراجعہ',
+  'murajaa.more': 'مراجعہ',
+  'murajaa.moreHint': 'آج کی دہرائی — جو بھول رہے ہیں',
+  'murajaa.todo': 'مراجعہ: آج {n} آیات',
+  'murajaa.hint': 'آیات آج دہرائیں — صحیح پڑھنے پر اگلی مراجعہ کچھ دن بعد',
+  'murajaa.empty': 'کوئی مراجعہ باقی نہیں — آج کا کام پورا۔ نئے چیکس کریں۔',
+  'murajaa.read': 'پڑھیں',
+  'murajaa.done': 'یاد تھا',
+  'murajaa.doneToast': 'مراجعہ کم ہو گیا — اگلا {date}',
+  'murajaa.mistakes': 'غلطیاں',
+  'murajaa.today': 'آج',
+  'murajaa.daysAgo': '{days} دن پہلے',
+  'murajaa.weak': 'کم اسکور',
+  'murajaa.old': 'پرانی تلاوت',
+  'murajaa.repeat':
+    'کم اسکور والی آیات روز آتی ہیں؛ بہتر اسکور پر اگلی مراجعہ 3، 7، 14، 30 دن میں۔',
 });
 
 addStrings('en', {
@@ -190,4 +222,20 @@ addStrings('en', {
   'badges.celebrate': 'Congratulations! New badge earned.',
   'badges.celebrateMore': '+{n} more as well!',
   'badges.ok': 'Thanks',
+  'murajaa.heading': 'Revision',
+  'murajaa.more': 'Revision',
+  'murajaa.moreHint': 'Today’s revision — what is slipping away',
+  'murajaa.todo': 'Revision: {n} ayaat today',
+  'murajaa.hint': 'ayas to revise today — a good recitation pushes the next one back',
+  'murajaa.empty': 'Nothing to revise — today is done. Do some new checks.',
+  'murajaa.read': 'Read',
+  'murajaa.done': 'Remembered',
+  'murajaa.doneToast': 'One revision done — next {date}',
+  'murajaa.mistakes': 'mistakes',
+  'murajaa.today': 'today',
+  'murajaa.daysAgo': '{days} days ago',
+  'murajaa.weak': 'low score',
+  'murajaa.old': 'old recitation',
+  'murajaa.repeat':
+    'Low scores come back daily; with a better score the next revision is in 3, 7, 14, 30 days.',
 });

@@ -1104,6 +1104,8 @@ body[data-theme='dark'] {
 .todo-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 0 4px rgba(176,122,60,.25); }
 .todo-text { flex: 1; font-size: 14px; }
 .pro-badge { font-style: normal; font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px; color: #3a1119; background: linear-gradient(180deg,#f6d4a8,#d8a66b); vertical-align: middle; }
+/* A due count pinned to the card's corner, so it never fights the Premium pill. */
+.more-count { position: absolute; top: 8px; inset-inline-end: 10px; display: grid; place-items: center; min-width: 21px; height: 21px; padding: 0 6px; border-radius: 999px; font-style: normal; font-size: 11px; font-weight: 800; line-height: 1; color: #fff6eb; background: linear-gradient(180deg,#6b2235,#4a1421); border: 1px solid rgba(240,193,147,.7); }
 .planner { display: grid; gap: 12px; }
 .pl-card { display: grid; gap: 10px; padding: 16px; border-radius: 20px; background: var(--card); border: 1px solid var(--line); border-top: 4px solid var(--gold); box-shadow: var(--shadow); }
 .pl-card h3 { margin: 0; font-size: 18px; color: var(--green-dark); }

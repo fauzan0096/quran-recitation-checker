@@ -22,11 +22,11 @@ import { t } from './i18n.js';
 
   if ('serviceWorker' in navigator) {
     let refreshing = false;
-    const hadController = Boolean(navigator.serviceWorker.controller);
+    const hadWorker = !!navigator.serviceWorker.controller;
 
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       // Only reload when this page was already controlled by an older worker.
-      if (!hadController || refreshing) return;
+      if (!hadWorker || refreshing) return;
       refreshing = true;
 
       const reload = () => window.location.reload();
@@ -41,7 +41,23 @@ import { t } from './i18n.js';
     window.addEventListener('load', () => {
       navigator.serviceWorker
         .register('sw.js', { updateViaCache: 'none' })
-        .then((registration) => registration.update().catch(() => {}))
+        .then(async (registration) => {
+          registration.update().catch(() => {});
+          // Background Sync: ek dafa offline hone par bhi shell cache taza ho jaye.
+          try {
+            const ready = await navigator.serviceWorker.ready;
+            if (ready.sync) await ready.sync.register('bayyin-sync');
+            // Periodic Background Sync: roz ek dafa chupke se app ka code taza karna.
+            if (ready.periodicSync && navigator.permissions) {
+              const status = await navigator.permissions.query({ name: 'periodic-background-sync' });
+              if (status.state === 'granted') {
+                await ready.periodicSync.register('bayyin-daily', { minInterval: 24 * 60 * 60 * 1000 });
+              }
+            }
+          } catch (error) {
+            /* not supported on this browser */
+          }
+        })
         .catch((error) => {
           console.warn('service worker register failed', error);
         });

@@ -249,9 +249,9 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
 
 - `install.js` + `sw.js`: app home screen par install ho jati hai aur shell (Quran
   text, page data, JS/CSS) offline cache ho jata hai.
-- Service worker **network-first** hai: naya version agli load par khud aa jata hai
-  (offline par cache se chalta hai), aur naya worker activate hote hi page ek dafa
-  reload hota hai.
+- Service worker **cache-first** hai: shell turant cache se aata hai aur code
+  background me taza hota hai, is liye naya version agli load par aa jata hai;
+  naya worker activate hote hi page ek dafa reload hota hai.
 - Android/Chrome: `beforeinstallprompt` pakar kar neeche chhoti **Install** card aati
   hai, jo asli install prompt kholti hai (`appinstalled` par band ho jati hai).
 - iOS/Safari: wahi card **Share → Add to Home Screen** ke steps dikhata hai.
@@ -260,7 +260,34 @@ Engine (normalise + align + tajweed) platform-independent JS hai, is liye:
   cache karta hai). `apple-touch-icon-180.png` ka naam badla gaya hai taake naya
   icon naya URL ho.
 - Settings me bhi **"Install app"** card hai (banner dismiss karne ke baad bhi).
-- Installed app ka naam **بيّن** hi dikhta hai (manifest `short_name` + `lang: ar`).
+- Installed app ka naam **بيّن** hi dikhta hai (manifest `short_name`).
+
+### Manifest — `manifest.webmanifest`
+
+- Install prompt / app listing ke liye **screenshots** (`screenshots/`: 3 phone
+  540×1080, 2 desktop 1280×720) labels ke saath.
+- **Shortcuts** (icon long-press): Duaein, Tasbeeh, Namaz ke auqaat, Roz ki Naiki
+  (`?go=dua|tasbeeh|prayer|daily`).
+- **Share target**: koi bhi text/link share kar ke bhejein to app Quran search me
+  wohi lafz khol deti hai.
+- **File handler**: `.txt` file se kholein to pehli line search hoti hai.
+- **Protocol handler** `web+bayyin:` — `web+bayyin:daily` jaisa link seedha us
+  screen par.
+- Desktop/Windows ke liye `display_override` (window controls overlay / tabbed),
+  `edge_side_panel`, `note_taking`, `tab_strip` aur **widget** (`widgets/` me
+  Adaptive Card template + data, `sw.js` ke `widgetinstall/widgetresume` handlers).
+
+### Service worker ke extra kaam
+
+- **Background Sync** (`bayyin-sync`) aur **Periodic Background Sync**
+  (`bayyin-daily`, ~roz ek dafa): phone online hote hi / roz chupke se shell cache
+  taza hota hai (`refreshShell()`).
+- **Push**: `push` par notification (title/body/tag/url), `notificationclick` par
+  app ka wohi screen khulta hai; `pushsubscriptionchange` ka handler maujood hai
+  (server nahi hai, is liye kuch re-send nahi hota).
+- `?go=` aur share/file/protocol se aane wale launch `app.js` ke `handleLaunch()`
+  me handle hote hain.
+
 
 ## Design / icon / naam
 
@@ -367,9 +394,10 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
 - **Free (hamesha)**: poora Quran, Duaein, Tasbeeh, Qibla, Calendar, Roz ki Naiki
   (aya + hadith + sunnah), aur **roz 3 talaawat checks**.
 - **Premium**: **Hifz plan** (sabaq / sabqi / murajaa planner, reminder ke saath),
-  **Hifz Test**, **Meri report** (neeche) aur be-paana talaawat checks. In sab ka har
-  rasta (More card, home ka kaam, reminder) `setView()` se guzarta hai, is liye gate
-  wahin ek jagah lagi hai.
+  **Hifz Test**, **Murajaa** (roz ki dohrai, neeche), **Meri report** (neeche) aur
+  be-paana talaawat checks. In sab ka har rasta (More card, home ka kaam, reminder)
+  `setView()` se guzarta hai, is liye gate wahin ek jagah lagi hai. More grid me
+  chaaron Premium cards ek hi jagah hain, "Premium" badge ke saath.
 - **Trial**: pehli dafa app khulne par **3 din** poora Premium khula rehta hai
   (`tc.premiumSince`), uske baad free hadd lag jati hai.
 - **Plans aur SKUs** (`premium.js` me `PLANS`): `bayyin_pro_monthly` (30 din),
@@ -398,10 +426,8 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
 
 ## Meri report (Premium) — `premium-tools.js`
 
-Settings → **Meri report**, ya More grid ka **Meri report** card. Teen tab:
+Settings → **Meri report**, ya More grid ka **Meri report** card. Do tab:
 
-- **Murajaa** — jo ayaat dobara sunani chahiye: kam score, purani check, ya jahan
-  lafz chhoot gaye. Har row tap karne par wahi aya Quran me khul jati hai.
 - **Ghaltiyan** — sab se zyada ghalat/suna nahi gaya lafz, kitni dafa, kis aya me,
   aur suna kya gaya. **Report share** se poora khulasa text me bhej sakte hain.
 - **Tareekh** — pichhle 14 din ki chhoti chart (kitne checks), kul checks, din aur
@@ -440,6 +466,20 @@ Naya badge milne par ek **celebration overlay** aata hai — bara gold medallion
 aur har badge ek **gold coin** ki tarah (earned = chamakta hua, locked = halka aur progress
 bar ke saath). Sab **free** hai (premium nahi). Data `tc.badges` me sirf earned ids ke
 tor par rehta hai.
+
+## Murajaa — `murajaa.js` (Premium)
+
+More → **Murajaa** — Premium cards ke saath, "Premium" badge ke saath. Card par aaj
+kitni ayaat due hain woh chhota gold count bhi dikhta hai. Free user card dabaein to
+paywall khulta hai (gate `setView()` me, hifz / hztest / report ke saath).
+
+- Har checked aya aik chhote **spaced-repetition** schedule par aa jati hai: **1 → 3 → 7 → 14 → 30 din**.
+- **Kam score (85% se neeche)** wali ayaat roz aati hain; **90%+** par agli murajaa aage khisak jati hai;
+  umeed se kam par wapas kal.
+- Har row: aya ka reference, score, kitni ghaltiyan, kitne din purani, aur **Padhein** (reader me
+  khulta hai) + **Yaad tha** (agla din set hota hai) buttons.
+- Data `tc.murajaa` me (due date, step); scores wohi jo har check par `tc.report` me likhe jate hain.
+- Report (Premium) me **Ghaltiyan** aur **Tareekh** tabs hain — Murajaa apna alag Premium card hai.
 
 ## Play Store billing — `billing.js`
 

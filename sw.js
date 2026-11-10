@@ -6,9 +6,9 @@
 //    from the cache: the app opens instantly, even offline.
 //  - Code files (html / js / css) are served from the cache at once and refreshed in
 //    the background, so a new version arrives on the next launch.
-// CDN / model / Quran.com requests are left to the network.
+// CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v29';
+const CACHE = 'bayyin-v32';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -37,6 +37,7 @@ const SHELL = [
   'premium.js',
   'premium-strings.js',
   'badges.js',
+  'murajaa.js',
   'extra-strings.js',
   'billing.js',
   'backup.js',
@@ -53,6 +54,8 @@ const SHELL = [
   'indopak.js',
   'install.js',
   'manifest.webmanifest',
+  'widgets/noor-template.json',
+  'widgets/noor-data.json',
   'amiri-quran.ttf',
   'icon-96.png',
   'icon-192.png',
@@ -152,12 +155,94 @@ self.addEventListener('fetch', (event) => {
   );
 });
 
+// ------------------------------------------------------------------ sync
+// Re-fetch the app shell into the cache (used by Background Sync, Periodic
+// Background Sync and the "refresh" message).
+async function refreshShell() {
+  const cache = await caches.open(CACHE);
+  await Promise.all(
+    SHELL.filter((url) => !IMMUTABLE.test(url)).map((url) =>
+      cache.add(new Request(url, { cache: 'reload' })).catch(() => {
+        /* offline or missing: try again next time */
+      })
+    )
+  );
+}
+
+// Background Sync: runs as soon as the phone is back online.
+self.addEventListener('sync', (event) => {
+  if (event.tag === 'bayyin-sync') event.waitUntil(refreshShell());
+});
+
+// Periodic Background Sync: about once a day, quietly, while the app is installed.
+self.addEventListener('periodicsync', (event) => {
+  if (event.tag === 'bayyin-daily') event.waitUntil(refreshShell());
+});
+
+self.addEventListener('message', (event) => {
+  const type = event.data && event.data.type;
+  if (type === 'SKIP_WAITING') self.skipWaiting();
+  if (type === 'REFRESH') event.waitUntil(refreshShell());
+});
+
+// ------------------------------------------------------------------- push
+// The app has no server of its own; this lets a push (or a locally triggered
+// notification) show up with the right text and open the right screen.
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (error) {
+    data = { body: event.data ? event.data.text() : '' };
+  }
+  const title = data.title || 'بيّن — Bayyin';
+  const options = {
+    body: data.body || 'Aaj ki tilawat aur duaon ka waqt.',
+    icon: 'icon-192.png',
+    badge: 'icon-96.png',
+    tag: data.tag || 'bayyin-reminder',
+    lang: 'en',
+    dir: 'auto',
+    data: { url: data.url || './?go=daily' },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+self.addEventListener('pushsubscriptionchange', (event) => {
+  // Without a server there is nothing to re-send the subscription to; keep the
+  // handler so the browser knows this worker handles it.
+  event.waitUntil(Promise.resolve());
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || './';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
-      for (const client of list) if ('focus' in client) return client.focus();
-      return self.clients.openWindow('./');
+      for (const client of list) {
+        if ('focus' in client) {
+          if ('navigate' in client && target !== './') client.navigate(target).catch(() => {});
+          return client.focus();
+        }
+      }
+      return self.clients.openWindow(target);
     })
   );
 });
+
+// ---------------------------------------------------------------- widgets
+// Windows 11 widget board: install / resume / update with the bundled card.
+async function renderWidget(widget) {
+  if (!self.widgets || !widget) return;
+  try {
+    const template = await (await fetch(widget.definition.msAcTemplate)).text();
+    const data = await (await fetch(widget.definition.data)).text();
+    await self.widgets.updateByTag(widget.definition.tag, { template, data });
+  } catch (error) {
+    /* offline: the board keeps the last card */
+  }
+}
+self.addEventListener('widgetinstall', (event) => event.waitUntil(renderWidget(event.widget)));
+self.addEventListener('widgetresume', (event) => event.waitUntil(renderWidget(event.widget)));
+self.addEventListener('widgetclick', (event) => event.waitUntil(renderWidget(event.widget)));
+self.addEventListener('widgetuninstall', () => {});

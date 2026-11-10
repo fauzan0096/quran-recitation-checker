@@ -121,42 +121,14 @@ export function recordReport(entries) {
   save();
 }
 
-/** Ayaat worth hearing again: weak score, long gap, or words left out. */
-export function murajaaList(limit = 12) {
-  const now = Date.now();
-  return Object.entries(load().ayat)
-    .map(([key, aya]) => {
-      const age = Math.max(0, (now - (aya.at || 0)) / 86400000);
-      let weight = 0;
-      if (aya.score < 50) weight += 4;
-      else if (aya.score < 70) weight += 3;
-      else if (aya.score < 85) weight += 2;
-      else if (aya.score < 98) weight += 1;
-
-      if (age > 21) weight += 3;
-      else if (age > 10) weight += 2;
-      else if (age > 4) weight += 1;
-
-      if (aya.chhoot) weight += 1;
-
-      return {
-        key,
-        score: aya.score,
-        at: aya.at,
-        age,
-        ghalti: aya.ghalti || 0,
-        chhoot: aya.chhoot || 0,
-        weight,
-      };
-    })
-    .filter((row) => row.weight > 0)
-    .sort((a, b) => b.weight - a.weight || a.score - b.score || a.at - b.at)
-    .slice(0, limit);
-}
-
 /** The words heard wrong (or not heard at all) most often. */
 export function mistakeList(limit = 14) {
   return [...load().words].sort((a, b) => b.n - a.n || b.at - a.at).slice(0, limit);
+}
+
+/** Raw per-aya scores and mistake counts, used by the Murajaa screen. */
+export function reportAyat() {
+  return load().ayat;
 }
 
 /** Last `count` days: how many checks and the average score of each day. */
@@ -201,7 +173,6 @@ export function summary() {
 
 export function reportText() {
   const totals = summary();
-  const due = murajaaList(8);
   const mistakes = mistakeList(8);
   const lines = [t('rep.shareTitle'), ''];
 
@@ -213,10 +184,6 @@ export function reportText() {
     })
   );
 
-  if (due.length) {
-    lines.push('', t('rep.tabMurajaa'));
-    for (const row of due) lines.push(`• ${refLabel(row.key)} — ${row.score}%`);
-  }
   if (mistakes.length) {
     lines.push('', t('rep.tabMistakes'));
     for (const row of mistakes) lines.push(`• ${row.word} — ${row.n}×`);
@@ -237,7 +204,7 @@ export function mountReport(root, options = {}) {
   if (!root) return { refresh() {} };
 
   const openAya = typeof options.openAya === 'function' ? options.openAya : null;
-  let tab = 'murajaa';
+  let tab = 'mistakes';
 
   function build() {
     root.innerHTML = '';
@@ -245,7 +212,6 @@ export function mountReport(root, options = {}) {
 
     const tabs = el('div', 'rep-tabs');
     const list = [
-      ['murajaa', t('rep.tabMurajaa')],
       ['mistakes', t('rep.tabMistakes')],
       ['history', t('rep.tabHistory')],
     ];
@@ -260,43 +226,10 @@ export function mountReport(root, options = {}) {
     }
 
     const body = el('div', 'rep-body');
-    if (tab === 'murajaa') paintMurajaa(body);
-    else if (tab === 'mistakes') paintMistakes(body);
+    if (tab === 'mistakes') paintMistakes(body);
     else paintHistory(body);
 
     root.append(tabs, body);
-  }
-
-  function paintMurajaa(body) {
-    body.appendChild(el('p', 'hint', t('rep.murajaaHint')));
-    const rows = murajaaList(12);
-    if (!rows.length) {
-      body.appendChild(el('p', 'rep-empty', t('rep.emptyMurajaa')));
-      return;
-    }
-
-    const list = el('div', 'rep-list');
-    for (const row of rows) {
-      const item = el('button', 'rep-row');
-      item.type = 'button';
-      const [surah, aya] = row.key.split(':').map(Number);
-      if (openAya && surah && aya) {
-        item.addEventListener('click', () => openAya(surah, aya));
-      }
-
-      const main = el('span', 'rep-main');
-      main.appendChild(el('strong', '', refLabel(row.key)));
-      const days = Math.max(0, Math.round(row.age));
-      const when = days <= 0 ? t('rep.today') : t('rep.daysAgo', { days });
-      const total = row.ghalti + row.chhoot;
-      main.appendChild(
-        el('span', 'rep-sub', total ? t('rep.sub', { ghalti: total, when }) : `${t('rep.old')} · ${when}`)
-      );
-
-      item.append(main, el('span', `rep-score${row.score < 70 ? ' is-low' : ''}`, `${row.score}%`));
-      list.appendChild(item);
-    }
-    body.appendChild(list);
   }
 
   function paintMistakes(body) {
