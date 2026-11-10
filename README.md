@@ -322,4 +322,16 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
 - New tasbeeh (tasbeeh-v2.js): own target, Aaj/Round/Kul, undo, zero, vibration, sound, screen-on.
 - "Aaj ka Noor": ayat + hadith + sunnah on one page, also on Home.
 - Faster service worker (cache-first for heavy files). Amiri Quran font bundled (OFL, see OFL-AmiriQuran.txt).
-- Old Fahm-ul-Quran files moved to _unused/ (not shipped).
+- Old Fahm-ul-Quran files (dua.js, tools.js, sounds.js ...) deleted - they were never loaded.
+
+## Update: rasm, hamza, model ek baar
+
+- **Rasm Uthmani** (`normalize.js`): الصلوٰة = الصلاة = الصلوة، الزكوٰة = الزكاة، الحيوٰة = الحياة،
+  الربوٰا = الربا. Sirf in khaas alfaz par; ربوة (pahari) ki asli waw nahi badalti.
+- **Hamza (ء)**: ءامنوا = آمنوا، القرءان = القرآن، يستهزءون = يستهزئون، هٰٓؤلآء = هؤلاء، السماء.
+  Hamza ki har shakal (ء ئ ؤ) dono taraf se hata di jati hai, aur do alif ek ho jate hain.
+  Isse Talash (search) me bhi bina hamza likha lafz mil jata hai.
+- **Model ek baar**: pehli dafa load hone ke baad app yaad rakhti hai (`tc.modelReady`) aur
+  agli dafa khud background me cache se load kar leti hai; storage `persist()` se maangi jati hai
+  taake browser weights na hataye; Transformers.js library + wasm service worker me
+  `bayyin-lib-v1` cache me rehti hai (offline bhi). Record aur Load ek hi load ka intezar karte hain.

@@ -8,7 +8,11 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / model / Quran.com requests are left to the network.
 
-const CACHE = 'bayyin-v20';
+const CACHE = 'bayyin-v21';
+// Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
+// the model starts offline and the library is not downloaded again each launch.
+const LIB_CACHE = 'bayyin-lib-v1';
+const LIB_HOSTS = ['cdn.jsdelivr.net', 'esm.sh'];
 
 const SHELL = [
   './',
@@ -76,7 +80,7 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(keys.filter((key) => key !== CACHE).map((key) => caches.delete(key)));
+      await Promise.all(keys.filter((key) => key !== CACHE && key !== LIB_CACHE).map((key) => caches.delete(key)));
       await self.clients.claim();
     })()
   );
@@ -87,6 +91,19 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
+  if (LIB_HOSTS.includes(url.hostname)) {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(LIB_CACHE);
+        const hit = await cache.match(request);
+        if (hit) return hit;
+        const fresh = await fetch(request);
+        if (fresh && fresh.ok) cache.put(request, fresh.clone()).catch(() => {});
+        return fresh;
+      })()
+    );
+    return;
+  }
   if (url.origin !== self.location.origin) return;
 
   event.respondWith(

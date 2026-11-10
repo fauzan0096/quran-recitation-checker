@@ -103,6 +103,28 @@ export function runSelfTest(context = {}) {
     return `score ${alignment.score}, verdict "${alignment.verdict}"`;
   });
 
+  check('Rasm Uthmani: صلوٰة = صلاة = صلوة (aur زكاة، حياة)', () => {
+    const same = (a, b) => normalizeToWords(a).join(' ') === normalizeToWords(b).join(' ');
+    assert(same('ٱلصَّلَوٰةَ', 'الصلاة'), 'الصلاة');
+    assert(same('ٱلصَّلَوٰةَ', 'الصلوة'), 'الصلوة');
+    assert(same('ٱلزَّكَوٰةَ', 'الزكاة'), 'الزكاة');
+    assert(same('ٱلْحَيَوٰةِ', 'الحياة'), 'الحياة');
+    assert(!same('رَبْوَةٍ', 'ربات'), 'ربوة ki asli waw badalni nahi chahiye');
+    return 'sab barabar';
+  });
+
+  check('Hamza (ء): ءامنوا = آمنوا, القرءان = القرآن, يستهزءون = يستهزئون', () => {
+    const same = (a, b) => normalizeToWords(a).join(' ') === normalizeToWords(b).join(' ');
+    assert(same('ءَامَنُوا۟', 'آمنوا'), 'آمنوا');
+    assert(same('ٱلْقُرْءَانُ', 'القرآن'), 'القرآن');
+    assert(same('يَسْتَهْزِءُونَ', 'يستهزئون'), 'يستهزئون');
+    assert(same('هَٰٓؤُلَآءِ', 'هؤلاء'), 'هؤلاء');
+    assert(same('ٱلسَّمَآءِ', 'السماء'), 'السماء');
+    const alignment = alignWords(['إِسْرَٰٓءِيلَ', 'ٱلصَّلَوٰتِ'], ['إسرائيل', 'الصلوات']);
+    assertEqual(alignment.counts.correct, 2, 'correct');
+    return 'sab sahi';
+  });
+
   check('Ek harf ka farq = "close", galat nahi', () => {
     const alignment = alignWords(['الرحمن'], ['الرحمان']);
     assertEqual(alignment.results[0].status, WORD_STATUS.CLOSE, 'status');

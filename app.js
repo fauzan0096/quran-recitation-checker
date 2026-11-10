@@ -61,6 +61,7 @@ import {
 const STORAGE = {
   selection: 'tc.selection',
   model: 'tc.modelId',
+  modelReady: 'tc.modelReady', // id of a model that finished loading once on this device
   hidden: 'tc.textHidden',
   reading: 'tc.reading',
   welcomed: 'tc.welcomed',
@@ -137,6 +138,7 @@ async function init() {
   maybeWelcome();
   loadQuranInBackground();
   startReminderLoop();
+  autoLoadModel();
 }
 
 /** Quran text + page data load after first paint; the reader fills in when they arrive. */
@@ -1226,11 +1228,25 @@ function summarise(results, extras) {
 
 // -------------------------------------------------------------------- model
 
-async function handleLoadModel() {
-  if (state.modelLoading) return false;
+/**
+ * Load the speech model once and keep it for the whole session. Calls that
+ * arrive while it is loading (Record pressed, Load pressed, auto-load at start)
+ * wait for the SAME load instead of failing or starting a second one.
+ */
+function handleLoadModel() {
   const modelId = els.modelSelect.value;
-  if (state.model && state.modelId === modelId) return true;
+  if (state.model && state.modelId === modelId) return Promise.resolve(true);
+  if (state.modelPromise && state.modelPromiseId === modelId) return state.modelPromise;
+  if (state.modelLoading) return state.modelPromise || Promise.resolve(false);
+  state.modelPromiseId = modelId;
+  state.modelPromise = doLoadModel(modelId).finally(() => {
+    state.modelPromise = null;
+    state.modelPromiseId = null;
+  });
+  return state.modelPromise;
+}
 
+async function doLoadModel(modelId) {
   state.modelLoading = true;
   els.loadModel.disabled = true;
   els.modelSelect.disabled = true;
@@ -1248,9 +1264,13 @@ async function handleLoadModel() {
     setProgress(100);
     try {
       localStorage.setItem(STORAGE.model, modelId);
+      // Remember that this model is already on the device: next launch loads it
+      // from the browser cache by itself, no tap and no download.
+      localStorage.setItem(STORAGE.modelReady, modelId);
     } catch (error) {
       console.warn('model id persist failed', error);
     }
+    keepStorage();
     setGlobalStatus('');
     return true;
   } catch (error) {
@@ -1266,6 +1286,37 @@ async function handleLoadModel() {
     els.modelSelect.disabled = false;
     updateRecordButtons();
   }
+}
+
+/** Ask the browser not to evict the cached model weights when space runs low. */
+function keepStorage() {
+  try {
+    if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+  } catch (error) {
+    /* optional */
+  }
+}
+
+/**
+ * If the model was loaded on this device before, load it again quietly in the
+ * background (weights come from the browser cache, nothing is downloaded), so
+ * it is ready by the time the person presses Record.
+ */
+function autoLoadModel() {
+  let ready = null;
+  try {
+    ready = localStorage.getItem(STORAGE.modelReady);
+  } catch (error) {
+    return;
+  }
+  if (!ready || !MODELS.some((m) => m.id === ready)) return;
+  els.modelSelect.value = ready;
+  const run = () => {
+    handleLoadModel();
+  };
+  // Let the home screen paint first.
+  if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 3000 });
+  else window.setTimeout(run, 1200);
 }
 
 function onModelProgress(progress) {

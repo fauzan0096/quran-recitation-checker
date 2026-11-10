@@ -24,12 +24,15 @@ const LETTER_MAP = [
   [/[\u0622\u0623\u0625\u0671-\u0673\u0675]/g, ALEF], // آ أ إ ٱ ٲ ٳ ٵ
   [/\u0649/g, YEH], // ى
   [/\u06CC/g, YEH], // Persian yeh
-  [/\u0624/g, WAW], // ؤ
-  [/\u0626/g, YEH], // ئ
   [/\u0629/g, HEH], // ة
   [/\u06A9/g, '\u0643'], // Persian kaf
   [/[\u06BE\u06C1\u06D5]/g, HEH], // heh variants
 ];
+
+// صلوة زكوة حيوة مشكوة نجوة غدوة (after ة -> ه), with optional prefixes. Only these
+// words: a real waw is correct in e.g. ربوة (hill), so no general rule.
+const OLD_WAW_SPELLING =
+  /(^|\s)((?:[وفبلك]|ال|لل|وال|بال|كال|فال|ولل)?)(صل|زك|حي|مشك|نج|غد)(و)(?=ه(?:\s|$))/g;
 
 /**
  * Reduce Arabic text to bare letters: no harakat, no Quranic marks, no
@@ -41,12 +44,24 @@ export function normalizeArabic(input) {
   s = s.replace(INVISIBLES, ' ');
   s = s.replace(/\u00A0/g, ' ');
   s = s.replace(/\u0640/g, ''); // tatweel
+  // Rasm Uthmani writes some long alefs as waw + dagger alef: الصلوٰة، الزكوٰة،
+  // الحيوٰة، مشكوٰة، الربوٰا. Heard text spells them الصلاة، الزكاة، الحياة، الربا.
+  // Fold the Uthmani spelling into the modern one BEFORE the marks are removed.
+  s = s.replace(/\u0648[\u064B-\u065F]*\u0670(?=[\u064B-\u065F]*[\u0629\u0627])/g, ALEF);
   s = s.replace(MARKS, '');
   for (const [re, to] of LETTER_MAP) s = s.replace(re, to);
+  // Hamza is not heard as a letter of its own and the two scripts seat it
+  // differently: ءامنوا / آمنوا, القرءان / القرآن, السماء / السماء, يستهزءون /
+  // يستهزئون, هٰٓؤلآء / هؤلاء. Drop every hamza form so both sides meet.
+  s = s.replace(/[\u0621\u0626\u0624]/g, '');
+  // A doubled alef is what is left when a hamza sat between two alefs (ءأنذرتهم).
+  s = s.replace(/\u0627{2,}/g, ALEF);
   // Drop everything that is not an Arabic letter or a space (punctuation,
   // digits, Latin, aya markers...).
   s = s.replace(/[^\u0621-\u063A\u0641-\u064A\s]/g, ' ');
   s = s.replace(/\s+/g, ' ').trim();
+  // A recogniser may also output the OLD spelling with a real waw (صلوة).
+  s = s.replace(OLD_WAW_SPELLING, '$1$2$3ا');
   return s;
 }
 
