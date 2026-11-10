@@ -9,6 +9,7 @@
 
 import { t } from './i18n.js';
 import { surahName } from './surahs.js';
+import { play as playQari } from './qari.js';
 
 const KEY = 'tc.report';
 const MAX_WORDS = 120;
@@ -248,6 +249,15 @@ export function mountReport(root, options = {}) {
       word.dir = 'rtl';
       const heard = row.heard ? ` · ${t('rep.heard')}: ${row.heard}` : '';
       item.append(word, el('span', 'rep-meta', `${refLabel(row.key)} · ${row.n}×${heard}`));
+
+      const [surah, aya] = String(row.key).split(':').map(Number);
+      if (surah && aya) {
+        const play = el('button', 'rep-play', '▶');
+        play.type = 'button';
+        play.title = t('qari.listen');
+        play.addEventListener('click', () => playQari(surah, aya));
+        item.appendChild(play);
+      }
       list.appendChild(item);
     }
     body.appendChild(list);

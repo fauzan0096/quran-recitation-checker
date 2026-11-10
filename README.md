@@ -570,3 +570,30 @@ karta hai aur `manifest.webmanifest` ka JSON check karta hai.
 - Testers ko yeh cheezein zaroor karne ko kahein: Hifz plan aur Hifz Test (Premium
   screen), trial khatam kar ke roz 3 checks ka limit, qibla compass, Roz ki Naiki
   page, aur ek talaawat check (mic ki ijazat ke saath).
+
+
+
+## Qari ki audio — `qari.js`
+
+Ghalti ki wazahat ke saath ab sahi tilawat bhi suni ja sakti hai.
+
+- Reciters (EveryAyah.com — muft, bina key): Alafasy, Husary, Abdul Basit (Murattal),
+  Minshawy. Settings → **Qari ki tilawat** se chunein (choice `tc.qari` me).
+- Reader me har result card par **🔊 Qari sunen** — wohi aya, sahi tilawat.
+- Meri report → Ghaltiyan me har lafz ke saath **▶** — us aya ki awaaz.
+- Audio on-demand stream hoti hai (app me bundle nahi), is liye APK chhoti rehti hai;
+  internet chahiye. Ek waqt me ek aya; reader chhodne par khud band.
+
+## Galti ki wazahat
+
+- Har mistake list ke neeche ek seedhi line: "Aap ne «X» sunaya, sahi «Y» hai" ya
+  "«Y» chhoot gaya" — pehli 3 galtiyan, uske baad "+n aur".
+- Word list pehle jaisi: tag (close / wrong / missing), sahi lafz → jo suna gaya.
+
+## Roz yaad dehani — `reminder.js`
+
+- Settings → **Roz yaad dehani**: on/off, waqt (default 20:00) aur **Test notification**.
+- Roz ek notification: Murajaa ayaat due hain to "{n} ayaat dohrani hain", warna
+  "aaj ka hissa baqi hai".
+- Notification tab aati hai jab app khuli ho ya khulte hi (browser band page ko khud
+  jagana allowed nahi; background push ke liye server chahiye jo is app me nahi).

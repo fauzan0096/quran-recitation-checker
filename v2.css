@@ -1673,3 +1673,46 @@ body[data-theme='dark'] .badge-card.is-earned {
 
 body[data-theme='dark'] .badges-stat { background: linear-gradient(180deg, #2a1a1e, #221518); border-color: #4a3338; }
 body[data-theme='dark'] .badge-card.is-locked { background: repeating-linear-gradient(135deg, #261a1d 0 10px, #2b1e21 10px 20px); }
+
+
+
+/* ------------------------------------------------------- qari + explanation */
+.mistake-explain {
+  margin: 8px 0 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border-inline-start: 3px solid var(--gold);
+  background: rgba(176, 122, 60, 0.1);
+  font-size: 12px;
+  line-height: 1.55;
+  color: var(--ink);
+}
+
+.qari-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
+.qari-btn { display: inline-flex; align-items: center; gap: 6px; }
+.qari-btn.is-on { background: linear-gradient(180deg, #f6d4a8, #d8a66b); color: #3a1119; border-color: transparent; }
+
+.rep-play {
+  margin-inline-start: auto;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(176, 122, 60, 0.55);
+  background: var(--card);
+  color: var(--green-dark);
+  font-size: 14px;
+  cursor: pointer;
+}
+.rep-play:active { transform: scale(0.96); }
+
+/* ------------------------------------------------------------ reminder card */
+.remind-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.remind-time {
+  font: inherit;
+  padding: 6px 8px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+}

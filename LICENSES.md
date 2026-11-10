@@ -85,3 +85,12 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+
+## Quran recitation audio — EveryAyah.com
+
+The "Qari sunen" button streams the recitation of one aya from
+<https://everyayah.com> (plain mp3, no key, no account). Nothing is bundled with
+the app and the audio is not re-sold. Reciters offered: Mishary Rashid Alafasy,
+Mahmoud Khalil Al-Husary, Abdul Basit (Murattal) and Mohamed Al-Minshawy.

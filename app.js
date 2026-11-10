@@ -47,6 +47,15 @@ import {
 } from './billing.js';
 import { download as backupDownload, restore as backupRestore } from './backup.js';
 import { mountBadges, checkBadges, celebrate } from './badges.js';
+import {
+  reciters,
+  current as currentQari,
+  setReciter,
+  toggle as toggleQari,
+  isPlaying as isQariPlaying,
+  stop as stopQari,
+} from './qari.js';
+import { mountCard as mountReminderCard, start as startDailyReminder } from './reminder.js';
 import { mountMurajaa, dueCount, updateFromCheck } from './murajaa.js';
 import { mountTasbeeh } from './tasbeeh-v2.js';
 import { mountReport, recordReport } from './premium-tools.js';
@@ -194,6 +203,8 @@ async function init() {
   fillLanguages();
   fillSurahs();
   fillModels();
+  fillQaris();
+  mountReminderCardUI();
   restoreSelection();
   wireEvents();
   setGlobalStatus('');
@@ -214,6 +225,7 @@ async function init() {
   maybeWelcome();
   loadQuranInBackground();
   startReminderLoop();
+  startDailyReminder();
   handleLaunch();
   autoLoadModel();
   syncSubscription();
@@ -404,6 +416,7 @@ function cacheElements() {
     'search-input', 'search-go', 'search-results',
     'list-title', 'global-status', 'range-error', 'aya-list',
     'list-footer', 'load-more', 'share-app', 'model-select', 'load-model',
+    'remind-root', 'qari-select',
     'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
     'accurate-mode',
     'mic-check', 'mic-check-output', 'player', 'tajweed',
@@ -468,6 +481,25 @@ function fillModels() {
     els.modelSelect.appendChild(option);
   }
   els.modelSelect.value = MODELS[0].id;
+}
+
+/** The reciter list for the "Qari ki tilawat" setting. */
+function fillQaris() {
+  if (!els.qariSelect) return;
+  els.qariSelect.textContent = '';
+  for (const item of reciters()) {
+    const option = document.createElement('option');
+    option.value = item.id;
+    option.textContent = item.name;
+    els.qariSelect.appendChild(option);
+  }
+  els.qariSelect.value = currentQari();
+  els.qariSelect.addEventListener('change', () => setReciter(els.qariSelect.value));
+}
+
+/** The daily reminder card lives in Settings. */
+function mountReminderCardUI() {
+  if (els.remindRoot) mountReminderCard(els.remindRoot);
 }
 
 function restoreSelection() {
@@ -722,7 +754,7 @@ function ayaCard(verse) {
 
   const result = document.createElement('div');
   result.className = 'aya-result';
-  if (alignment) renderAyaResult(result, alignment);
+  if (alignment) renderAyaResult(result, alignment, key);
 
   const actions = document.createElement('div');
   actions.className = 'aya-actions';
@@ -968,6 +1000,56 @@ function renderMushafPage() {
   els.ayaList.appendChild(page);
 }
 
+function setQariLabel(btn, on) {
+  btn.textContent = on ? t('qari.stop') : t('qari.listen');
+  btn.classList.toggle('is-on', on);
+}
+
+/** "Suno" button: the qari's recitation of this aya, right next to the mistakes. */
+function qariRow(key) {
+  const [surah, aya] = String(key || '')
+    .split(':')
+    .map(Number);
+  const row = document.createElement('div');
+  row.className = 'qari-row';
+  if (!surah || !aya) return row;
+
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'btn ghost small qari-btn';
+  btn.textContent = t('qari.listen');
+  btn.addEventListener('click', () => {
+    toggleQari(surah, aya, {
+      onStop: () => setQariLabel(btn, false),
+      onEnd: () => setQariLabel(btn, false),
+      onError: () => {
+        setQariLabel(btn, false);
+        toast(t('qari.failed'));
+      },
+    });
+    setQariLabel(btn, isQariPlaying(surah, aya));
+  });
+  row.appendChild(btn);
+  return row;
+}
+
+/** The plain-language "what went wrong" line under the word list. */
+function explainLine(problems) {
+  const p = document.createElement('p');
+  p.className = 'mistake-explain';
+
+  const bits = problems.slice(0, 3).map((r) => {
+    const heard = r.heard || t('note.unread');
+    if (r.status === WORD_STATUS.MISSING) return t('explain.missing', { expected: r.expected });
+    if (r.status === WORD_STATUS.CLOSE) return t('explain.close', { expected: r.expected, heard });
+    return t('explain.wrong', { expected: r.expected, heard });
+  });
+  if (problems.length > 3) bits.push(t('explain.more', { n: problems.length - 3 }));
+
+  p.textContent = bits.join(' ');
+  return p;
+}
+
 function mistakeBlock(key, problems) {
   const block = document.createElement('div');
   block.className = 'page-mistake';
@@ -1007,6 +1089,8 @@ function mistakeBlock(key, problems) {
     list.appendChild(li);
   }
   block.appendChild(list);
+  block.appendChild(explainLine(problems));
+  if (key && String(key).includes(':')) block.appendChild(qariRow(key));
   return block;
 }
 
@@ -1084,7 +1168,7 @@ function countsLine(c) {
     .join(' · ');
 }
 
-function renderAyaResult(target, alignment) {
+function renderAyaResult(target, alignment, key) {
   const strip = document.createElement('div');
   strip.className = `aya-score ${scoreClass(alignment.score)}`;
 
@@ -1112,7 +1196,7 @@ function renderAyaResult(target, alignment) {
     target.appendChild(ok);
     return;
   }
-  target.appendChild(mistakeBlock('', problems));
+  target.appendChild(mistakeBlock(key, problems));
 }
 
 function scoreClass(score) {
@@ -1176,6 +1260,7 @@ function updateRecordButtons() {
 }
 
 async function toggleRecording(id, keys) {
+  stopQari();
   if (state.recording && state.recording.id === id) {
     await finishRecording(false);
     return;
@@ -1702,6 +1787,9 @@ function setView(name) {
   if (currentView === 'tasbeeh' && name !== 'tasbeeh') moreViews.tasbeeh?.stop();
   if (currentView === 'dua' && name !== 'dua') moreViews.duas?.stop();
   if (currentView === 'hztest' && name !== 'hztest') moreViews.hztest?.stop();
+  if (currentView === 'reader' && name !== 'reader') stopQari();
+  if (currentView === 'report' && name !== 'report') stopQari();
+  if (currentView === 'murajaa' && name !== 'murajaa') stopQari();
   currentView = name;
 
   for (const [key, element] of Object.entries(sections)) {
