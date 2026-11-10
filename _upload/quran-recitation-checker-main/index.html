@@ -1,0 +1,753 @@
+<!doctype html>
+<!-- © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. See LICENSE. -->
+<html lang="en" translate="no" class="notranslate">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.jsdelivr.net https://esm.sh; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' blob:; connect-src 'self' blob: data: https://cdn.jsdelivr.net https://esm.sh https://huggingface.co https://*.huggingface.co https://*.hf.co https://api.quran.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-src 'none';"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <!-- Chrome/Android ka auto-translate Arabic aayat ko English/Roman me badal deta tha — band. -->
+    <meta name="google" content="notranslate" />
+    <meta name="theme-color" content="#4b1b21" />
+    <meta
+      name="description"
+      content="Bayyin — Quran tilawat aya-ba-aya khud check karein, on-device, bina server."
+    />
+    <title>بيّن — Bayyin | Quran Recitation</title>
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="بيّن" />
+    <link rel="icon" href="favicon.ico" sizes="any" />
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon-180.png?v=2" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="preload" href="amiri-quran.ttf" as="font" type="font/ttf" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="v2.css" />
+  </head>
+  <body>
+    <svg class="ui-sprite" aria-hidden="true" focusable="false" width="0" height="0">
+      <defs>
+        <symbol id="i-dua" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M5 16c0 6.1 4.9 11 11 11s11-4.9 11-11" />
+          <path d="M5 16c4.4.2 8.2 2.2 11 5.4 2.8-3.2 6.6-5.2 11-5.4" />
+          <path d="M16 21.4V26" />
+          <path class="ai-accent" d="M16 4l1.3 3.1 3.1 1.3-3.1 1.3L16 12.8l-1.3-3.1L11.6 8.4l3.1-1.3z" />
+          <path class="ai-accent" d="M7.4 9.2l.9 1.8M24.6 9.2l-.9 1.8" />
+        </symbol>
+        <symbol id="i-khatam" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="11"/><path d="M10.5 16.5l3.8 3.8 7.2-8"/></g></symbol>
+    <symbol id="i-hifz" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 6v20M16 8c-3-2.4-7-2.6-10-1.4v16c3-1.2 7-1 10 1.4M16 8c3-2.4 7-2.6 10-1.4v16c-3-1.2-7-1-10 1.4"/><path d="M9 12.5h3.5M9 16.5h3.5M19.5 12.5H23M19.5 16.5H23"/></g></symbol>
+    <symbol id="i-hztest" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="6" width="22" height="7" rx="2.5"/><rect x="5" y="19" width="22" height="7" rx="2.5" stroke-dasharray="3 3"/><path class="ai-accent" d="M11 9.5h10M12.5 22.5l2.2 2.2 4.8-4.9"/></g></symbol>
+    <symbol id="i-premium" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22l-1.6-11 6.1 3.6L16 7l5.5 7.6L27.6 11 26 22z"/><path class="ai-accent" d="M6.5 26h19"/></g></symbol>
+    <symbol id="i-report" viewBox="0 0 32 32"><g fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 4h11l5 5v18H8z"/><path d="M19 4v5h5"/><path d="M11.5 14h4M11.5 18h9M11.5 22h6"/><path class="ai-accent" d="M20.5 21.5l1.5 1.5 3-3"/></g></symbol>
+    <symbol id="i-daily" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 13.4c-2.7-1.9-6.2-2.6-9.8-2v14.2c3.6-.5 7.1.2 9.8 2 2.7-1.8 6.2-2.5 9.8-2V11.4c-3.6-.6-7.1.1-9.8 2z" />
+          <path d="M16 13.4v14.2" />
+          <path class="ai-accent" d="M16 8.6V4.2M10.4 7.6L8.6 4.6M21.6 7.6l1.8-3" />
+        </symbol>
+        <symbol id="i-tasbeeh" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="16" cy="6.8" r="2.3" class="ai-accent" />
+          <circle cx="21.4" cy="8.6" r="1.5" />
+          <circle cx="24.8" cy="13.2" r="1.5" />
+          <circle cx="24.8" cy="18.8" r="1.5" />
+          <circle cx="21.4" cy="23.4" r="1.5" />
+          <circle cx="16" cy="25.2" r="1.5" />
+          <circle cx="10.6" cy="23.4" r="1.5" />
+          <circle cx="7.2" cy="18.8" r="1.5" />
+          <circle cx="7.2" cy="13.2" r="1.5" />
+          <circle cx="10.6" cy="8.6" r="1.5" />
+          <path d="M16 9.1v3.3" />
+        </symbol>
+        <symbol id="i-qibla" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="16" cy="17" r="10.6" />
+          <path d="M16 9.4l3 5.2h-6z" class="ai-accent" />
+          <path d="M16 24.6l-3-5.2h6z" />
+          <rect x="13.9" y="14.9" width="4.2" height="4.2" rx="1" class="ai-accent" />
+        </symbol>
+        <symbol id="i-calendar" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="5" y="7.4" width="22" height="19.8" rx="4" />
+          <path d="M11 4.6v4.4M21 4.6v4.4M5 13.2h22" />
+          <path class="ai-accent" d="M18.9 17.6a3.7 3.7 0 1 0 2.7 6 3.1 3.1 0 0 1-2.7-6z" />
+        </symbol>
+        <symbol id="i-surah" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="6.5" y="4" width="19" height="24" rx="3.5" />
+          <path d="M11 4v24" />
+          <path class="ai-accent" d="M15.5 10.5h6M15.5 15.5h6M15.5 20.5h3.6" />
+        </symbol>
+        <symbol id="i-mushaf" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 10.4c-2.8-2-6.4-2.7-10.1-2.1v15.9c3.7-.6 7.3.1 10.1 2.1 2.8-2 6.4-2.7 10.1-2.1V8.3c-3.7-.6-7.3.1-10.1 2.1z" />
+          <path d="M16 10.4v15.9" />
+          <path class="ai-accent" d="M9.4 13.4h3.6M9.4 17h3.6M19 13.4h3.6M19 17h3.6" />
+        </symbol>
+        <symbol id="i-search" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="14.4" cy="14.4" r="8.4" />
+          <path d="M20.8 20.8L27 27" class="ai-accent" />
+        </symbol>
+      </defs>
+    </svg>
+
+    <div id="splash" class="splash" role="status" aria-live="polite">
+      <img class="splash-logo" src="icon-96.png" alt="" width="104" height="104" />
+      <div class="splash-title" lang="ar" dir="rtl">بيّن</div>
+      <div class="splash-sub">Bayyin</div>
+      <div class="splash-loader" aria-hidden="true"><span></span></div>
+    </div>
+
+    <header class="app-bar">
+      <div class="brand">
+        <img class="brand-mark" src="icon-96.png" alt="" width="42" height="42" />
+        <div class="brand-text">
+          <h1>
+            <span class="brand-ar" lang="ar" dir="rtl">بيّن</span>
+            <span class="brand-en">Bayyin</span>
+          </h1>
+          <p class="tagline" data-i18n="app.tagline">
+            Aya padhein, Record dabaein, ghalti wahin dekhein.
+          </p>
+        </div>
+      </div>
+      <div class="app-tools">
+                <button type="button" id="toggle-theme" class="icon-btn" aria-label="Night mode" title="Night mode">
+          🌙
+        </button>
+        <button type="button" id="open-settings" class="icon-btn" aria-label="Settings" title="Settings">
+          ⚙
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section id="view-reader">
+        <div class="tabs" role="tablist">
+          <button type="button" id="tab-surah" class="tab is-active" data-mode="surah">
+            <svg class="tab-ic" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-surah" /></svg>
+            <span data-i18n="tab.ayah">Aya ba aya</span>
+          </button>
+          <button type="button" id="tab-page" class="tab" data-mode="page">
+            <svg class="tab-ic" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-mushaf" /></svg>
+            <span data-i18n="tab.mushaf">Mushaf</span>
+          </button>
+          <button type="button" id="tab-search" class="tab" data-mode="search">
+            <svg class="tab-ic" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-search" /></svg>
+            <span data-i18n="tab.search">Talash</span>
+          </button>
+        </div>
+
+        <div class="picker" id="picker-surah">
+          <label class="field">
+            <span data-i18n="tab.surah">Surah</span>
+            <select id="surah-select"></select>
+          </label>
+          <button type="button" id="resume-aya" class="btn ghost small" title="Pichhli jagah" hidden>
+            ↩
+          </button>
+        </div>
+
+        <div class="picker" id="picker-page" hidden>
+          <label class="field small">
+            <span data-i18n="mushaf.label">Mushaf</span>
+            <select id="mushaf-select">
+              <option value="madani">Madani (604)</option>
+              <option value="indopak">IndoPak (610)</option>
+            </select>
+          </label>
+          <button type="button" id="page-next" class="btn ghost small" aria-label="Agla page" title="Agla page">
+            ◀
+          </button>
+          <label class="field small">
+            <span data-i18n="page.label">Page</span>
+            <input id="page-number" type="number" min="1" max="610" step="1" value="1" inputmode="numeric" />
+          </label>
+          <button type="button" id="page-prev" class="btn ghost small" aria-label="Pichhla page" title="Pichhla page">
+            ▶
+          </button>
+          <span id="page-total" class="hint"></span>
+        </div>
+
+        <div class="picker" id="picker-search" hidden>
+          <label class="field">
+            <span data-i18n="search.label">Talash — lafz, aya ya juz</span>
+            <input
+              id="search-input"
+              type="search"
+              inputmode="search"
+              data-i18n-placeholder="search.placeholder"
+              placeholder="rahman · 2:255 · 5"
+            />
+          </label>
+          <button type="button" id="search-go" class="btn" data-i18n="search.button">Dhoondein</button>
+        </div>
+
+        <div class="toolbar">
+          <span id="list-title" class="list-title"></span>
+        </div>
+
+        <div class="reader-controls">
+          <span class="rc-label" data-i18n="font.size">Text</span>
+          <button type="button" id="font-smaller" class="rc-btn" aria-label="Chhota text">A−</button>
+          <button type="button" id="font-larger" class="rc-btn" aria-label="Bara text">A+</button>
+          <span id="reading-meta" class="rc-meta"></span>
+        </div>
+
+        <div id="global-status" class="global-status" role="status" aria-live="polite" hidden></div>
+        <p id="range-error" class="error" hidden></p>
+
+        <div id="aya-list" class="aya-list"></div>
+        <div id="search-results" class="search-results" hidden></div>
+
+        <div id="list-footer" class="list-footer" hidden>
+          <button type="button" id="load-more" class="btn ghost" data-i18n="list.more">
+            Aur ayaat dikhayein
+          </button>
+        </div>
+      </section>
+
+      <section id="view-settings" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-settings" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2 data-i18n="settings.title">Settings</h2>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="welcome.lang">Zubaan</h3>
+          <select data-lang-select id="lang-select" aria-label="Zubaan">
+            <option value="roman">Roman Urdu</option>
+            <option value="ur">اردو</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="tarjuma.title">Quran ka tarjuma</h3>
+          <select id="tarjuma-select" aria-label="Tarjuma">
+            <option value="auto" data-i18n="tarjuma.auto">App ki zubaan ke mutabiq</option>
+            <option value="off" data-i18n="tarjuma.off">Tarjuma nahi chahiye</option>
+            <option value="roman" data-i18n="tarjuma.roman">Roman Urdu</option>
+            <option value="en" data-i18n="tarjuma.en">English</option>
+          </select>
+          <p class="hint" data-i18n="tarjuma.hint">Sirf Quran ki aayat ke neeche ka tarjuma. Arabic hamesha dikhega.</p>
+        </div>
+
+        <div class="card">
+          <h3><span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-premium" /></svg></span> <span data-i18n="premium.heading">Bayyin Premium</span></h3>
+          <p class="hint" id="premium-status"></p>
+          <button type="button" id="open-premium" class="btn primary" data-i18n="premium.open">
+            Premium lein
+          </button>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="rep.heading">Meri report</h3>
+          <p class="hint" data-i18n="rep.settingsHint">
+            Murajaa ki list, sab se zyada ghalat hone wale lafz, aur roz ka tareekh.
+          </p>
+          <button type="button" id="open-report" class="btn primary" data-i18n="rep.open">
+            Report kholein
+          </button>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="premium.chartHeading">Free ya Premium — kya milta hai</h3>
+          <div class="compare" role="table">
+            <div class="compare-row is-head" role="row">
+              <span class="compare-name" role="columnheader" data-i18n="premium.chartFeature">Cheez</span>
+              <span role="columnheader" data-i18n="premium.chartFree">Free</span>
+              <span class="compare-pro" role="columnheader" data-i18n="premium.chartPro">Premium</span>
+            </div>
+            <div class="compare-row" role="row">
+              <span class="compare-name" role="cell" data-i18n="premium.chartEveryday">Quran, Duaein, Tasbeeh, Qibla, Calendar</span>
+              <span class="compare-yes" role="cell">✓</span>
+              <span class="compare-yes compare-pro" role="cell">✓</span>
+            </div>
+            <div class="compare-row" role="row">
+              <span class="compare-name" role="cell" data-i18n="premium.chartNaiki">Roz ki Naiki — aya, hadith, sunnah</span>
+              <span class="compare-yes" role="cell">✓</span>
+              <span class="compare-yes compare-pro" role="cell">✓</span>
+            </div>
+            <div class="compare-row" role="row">
+              <span class="compare-name" role="cell" data-i18n="premium.chartKhatam">Khatam plan</span>
+              <span class="compare-yes" role="cell">✓</span>
+              <span class="compare-yes compare-pro" role="cell">✓</span>
+            </div>
+            <div class="compare-row" role="row">
+              <span class="compare-name" role="cell" data-i18n="premium.chartChecks">Talaawat checks</span>
+              <span role="cell" data-i18n="premium.chartChecksFree">Roz 3</span>
+              <span class="compare-pro" role="cell" data-i18n="premium.chartChecksPro">Be-paana</span>
+            </div>
+            <div class="compare-row" role="row">
+              <span class="compare-name" role="cell" data-i18n="premium.chartHifz">Hifz plan — sabaq, sabqi, murajaa</span>
+              <span class="compare-no" role="cell">–</span>
+              <span class="compare-yes compare-pro" role="cell">✓</span>
+            </div>
+            <div class="compare-row" role="row">
+              <span class="compare-name" role="cell" data-i18n="premium.chartHzTest">Hifz Test</span>
+              <span class="compare-no" role="cell">–</span>
+              <span class="compare-yes compare-pro" role="cell">✓</span>
+            </div>
+            <div class="compare-row" role="row">
+              <span class="compare-name" role="cell" data-i18n="premium.chartMurajaa">Murajaa — kya dobara sunna hai</span>
+              <span class="compare-no" role="cell">–</span>
+              <span class="compare-yes compare-pro" role="cell">✓</span>
+            </div>
+            <div class="compare-row" role="row">
+              <span class="compare-name" role="cell" data-i18n="premium.chartMistakes">Ghaltiyan — kaun sa lafz ghalat</span>
+              <span class="compare-no" role="cell">–</span>
+              <span class="compare-yes compare-pro" role="cell">✓</span>
+            </div>
+            <div class="compare-row" role="row">
+              <span class="compare-name" role="cell" data-i18n="premium.chartHistory">Tareekh — roz ka chart</span>
+              <span class="compare-no" role="cell">–</span>
+              <span class="compare-yes compare-pro" role="cell">✓</span>
+            </div>
+          </div>
+          <p class="hint" data-i18n="premium.chartTrial">
+            Pehle 3 din poora Premium muft — us ke baad yeh farq rehta hai.
+          </p>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="progress.heading">Meri yaad-dasht</h3>
+          <p class="hint" data-i18n="progress.hint">
+            Har aya par ★ (bookmark) ya ✓ / ↺ ka nishan lagayein — sab kuch isi phone par rehta hai.
+          </p>
+          <div class="progress-stats" id="progress-stats"></div>
+          <div id="progress-lists"></div>
+          <button type="button" id="progress-reset" class="btn ghost small" data-i18n="progress.reset">
+            Yaad-dasht mita dein
+          </button>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="backup.heading">Backup</h3>
+          <p class="hint" data-i18n="backup.hint">
+            Progress, report aur settings ek file me — phone badalne ya data mitne se pehle save karein.
+          </p>
+          <button type="button" id="backup-export" class="btn primary small" data-i18n="backup.export">
+            Backup file save karein
+          </button>
+          <button type="button" id="backup-import" class="btn ghost small" data-i18n="backup.import">
+            Backup wapas laayein
+          </button>
+          <input id="backup-file" type="file" accept="application/json,.json" hidden />
+        </div>
+
+        <div class="card" id="install-card">
+          <h3 data-i18n="install.heading">App install karein</h3>
+          <p class="hint" data-i18n="install.hint">
+            Home screen par icon — bina browser, tez aur offline.
+          </p>
+          <button type="button" id="install-app" class="btn primary" data-i18n="install.button">
+            Install app
+          </button>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="share.heading">App share karein</h3>
+          <p class="hint" data-i18n="share.hint">Doston ko yeh app bhejein — bas is link se khul jati hai.</p>
+          <button type="button" id="share-app" class="btn primary" data-i18n="share.button">Share app</button>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="model.heading">Speech model (on-device)</h3>
+          <p class="hint" data-i18n="model.hint">Pehli dafa ~105 MB download hota hai, phir cache se chalta hai.</p>
+          <label class="field">
+            <span data-i18n="model.label">Model</span>
+            <select id="model-select"></select>
+          </label>
+          <label class="check-row">
+            <input type="checkbox" id="accurate-mode" />
+            <span data-i18n="model.accurate">Behtar accuracy (deri zyada)</span>
+          </label>
+          <p class="hint" data-i18n="model.speedHint">
+            Default tez hai. "Behtar accuracy" par har check thoda deri lagta hai, natija behtar ho sakta hai.
+          </p>
+          <button type="button" id="load-model" class="btn" data-i18n="model.load">Model load karein</button>
+          <div class="progress" id="model-progress" hidden>
+            <div class="progress-bar" id="model-progress-bar"></div>
+          </div>
+          <p id="model-status" class="hint"></p>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="audio.heading">Audio</h3>
+          <label class="field file">
+            <span data-i18n="audio.file">Recording ki jagah file chunein</span>
+            <input id="audio-file" type="file" accept="audio/*" />
+          </label>
+          <button type="button" id="mic-check" class="btn ghost small" data-i18n="mic.check">Mic jaanch</button>
+          <ul id="mic-check-output" class="diag" hidden></ul>
+          <audio id="player" controls hidden></audio>
+        </div>
+
+        <div class="card">
+          <h3 data-i18n="tajweed.heading">Tajweed hints (script se)</h3>
+          <div id="tajweed"></div>
+        </div>
+
+        <details class="card">
+          <summary data-i18n="about.summary">About &amp; privacy</summary>
+          <div class="prose">
+            <p>
+              <strong>Bayyin (بيّن)</strong> aap ki tilawat ko aya ke Uthmani text se mila kar
+              batata hai kaunsa lafz sahi, qareeb, galat ya chhoot gaya.
+            </p>
+            <p>
+              Sab kuch <strong>aap ke phone par</strong> chalta hai. Na koi server, na account, na
+              audio upload. Mic ka audio sirf usi waqt memory me rehta hai jab tak check na ho jaye.
+            </p>
+            <p>
+              App koi personal data collect nahi karti. Settings aur chuni hui surah/aya sirf aap ke
+              browser (local storage) me mehfooz hoti hai.
+            </p>
+            <p class="copyright">
+              © 2026 Fauzan Gorme — Bayyin (بيّن) ·
+              <span data-i18n="copyright.rights">All rights reserved.</span> ·
+              <a href="privacy.html" data-i18n="privacy.link">Privacy policy</a>
+            </p>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary data-i18n="errors.heading">Error report</summary>
+          <div class="prose">
+            <p data-i18n="errors.hint">
+              App me kuch toota to yahan akhri error likha hota hai — copy kar ke bhej dein.
+            </p>
+            <pre id="error-log" class="error-log"></pre>
+            <button type="button" id="errors-copy" class="btn ghost small" data-i18n="errors.copy">
+              Copy karein
+            </button>
+          </div>
+        </details>
+
+        <details class="card">
+          <summary data-i18n="licenses.summary">Licenses / Open source</summary>
+          <div class="prose">
+            <p>
+              <strong>Quran text — Tanzil Project</strong><br />
+              Tanzil Quran Text (Uthmani, Version 1.1). Copyright (C) 2007-2026 Tanzil Project.
+              License: Creative Commons Attribution 3.0.
+            </p>
+            <ul>
+              <li>
+                Permission is granted to copy and distribute verbatim copies of this text, but
+                CHANGING IT IS NOT ALLOWED.
+              </li>
+              <li>
+                This Quran text can be used in any website or application, provided that its source
+                (Tanzil Project) is clearly indicated, and a link is made to
+                <a href="https://tanzil.net" target="_blank" rel="noreferrer">tanzil.net</a> to
+                enable users to keep track of changes.
+              </li>
+              <li>
+                This copyright notice shall be included in all verbatim copies of the text, and
+                shall be reproduced appropriately in all files derived from or containing
+                substantial portion of this text.
+              </li>
+            </ul>
+            <p>
+              <strong>Quran font — Amiri Quran</strong><br />
+              Copyright 2010-2022 The Amiri Project Authors (https://github.com/aliftype/amiri).
+              Licensed under the SIL Open Font License, Version 1.1 —
+              <a href="https://scripts.sil.org/OFL" target="_blank" rel="noreferrer">scripts.sil.org/OFL</a>.
+              The full licence text is in <code>OFL-AmiriQuran.txt</code> in the source.
+            </p>
+            <p>
+              Mushaf page data: Tanzil Quran metadata (CC-BY). Updates:
+              <a href="https://tanzil.net/updates/" target="_blank" rel="noreferrer">tanzil.net/updates</a>.
+            </p>
+            <p>
+              <strong>Quran-tuned Whisper</strong> — <code>tarteel-ai/whisper-base-ar-quran</code>,
+              <code>tarteel-ai/whisper-tiny-ar-quran</code> (Tarteel AI) aur unke ONNX exports
+              (<code>nael239/tasme3-whisper-base-ar-quran-web</code>,
+              <code>Sharjeelbaig/whisper-tiny-ar-quran-onnx</code>): Apache License 2.0 —
+              <a href="https://www.apache.org/licenses/LICENSE-2.0" target="_blank" rel="noreferrer"
+                >apache.org/licenses/LICENSE-2.0</a
+              >. Distributed on an "AS IS" BASIS, without warranties.
+            </p>
+            <p>
+              <strong>Whisper</strong> (OpenAI) — MIT. <strong>Transformers.js</strong> (Hugging
+              Face) — Apache-2.0. <strong>ONNX Runtime</strong> (Microsoft) — MIT.
+            </p>
+            <p>
+              MIT License: Permission is hereby granted, free of charge, to any person obtaining a
+              copy of this software and associated documentation files (the "Software"), to deal in
+              the Software without restriction, including without limitation the rights to use,
+              copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the
+              Software, subject to the condition that the above copyright notice and this permission
+              notice are included in all copies or substantial portions of the Software. THE
+              SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.
+            </p>
+          </div>
+        </details>
+
+        <p class="app-footer">
+          Bayyin (بيّن) · v1.0 · © 2026 Fauzan Gorme
+          <br />
+          <span data-i18n="copyright.rights">All rights reserved.</span> ·
+          <a href="privacy.html" data-i18n="privacy.link">Privacy policy</a>
+        </p>
+      </section>
+
+      <section id="view-home" hidden>
+        <div class="home-hero">
+          <div class="home-hero-text">
+            <p class="home-salam" lang="ar" dir="rtl" data-i18n="home.salam">السَّلَامُ عَلَيْكُمْ</p>
+            <p class="home-date" id="home-date"></p>
+          </div>
+          <button type="button" class="home-hero-btn" id="home-open-quran">
+            <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-surah" /></svg>
+            <span data-i18n="home.openQuran">Quran padhein</span>
+          </button>
+        </div>
+
+        <div id="home-todo"></div>
+
+        <h2 class="home-h" data-i18n="home.all">Sab kuch yahin</h2>
+        <div class="more-grid home-grid">
+          
+          <button type="button" class="more-card" id="home-dua">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-dua" /></svg></span>
+            <strong data-i18n="more.dua">Duaein</strong>
+            <span data-i18n="more.duaHint">Masnoon duaein aur azkar</span>
+          </button>
+          <button type="button" class="more-card" id="more-tasbeeh">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-tasbeeh" /></svg></span>
+            <strong data-i18n="more.tasbeeh">Tasbeeh</strong>
+            <span data-i18n="more.tasbeehHint">Zikr ginein, round aur daily total</span>
+          </button>
+          <button type="button" class="more-card" id="more-daily">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-daily" /></svg></span>
+            <strong data-i18n="more.daily">Roz ki Naiki</strong>
+            <span data-i18n="more.dailyHint">Roz ek aya, ek hadith, ek sunnah</span>
+          </button>
+          <button type="button" class="more-card" id="more-khatam">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-khatam" /></svg></span>
+            <strong data-i18n="more.khatam">Khatam plan</strong>
+            <span data-i18n="more.khatamHint">Roz ka hissa aur yaad dehani</span>
+          </button>
+          <button type="button" class="more-card" id="more-hifz">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-hifz" /></svg></span>
+            <strong><span data-i18n="more.hifz">Hifz plan</span> <em class="pro-badge">Premium</em></strong>
+            <span data-i18n="more.hifzHint">Kitne din mein yaad hoga</span>
+          </button>
+          <button type="button" class="more-card" id="more-hztest">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-hztest" /></svg></span>
+            <strong><span data-i18n="more.hztest">Hifz Test</span> <em class="pro-badge">Premium</em></strong>
+            <span data-i18n="more.hztestHint">Pichli aya se agli yaad karein</span>
+          </button>
+          <button type="button" class="more-card" id="more-report">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-report" /></svg></span>
+            <strong><span data-i18n="rep.more">Meri report</span> <em class="pro-badge">Premium</em></strong>
+            <span data-i18n="rep.moreHint">Murajaa, ghaltiyan aur tareekh</span>
+          </button>
+          <button type="button" class="more-card" id="more-qibla">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
+            <strong data-i18n="more.qibla">Qibla</strong>
+            <span data-i18n="more.qiblaHint">Kaaba ki simt, compass ke sath</span>
+          </button>
+          <button type="button" class="more-card" id="more-calendar">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-calendar" /></svg></span>
+            <strong data-i18n="more.calendar">Islami calendar</strong>
+            <span data-i18n="more.calendarHint">Hijri tareekh aur mahina</span>
+          </button>
+          <button type="button" class="more-card" id="more-prayer">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
+            <strong data-i18n="more.prayer">Namaz ke auqaat</strong>
+            <span data-i18n="more.prayerHint">Fajr se Isha tak, aap ki jagah ke hisaab se</span>
+          </button>
+          <button type="button" class="more-card" id="more-badges">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-khatam" /></svg></span>
+            <strong data-i18n="badges.more">Inaam</strong>
+            <span data-i18n="badges.moreHint">Badges — aadha Quran, be-ghalti, streak</span>
+          </button>
+        </div>
+
+        <div class="home-noor-head">
+          <h2 class="home-h" data-i18n="home.noor">Roz ki Naiki</h2>
+        </div>
+        <div id="home-noor"></div>
+      </section>
+
+      <section id="view-dua" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-dua" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-dua" /></svg></span>
+            <span data-i18n="dua.heading">Masnoon Duaein</span>
+          </h2>
+        </div>
+        <div id="dua-root"></div>
+      </section>
+
+      <section id="view-khatam" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-khatam" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2><span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-khatam" /></svg></span><span data-i18n="more.khatam">Khatam plan</span></h2>
+        </div>
+        <div id="khatam-root"></div>
+      </section>
+
+      <section id="view-hifz" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-hifz" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2><span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-hifz" /></svg></span><span data-i18n="more.hifz">Hifz plan</span> <em class="pro-badge">Premium</em></h2>
+        </div>
+        <div id="hifz-root"></div>
+      </section>
+
+      <section id="view-hztest" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-hztest" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2><span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-hztest" /></svg></span><span data-i18n="more.hztest">Hifz Test</span> <em class="pro-badge">Premium</em></h2>
+        </div>
+        <div id="hztest-root"></div>
+      </section>
+
+      <section id="view-report" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-report" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-report" /></svg></span>
+            <span data-i18n="rep.heading">Meri report</span> <em class="pro-badge">Premium</em>
+          </h2>
+        </div>
+        <div id="report-root"></div>
+      </section>
+
+      <section id="view-premium" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-premium" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-premium" /></svg></span>
+            <span data-i18n="premium.heading">Bayyin Premium</span>
+          </h2>
+        </div>
+        <div id="premium-root"></div>
+      </section>
+
+      <section id="view-daily" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-daily" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-daily" /></svg></span>
+            <span data-i18n="daily.heading">Roz ki Naiki</span>
+          </h2>
+        </div>
+        <div id="daily-root"></div>
+      </section>
+
+      <section id="view-tasbeeh" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-tasbeeh" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-tasbeeh" /></svg></span>
+            <span data-i18n="tasbeeh.heading">Tasbeeh</span>
+          </h2>
+        </div>
+        <div id="tasbeeh-root"></div>
+      </section>
+
+      <section id="view-qibla" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-qibla" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
+            <span data-i18n="qibla.heading">Qibla</span>
+          </h2>
+        </div>
+        <div id="qibla-root"></div>
+      </section>
+
+      <section id="view-calendar" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-calendar" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-calendar" /></svg></span>
+            <span data-i18n="cal.heading">Islami calendar</span>
+          </h2>
+        </div>
+        <div id="calendar-root"></div>
+      </section>
+
+      <section id="view-prayer" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-prayer" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
+            <span data-i18n="prayer.heading">Namaz ke auqaat</span>
+          </h2>
+        </div>
+        <div id="prayer-root"></div>
+      </section>
+
+      <section id="view-badges" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-badges" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-khatam" /></svg></span>
+            <span data-i18n="badges.heading">Inaam</span>
+          </h2>
+        </div>
+        <div id="badges-root"></div>
+      </section>
+    </main>
+
+    <div id="welcome" class="welcome" hidden>
+      <div class="welcome-card">
+        <img class="welcome-logo" src="icon-96.png" alt="" width="88" height="88" />
+        <h2 data-i18n="welcome.title">Khush aamdeed</h2>
+        <p class="welcome-sub" data-i18n="welcome.sub">
+          Bayyin — aap ki tilawat ka apna check, poori tarah phone par.
+        </p>
+        <ul class="welcome-points">
+          <li data-i18n="welcome.p1">Aya ya page chunein, Record dabaein aur padhein.</li>
+          <li data-i18n="welcome.p2">Har lafz par rang — sahi, qareeb, galat, chhoot gaya.</li>
+          <li data-i18n="welcome.p3">Sab kuch device par — na server, na account.</li>
+        </ul>
+        <label class="field">
+          <span data-i18n="welcome.lang">Zubaan</span>
+          <select data-lang-select id="welcome-lang">
+            <option value="roman">Roman Urdu</option>
+            <option value="ur">اردو</option>
+            <option value="en">English</option>
+          </select>
+        </label>
+        <button type="button" id="welcome-start" class="btn primary wide" data-i18n="welcome.start">
+          Shuru karein
+        </button>
+        <p class="welcome-foot">© 2026 Fauzan Gorme · Bayyin (بيّن)</p>
+      </div>
+    </div>
+
+    <nav class="bottom-nav" id="bottom-nav" aria-label="Main">
+      <button type="button" class="bn-item" data-nav="home">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 15.2L16 5l12 10.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 13.4V26a1 1 0 0 0 1 1h5.5v-7h5v7H24a1 1 0 0 0 1-1V13.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span data-i18n="nav.home">Home</span>
+      </button>
+      <button type="button" class="bn-item" data-nav="reader">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-mushaf" /></svg>
+        <span data-i18n="nav.quran">Quran</span>
+      </button>
+      <button type="button" class="bn-item" data-nav="dua">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-dua" /></svg>
+        <span data-i18n="nav.dua">Duaein</span>
+      </button>
+      <button type="button" class="bn-item" data-nav="tasbeeh">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-tasbeeh" /></svg>
+        <span data-i18n="nav.tasbeeh">Tasbeeh</span>
+      </button>
+      <button type="button" class="bn-item" data-nav="daily">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-daily" /></svg>
+        <span data-i18n="nav.noor">Naiki</span>
+      </button>
+    </nav>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <script type="module" src="install.js"></script>
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

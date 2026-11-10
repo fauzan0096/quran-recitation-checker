@@ -1,0 +1,58 @@
+Bayyin (بيّن) — on-device Quran recitation checker
+
+Copyright (c) 2026 Fauzan Gorme. All rights reserved.
+
+This software, its source code, user interface, visual theme, illustrations,
+app icon and the name "Bayyin" / "بيّن" ("the Software") are the property of the
+copyright holder and are protected by copyright law and international
+conventions.
+
+1. What is not allowed
+
+   Without prior written permission from the copyright holder you may not:
+
+   a. copy, publish, distribute, upload, sell, rent or sublicense the Software
+      or any substantial part of it;
+   b. modify, translate, adapt, reverse engineer or create derivative works
+      from the Software;
+   c. use the Software, its code, its icon, or the name "Bayyin" / "بيّن" (or a
+      confusingly similar name or icon) in another app, website, product or
+      store listing;
+   d. remove or alter any copyright, attribution or licence notice in the
+      Software.
+
+2. What is allowed
+
+   a. Running the officially published app for personal, non-commercial use.
+   b. Keeping a private copy of this repository for your own reference, as long
+      as it is not published, shared or distributed.
+
+3. Third-party parts are not covered by this licence
+
+   The Quran text is a separate work: Tanzil Quran Text, Copyright (C) 2007-2026
+   Tanzil Project, licensed under CC BY 3.0, and it may not be changed. The
+   speech-recognition models, Transformers.js, ONNX Runtime and Whisper remain
+   under their own licences (Apache-2.0 / MIT). See LICENSES.md for the full
+   notices. Nothing in this licence grants rights over those parts, and those
+   licences grant no rights over the Software.
+
+4. No warranty
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+   IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+   COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY ARISING
+   FROM THE SOFTWARE OR ITS USE.
+
+5. Permission requests
+
+   For any use not described above, ask in writing:
+   https://github.com/fauzan0096/quran-recitation-checker
+
+------------------------------------------------------------
+
+Khulasa (Roman Urdu): yeh app aur uska code, design, icon aur naam
+"Bayyin (بيّن)" © 2026 Fauzan Gorme ke hain. Isay copy karna, badalna, kisi aur
+app ya website me dalna, ya bechna mana hai. Sirf app ko apne istemal ke liye
+chalana jaiz hai. Quran ka text Tanzil ka hai (CC BY 3.0) aur usay badalna mana
+hai — woh is licence ke andar nahi aata. Poori tafseel upar angrezi me hai.
