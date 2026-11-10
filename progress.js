@@ -161,6 +161,28 @@ export function stats() {
   };
 }
 
+/** How many ayaat were checked, how many were perfect, and the average score. */
+export function scoreStats() {
+  const store = load();
+  let checked = 0;
+  let perfect = 0;
+  let strong = 0;
+  let sum = 0;
+  for (const item of Object.values(store.ayat)) {
+    if (!item || typeof item !== 'object' || typeof item.score !== 'number') continue;
+    checked += 1;
+    sum += item.score;
+    if (item.score >= 100) perfect += 1;
+    if (item.score >= 95) strong += 1;
+  }
+  return {
+    checked,
+    perfect,
+    strong,
+    average: checked ? Math.round(sum / checked) : 0,
+  };
+}
+
 /** 'star' | 'ok' | 'redo' → sorted aya references. */
 export function listOf(kind) {
   const store = load();

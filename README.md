@@ -425,6 +425,22 @@ Data sirf `tc.report` me device par rehta hai (`premium-tools.js`); check ke waq
   chalta hai. **Tiny** model chun kar inference aur bhi tez ho jata hai (accuracy kam).
 - Check ke doran status me **kitne second lag rahe hain** aur **audio kitni der ka hai** dikhta hai.
 
+## Inaam (badges) — `badges.js`
+
+More → **Inaam**. Har badge pehle se mehfooz data se banta hai (`progress.js` ke scores aur
+✓ marks, streak aur practice days) — naya kuch track nahi hota:
+
+- **Quran ka safar**: pehla qadam, 100 ayaat, chauthai, **aadha**, teen chauthai, poora Quran.
+- **Accuracy**: pehli be-ghalti (100%), 25 be-ghalti, "saaf talaawat" (20 checks ke baad ausat 90%).
+- **Surah**: pehli surah mukammal, 5 surahs mukammal (saari ayaat ✓).
+- **Consistency**: 7 din lagataar, 30 din lagataar, 30 din ka safar.
+
+Naya badge milne par ek **celebration overlay** aata hai — bara gold medallion, sparkles,
+"Mubarak ho!" aur ek button. Screen par upar aap ki Quran progress ek ring me dikhti hai,
+aur har badge ek **gold coin** ki tarah (earned = chamakta hua, locked = halka aur progress
+bar ke saath). Sab **free** hai (premium nahi). Data `tc.badges` me sirf earned ids ke
+tor par rehta hai.
+
 ## Play Store billing — `billing.js`
 
 Browser paisa nahi le sakta. Play par app ko TWA (Bubblewrap) ya Capacitor jaisi shell me

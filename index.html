@@ -546,6 +546,11 @@
             <strong data-i18n="more.prayer">Namaz ke auqaat</strong>
             <span data-i18n="more.prayerHint">Fajr se Isha tak, aap ki jagah ke hisaab se</span>
           </button>
+          <button type="button" class="more-card" id="more-badges">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-khatam" /></svg></span>
+            <strong data-i18n="badges.more">Inaam</strong>
+            <span data-i18n="badges.moreHint">Badges — aadha Quran, be-ghalti, streak</span>
+          </button>
         </div>
 
         <div class="home-noor-head">
@@ -664,6 +669,17 @@
           </h2>
         </div>
         <div id="prayer-root"></div>
+      </section>
+
+      <section id="view-badges" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-badges" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-khatam" /></svg></span>
+            <span data-i18n="badges.heading">Inaam</span>
+          </h2>
+        </div>
+        <div id="badges-root"></div>
       </section>
     </main>
 

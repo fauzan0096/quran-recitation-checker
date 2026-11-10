@@ -46,6 +46,7 @@ import {
   restore as billingRestore,
 } from './billing.js';
 import { download as backupDownload, restore as backupRestore } from './backup.js';
+import { mountBadges, checkBadges, celebrate } from './badges.js';
 import { mountTasbeeh } from './tasbeeh-v2.js';
 import { mountReport, recordReport } from './premium-tools.js';
 import { mountDuas } from './duas.js';
@@ -147,6 +148,14 @@ function paintErrors() {
   const list = readErrors();
   els.errorLog.textContent = list.length ? list.join('\n') : t('errors.none');
 }
+
+/** After a check or a ✓ mark, tell the person about a badge just earned. */
+function announceBadges() {
+  const fresh = checkBadges();
+  if (!fresh.length) return;
+  celebrate(fresh);
+  if (els.viewBadges && !els.viewBadges.hidden) moreViews.badges?.refresh();
+}
 let toastTimer = null;
 const bootAt = Date.now();
 let splashGone = false;
@@ -164,6 +173,7 @@ const moreViews = {
   hztest: null,
   report: null,
   prayer: null,
+  badges: null,
 };
 
 init();
@@ -334,6 +344,7 @@ function cacheElements() {
     'more-hztest', 'view-hztest', 'hztest-root', 'close-hztest',
     'more-report', 'view-report', 'report-root', 'close-report', 'open-report',
     'more-prayer', 'view-prayer', 'prayer-root', 'close-prayer',
+    'more-badges', 'view-badges', 'badges-root', 'close-badges',
     'backup-export', 'backup-import', 'backup-file', 'error-log', 'errors-copy',
     'view-premium', 'close-premium', 'premium-root', 'open-premium', 'premium-status',
     'home-date', 'home-noor', 'view-dua', 'close-dua', 'dua-root', 'bottom-nav',
@@ -717,6 +728,7 @@ function markChip(key) {
     cycleMark(key);
     paint();
     renderProgress();
+    announceBadges();
   });
   return chip;
 }
@@ -1267,6 +1279,7 @@ async function checkTarget(id, keys, blob) {
     recordReport(report);
     if (verses.length) setResume(keyOf(verses[0].surah, verses[0].aya));
     recordCheck();
+    announceBadges();
     renderPremiumCard();
 
     state.pageAlignment =
@@ -1565,6 +1578,8 @@ function ensureMounted(name) {
     });
   } else if (name === 'prayer') {
     moreViews.prayer = mountPrayer(els.prayerRoot);
+  } else if (name === 'badges') {
+    moreViews.badges = mountBadges(els.badgesRoot);
   }
 }
 
@@ -1590,6 +1605,7 @@ function setView(name) {
     hztest: els.viewHztest,
     report: els.viewReport,
     prayer: els.viewPrayer,
+    badges: els.viewBadges,
     premium: els.viewPremium,
   };
   if (currentView === 'qibla' && name !== 'qibla') moreViews.qibla?.stop();
@@ -1613,11 +1629,13 @@ function setView(name) {
   if (name === 'hztest') ensureMounted('hztest');
   if (name === 'report') ensureMounted('report');
   if (name === 'prayer') ensureMounted('prayer');
+  if (name === 'badges') ensureMounted('badges');
   if (name === 'khatam') moreViews.khatam?.refresh();
   if (name === 'hifz') moreViews.hifz?.refresh();
   if (name === 'hztest') moreViews.hztest?.refresh();
   if (name === 'report') moreViews.report?.refresh();
   if (name === 'prayer') moreViews.prayer?.refresh();
+  if (name === 'badges') moreViews.badges?.refresh();
   if (name === 'home') paintHomeTodo();
   if (name === 'settings') {
     renderPremiumCard();
@@ -2267,6 +2285,7 @@ function wireEvents() {
   go(els.moreHztest, 'hztest');
   go(els.moreReport, 'report');
   go(els.morePrayer, 'prayer');
+  go(els.moreBadges, 'badges');
   go(els.homeOpenQuran, 'reader');
   go(els.homeDua, 'dua');
   go(els.moreDaily, 'daily');
@@ -2284,6 +2303,7 @@ function wireEvents() {
     els.closeHztest,
     els.closeReport,
     els.closePrayer,
+    els.closeBadges,
     els.closePremium,
   ]) {
     go(closer, 'home');

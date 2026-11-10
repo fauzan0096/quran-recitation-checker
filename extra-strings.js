@@ -57,6 +57,15 @@ addStrings('roman', {
   'model.accurate': 'Behtar accuracy (deri zyada)',
   'model.speedHint':
     'Default tez hai. "Behtar accuracy" par har check thoda deri lagta hai, natija behtar ho sakta hai.',
+  'badges.heading': 'Inaam',
+  'badges.more': 'Inaam',
+  'badges.moreHint': 'Badges — aadha Quran, be-ghalti, streak',
+  'badges.progress': '{done} / {total} ayaat checked',
+  'badges.earned': '{earned} / {total} badges mile',
+  'badges.done': 'Mil gaya',
+  'badges.celebrate': 'Mubarak ho! Naya inaam mila.',
+  'badges.celebrateMore': '+{n} aur badges bhi!',
+  'badges.ok': 'Shukriya',
 });
 
 addStrings('ur', {
@@ -110,6 +119,15 @@ addStrings('ur', {
   'model.accurate': 'بہتر درستگی (دیری زیادہ)',
   'model.speedHint':
     'ڈیفالٹ تیز ہے۔ "بہتر درستگی" پر ہر چیک تھوڑی دیر لیتا ہے، نتیجہ بہتر ہو سکتا ہے۔',
+  'badges.heading': 'انعام',
+  'badges.more': 'انعام',
+  'badges.moreHint': 'بیجز — آدھا قرآن، بے غلطی، مسلسل دن',
+  'badges.progress': '{done} / {total} آیات چیک ہوئیں',
+  'badges.earned': '{earned} / {total} بیجز ملے',
+  'badges.done': 'مل گیا',
+  'badges.celebrate': 'مبارک ہو! نیا انعام ملا۔',
+  'badges.celebrateMore': '+{n} اور بیجز بھی!',
+  'badges.ok': 'شکریہ',
 });
 
 addStrings('en', {
@@ -163,4 +181,13 @@ addStrings('en', {
   'model.accurate': 'Better accuracy (slower)',
   'model.speedHint':
     'The default is fast. "Better accuracy" makes every check slower but may improve the result.',
+  'badges.heading': 'Awards',
+  'badges.more': 'Awards',
+  'badges.moreHint': 'Badges — half the Quran, perfect ayas, streak',
+  'badges.progress': '{done} / {total} ayaat checked',
+  'badges.earned': '{earned} / {total} badges earned',
+  'badges.done': 'Earned',
+  'badges.celebrate': 'Congratulations! New badge earned.',
+  'badges.celebrateMore': '+{n} more as well!',
+  'badges.ok': 'Thanks',
 });
