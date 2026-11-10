@@ -51,6 +51,7 @@ import {
   reciters,
   current as currentQari,
   setReciter,
+  play as playQari,
   toggle as toggleQari,
   isPlaying as isQariPlaying,
   stop as stopQari,
@@ -414,7 +415,7 @@ function cacheElements() {
     'picker-surah', 'picker-page', 'picker-search',
     'surah-select', 'mushaf-select', 'page-prev', 'page-next', 'page-number', 'page-total',
     'search-input', 'search-go', 'search-results',
-    'list-title', 'global-status', 'range-error', 'aya-list',
+    'list-title', 'global-status', 'range-error', 'aya-list', 'qari-all',
     'list-footer', 'load-more', 'share-app', 'model-select', 'load-model',
     'remind-root', 'qari-select',
     'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
@@ -500,6 +501,47 @@ function fillQaris() {
 /** The daily reminder card lives in Settings. */
 function mountReminderCardUI() {
   if (els.remindRoot) mountReminderCard(els.remindRoot);
+}
+
+/** One qari button at the top of the reader plays the whole list, aya by aya. */
+let qariQueue = null;
+
+function paintQariAll() {
+  if (!els.qariAll) return;
+  const on = Boolean(qariQueue);
+  els.qariAll.textContent = on ? t('qari.stopAll') : t('qari.playAll');
+  els.qariAll.classList.toggle('is-on', on);
+}
+
+function stopAyaAudio() {
+  qariQueue = null;
+  stopQari();
+  paintQariAll();
+}
+
+function playAll() {
+  if (qariQueue) {
+    stopAyaAudio();
+    return;
+  }
+  const list = state.verses.map((verse) => [verse.surah, verse.aya]);
+  if (!list.length) return;
+
+  qariQueue = { list, index: 0 };
+  paintQariAll();
+
+  const next = () => {
+    if (!qariQueue) return;
+    if (qariQueue.index >= qariQueue.list.length) {
+      stopAyaAudio();
+      return;
+    }
+    const [surah, aya] = qariQueue.list[qariQueue.index];
+    qariQueue.index += 1;
+    playQari(surah, aya, { onEnd: next, onError: next });
+  };
+
+  next();
 }
 
 function restoreSelection() {
@@ -1013,6 +1055,8 @@ function hearButton(key) {
   if (!surah || !aya) return btn;
 
   btn.addEventListener('click', () => {
+    qariQueue = null;
+    paintQariAll();
     toggleQari(surah, aya, {
       onStop: () => setHearLabel(btn, false),
       onEnd: () => setHearLabel(btn, false),
@@ -1818,9 +1862,9 @@ function setView(name) {
   if (currentView === 'tasbeeh' && name !== 'tasbeeh') moreViews.tasbeeh?.stop();
   if (currentView === 'dua' && name !== 'dua') moreViews.duas?.stop();
   if (currentView === 'hztest' && name !== 'hztest') moreViews.hztest?.stop();
-  if (currentView === 'reader' && name !== 'reader') stopQari();
-  if (currentView === 'report' && name !== 'report') stopQari();
-  if (currentView === 'murajaa' && name !== 'murajaa') stopQari();
+  if (currentView === 'reader' && name !== 'reader') stopAyaAudio();
+  if (currentView === 'report' && name !== 'report') stopAyaAudio();
+  if (currentView === 'murajaa' && name !== 'murajaa') stopAyaAudio();
   currentView = name;
 
   for (const [key, element] of Object.entries(sections)) {
@@ -2425,6 +2469,7 @@ function wireEvents() {
   });
 
   els.searchGo.addEventListener('click', runSearch);
+  if (els.qariAll) els.qariAll.addEventListener('click', playAll);
   els.searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();
