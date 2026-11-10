@@ -508,11 +508,21 @@ window.BayyinBilling = {
 
 Jab tak bridge nahi hai, paywall saaf kehta hai ke subscription Play app me milti hai
 (koi demo button nahi). Bridge hone par plan card `billing.buy()` chalata hai, "Purchase
-restore karein" aur "Play Store me manage karein" buttons khud aa jate hain.
+restore karein" aur "Play Store me manage karein" buttons khud aa jate hain, aur app
+**launch par `restore()`** khud chala kar renewal/cancel pick up karti hai
+(`app.js` → `syncSubscription()`).
+
+Play build me **in-app 3-din trial band** rehta hai (`premium.js` → `playBuild()`):
+trial wahan Play ke "free trial offer" se aata hai, taake Play ki digital-goods policy
+ki khilaf-warzi na ho. Browser/preview me purana 3-din trial jaisa hai.
 
 Play policy: digital subscription sirf Play Billing se — is liye `assetlinks.json` (TWA)
 aur native shell bina release nahi ho sakta. Verify server-side (RTDN) karna behtar hai;
 client par `activate()` sirf verified jawab ke baad chalta hai.
+
+**Poora step-by-step release plan: [`PLAYSTORE.md`](PLAYSTORE.md)** (wrapper, asset
+links, subscription products + per-country prices, billing bridge ka Kotlin skeleton,
+verification Worker, testing aur rollout).
 
 ## Namaz ke auqaat — `prayer.js`
 

@@ -216,6 +216,24 @@ async function init() {
   startReminderLoop();
   handleLaunch();
   autoLoadModel();
+  syncSubscription();
+}
+
+/**
+ * A Play build: ask the store once at launch so a renewed (or lapsed)
+ * subscription is picked up without the person opening the paywall.
+ */
+function syncSubscription() {
+  if (!billingAvailable()) return;
+  billingRestore()
+    .then((result) => {
+      if (!result || !result.ok) return;
+      renderPremiumCard();
+      if (els.viewPremium && !els.viewPremium.hidden) renderPremium();
+    })
+    .catch(() => {
+      /* the paywall's Restore button is still there */
+    });
 }
 
 /** Share target, web+bayyin: links and opened files all end in the Search tab. */

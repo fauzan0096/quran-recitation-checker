@@ -160,12 +160,23 @@ function store() {
   };
 }
 
+/** A Play build sets this bridge before the page loads (see billing.js). */
+function playBuild() {
+  try {
+    return Boolean(window.BayyinBilling);
+  } catch (error) {
+    return false;
+  }
+}
+
 /** Everything the UI and the gates need. */
 export function premiumState() {
   const data = store();
   const active = data.paid && (!data.expires || data.expires > Date.now());
   const days = Math.floor((Date.now() - data.since) / 86400000);
-  const trial = !active && days < TRIAL_DAYS;
+  // On Play, the 3-day trial is a Play "free trial" offer on the subscription.
+  // The app must not hand out Premium on its own there (Play policy).
+  const trial = !active && !playBuild() && days < TRIAL_DAYS;
   const daysLeft = Math.max(0, TRIAL_DAYS - days);
   const limit = active || trial ? Infinity : FREE_CHECKS_PER_DAY;
   const used = data.checks.count;
