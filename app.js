@@ -51,6 +51,8 @@ import {
   reciters,
   current as currentQari,
   setReciter,
+  repeatCount,
+  setRepeatCount,
   play as playQari,
   toggle as toggleQari,
   isPlaying as isQariPlaying,
@@ -130,6 +132,7 @@ const state = {
   levelState: '',
   busyId: null,
   micChecking: false,
+  recordings: new Map(), // aya key -> object URL of the person's own recording
 };
 
 const els = {};
@@ -417,7 +420,7 @@ function cacheElements() {
     'search-input', 'search-go', 'search-results',
     'list-title', 'global-status', 'range-error', 'aya-list', 'qari-all',
     'list-footer', 'load-more', 'share-app', 'model-select', 'load-model',
-    'remind-root', 'qari-select',
+    'remind-root', 'qari-select', 'qari-repeat',
     'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
     'accurate-mode',
     'mic-check', 'mic-check-output', 'player', 'tajweed',
@@ -496,6 +499,11 @@ function fillQaris() {
   }
   els.qariSelect.value = currentQari();
   els.qariSelect.addEventListener('change', () => setReciter(els.qariSelect.value));
+
+  if (els.qariRepeat) {
+    els.qariRepeat.value = String(repeatCount());
+    els.qariRepeat.addEventListener('change', () => setRepeatCount(Number(els.qariRepeat.value)));
+  }
 }
 
 /** The daily reminder card lives in Settings. */
@@ -516,6 +524,7 @@ function paintQariAll() {
 function stopAyaAudio() {
   qariQueue = null;
   stopQari();
+  stopMyAudio();
   paintQariAll();
 }
 
@@ -524,7 +533,10 @@ function playAll() {
     stopAyaAudio();
     return;
   }
-  const list = state.verses.map((verse) => [verse.surah, verse.aya]);
+  const times = repeatCount();
+  const list = state.verses.flatMap((verse) =>
+    Array.from({ length: times }, () => [verse.surah, verse.aya])
+  );
   if (!list.length) return;
 
   qariQueue = { list, index: 0 };
@@ -782,7 +794,10 @@ function ayaCard(verse) {
   share.textContent = '↗';
   share.addEventListener('click', () => shareAya(verse));
 
-  head.append(badge, starButton(key), hearButton(key), share);
+  const mine = myAudioButton(key);
+  head.append(badge, starButton(key), hearButton(key));
+  if (mine) head.appendChild(mine);
+  head.appendChild(share);
 
   const text = document.createElement('div');
   text.className = 'aya-text';
@@ -952,7 +967,10 @@ function renderMushafPage() {
       status.className = 'aya-status';
       status.dataset.role = 'status';
 
-      bar.append(label, record, starButton(key), hearButton(key), markChip(key), share, clear, status);
+      bar.append(label, record, starButton(key), hearButton(key));
+      const mine = myAudioButton(key);
+      if (mine) bar.appendChild(mine);
+      bar.append(markChip(key), share, clear, status);
       page.appendChild(bar);
     }
   }
@@ -1073,6 +1091,59 @@ function hearButton(key) {
 function setHearLabel(btn, on) {
   btn.textContent = on ? '⏹' : '🔊';
   btn.classList.toggle('is-on', on);
+}
+
+/** Play back the person's own recording of this aya — the proof of what they said. */
+let myAudio = null;
+
+function stopMyAudio() {
+  if (myAudio) {
+    try {
+      myAudio.pause();
+    } catch (error) {
+      /* already gone */
+    }
+    myAudio = null;
+  }
+  document.querySelectorAll('.aya-mine.is-on').forEach((btn) => {
+    btn.classList.remove('is-on');
+    btn.textContent = '🎧';
+  });
+}
+
+function playMyAudio(key, btn) {
+  const url = state.recordings.get(key);
+  if (!url) return;
+
+  if (btn.classList.contains('is-on')) {
+    stopMyAudio();
+    return;
+  }
+  stopAyaAudio();
+  stopMyAudio();
+
+  myAudio = new Audio(url);
+  btn.classList.add('is-on');
+  btn.textContent = '⏸';
+  myAudio.addEventListener('ended', stopMyAudio);
+  const started = myAudio.play();
+  if (started && typeof started.catch === 'function') {
+    started.catch(() => {
+      stopMyAudio();
+      toast(t('mine.failed'));
+    });
+  }
+}
+
+function myAudioButton(key) {
+  if (!state.recordings.has(key)) return null;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'icon-btn small aya-mine';
+  btn.title = t('mine.listen');
+  btn.textContent = '🎧';
+  btn.addEventListener('click', () => playMyAudio(key, btn));
+  return btn;
 }
 
 function setQariLabel(btn, on) {
@@ -1387,6 +1458,15 @@ async function finishRecording(byItself) {
     setStatus(current.id, t('status.empty'), 'error');
     return;
   }
+
+  // Keep this recording so the person can hear exactly what the app heard.
+  const url = URL.createObjectURL(blob);
+  for (const key of current.keys) {
+    const old = state.recordings.get(key);
+    if (old && old !== url) URL.revokeObjectURL(old);
+    state.recordings.set(key, url);
+  }
+
   await checkTarget(current.id, current.keys, blob);
 }
 

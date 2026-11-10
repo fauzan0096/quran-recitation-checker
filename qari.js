@@ -68,6 +68,28 @@ export function reciters() {
 
 const pad = (n) => String(n).padStart(3, '0');
 
+/** How many times a single aya is played in a row (1, 2 or 3). */
+const REPEAT_KEY = 'tc.qariRepeat';
+
+export function repeatCount() {
+  try {
+    const n = Number(localStorage.getItem(REPEAT_KEY));
+    return n === 2 || n === 3 ? n : 1;
+  } catch (error) {
+    return 1;
+  }
+}
+
+export function setRepeatCount(n) {
+  const value = n === 2 || n === 3 ? n : 1;
+  try {
+    localStorage.setItem(REPEAT_KEY, String(value));
+  } catch (error) {
+    /* private mode */
+  }
+  return value;
+}
+
 /** The aya's number in the whole Quran (1..6236), 0 while the text is loading. */
 function globalIndex(surah, aya) {
   let index = aya;
