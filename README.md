@@ -495,8 +495,16 @@ paywall khulta hai (gate `setView()` me, hifz / hztest / report ke saath).
 
 ## Play Store billing — `billing.js`
 
-Browser paisa nahi le sakta. Play par app ko TWA (Bubblewrap) ya Capacitor jaisi shell me
-chalna hoga jo ek chhota bridge de:
+Browser paisa nahi le sakta. Play par app **TWA** (PWABuilder package) me chalti hai — wahan
+billing Chrome ke **Digital Goods API** se hoti hai (sirf Play se install ki gayi TWA me):
+
+```js
+const service = await window.getDigitalGoodsService('https://play.google.com/billing');
+// getDetails -> PaymentRequest(https://play.google.com/billing) -> acknowledge(token, 'repeatable')
+```
+
+`billing.js` me dono raste hain: Digital Goods API (TWA) aur `window.BayyinBilling` bridge
+(agar kabhi Capacitor/native shell use ho):
 
 ```js
 window.BayyinBilling = {
@@ -506,11 +514,11 @@ window.BayyinBilling = {
 };
 ```
 
-Jab tak bridge nahi hai, paywall saaf kehta hai ke subscription Play app me milti hai
-(koi demo button nahi). Bridge hone par plan card `billing.buy()` chalata hai, "Purchase
-restore karein" aur "Play Store me manage karein" buttons khud aa jate hain, aur app
-**launch par `restore()`** khud chala kar renewal/cancel pick up karti hai
-(`app.js` → `syncSubscription()`).
+`available()` tabhi true hota hai jab bridge ho ya page Play-installed TWA me chale
+(`document.referrer` = `android-app://…`); warna paywall saaf kehta hai ke subscription
+Play app me milti hai. Plan card `billing.buy()` chalata hai, "Purchase restore karein" aur
+"Play Store me manage karein" buttons khud aa jate hain, aur app **launch par `restore()`**
+khud chala kar renewal/cancel pick up karti hai (`app.js` → `syncSubscription()`).
 
 Play build me **in-app 3-din trial band** rehta hai (`premium.js` → `playBuild()`):
 trial wahan Play ke "free trial offer" se aata hai, taake Play ki digital-goods policy
@@ -520,9 +528,9 @@ Play policy: digital subscription sirf Play Billing se — is liye `assetlinks.j
 aur native shell bina release nahi ho sakta. Verify server-side (RTDN) karna behtar hai;
 client par `activate()` sirf verified jawab ke baad chalta hai.
 
-**Poora step-by-step release plan: [`PLAYSTORE.md`](PLAYSTORE.md)** (wrapper, asset
-links, subscription products + per-country prices, billing bridge ka Kotlin skeleton,
-verification Worker, testing aur rollout).
+**Poora step-by-step release plan: [`PLAYSTORE.md`](PLAYSTORE.md)** (Play Console account,
+wrapper, asset links, subscription products + per-country prices, billing bridge ka Kotlin
+skeleton, verification Worker, testing aur rollout).
 
 ## Namaz ke auqaat — `prayer.js`
 

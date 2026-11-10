@@ -1,18 +1,37 @@
 # Bayyin — Play Store release, step by step
 
-PWA approval ho gayi aur key mil gayi — ab app ko Play par **subscription ke saath**
-ship karne ke steps. Har step ke saath likha hai: kaun karta hai (aap / main) aur
-repo me kya badalta hai.
+PWA taiyar hai. Ab app ko Play par **subscription ke saath** ship karne ke steps — shuruaat
+**Play Console developer account** se. Har step ke saath likha hai: kaun karta hai
+(aap / main) aur repo me kya badalta hai.
 
-> Pehle ek cheez clear karein: "key" se aap ka matlab kya hai?
-> 1. **App signing key / keystore** (PWA Builder ya Play App Signing) — build sign karne ke liye.
-> 2. **Play Developer API service-account JSON** — purchase verify karne ke liye (RTDN).
-> 3. **PWA Builder ka "package"** — sirf app package banane ke liye.
-> Teeno ke kaam alag hain; neeche teeno ki jagah batayi gayi hai.
+> "key" se aap ka matlab kya hai, ye baad me clear karenge:
+> 1. **App signing key / keystore** — build sign karne ke liye.
+> 2. **Developer API service-account JSON** — purchase verify karne ke liye (RTDN).
+> 3. **Upload key** — Play par AAB upload karne ke liye.
+> Teeno ka kaam alag hai; neeche teeno ki jagah batayi gayi hai.
 
 ---
 
-## 0. Jo pehle se maujood hai (repo me)
+## 0. Play Console developer account (pehla qadam)
+
+1. **Google account** chunein jo hamesha rahe (isi se Play Console bandhega). Ek naya
+   account banana behtar hai: `bayyin.app@gmail.com` jaisa.
+2. **https://play.google.com/console/signup** kholen → developer name, email, phone.
+3. **One-time fee $25** (India me lagbhag ₹2,100 + tax). Card chahiye; ye ek dafa hi hai.
+4. **Identity verification**: ID (Aadhaar / passport / DL) + address proof. 1–3 din.
+5. **Account type**: **Personal** (aasaan) ya **Organization** (D-U-N-S number chahiye).
+   Personal account par production se pehle **12 testers × 14 din** closed testing zaroori hai.
+6. **Payments profile** (subscription bechne ke liye): Play Console → Setup → Payments
+   profile → bank account, PAN, address. Ye baad me bhi ho sakta hai, magar subscription
+   product tab tak publish nahi hota.
+
+**Account approve hone tak** ye kaam ho sakte hain (Play Console ki zaroorat nahi):
+wrapper + signed AAB, asset links ka template, 1080×1920 screenshots, feature graphic,
+store listing text aur billing bridge ka code.
+
+---
+
+## 0b. Jo pehle se maujood hai (repo me)
 
 | Cheez | File |
 | --- | --- |
@@ -29,24 +48,24 @@ Play build par app ab khud:
 
 ---
 
-## 1. Wrapper chunein — Capacitor (recommended), TWA nahi
+## 1. Package — PWABuilder ka TWA (jo ban chuka hai)
 
-TWA (Bubblewrap) me Play Billing seedha nahi lagta; Google ki policy bhi digital goods
-ke liye Play Billing maangti hai. Is liye **Capacitor** shell:
+PWABuilder se jo package bana wo ek **Trusted Web Activity (TWA)** hai, aur us ke saath ek
+**signing keystore** mila (`signing.keystore` + `signing-key-info.txt`).
 
-```
-bayyin-android/
-  android/app/src/main/java/app/bayyin/MainActivity.kt   <- billing bridge
-  capacitor.config.json                                  <- server.url = https://<aapka-preview-domain>
-```
+- **Key sambhal kar rakhein**: `signing.keystore` aur us ke passwords kabhi git ya public
+  link me na jayein. Agli AAB usi key se sign honi chahiye, warna Play update reject karta hai.
+- **Package name (final): `app.bayyin`** — Play par ek dafa upload hone ke baad badal nahi sakta.
+- **TWA = live site**: app ka HTML/JS/CSS seedha site se aata hai, is liye naye features
+  bhejne ke liye naya AAB release nahi chahiye. Sirf native/manifest/billing tab badalta hai
+  jab package dobara banayein.
+- **Billing**: TWA me native bridge nahi chalta — Play **Digital Goods API** deta hai
+  (Chrome, sirf Play se install ki gayi TWA me). `billing.js` me ab dono raste hain:
+  `window.BayyinBilling` (agar kabhi native shell use karein) aur Digital Goods API (TWA).
 
-- `capacitor.config.json` me `server.url` aapki live site (preview link ya custom domain)
-  rakhein, warna app khali WebView dikhegi.
-- Package name chunein, e.g. `app.bayyin` (aage `assetlinks.json` me wahi likhna hai).
+## 2. `assetlinks.json` (TWA ke liye zaroori)
 
-## 2. `assetlinks.json` (TWA ke liye; Capacitor me optional)
-
-Agar TWA hi use karna ho to `https://<domain>/.well-known/assetlinks.json`:
+`https://<aapki-site>/.well-known/assetlinks.json`:
 
 ```json
 [
@@ -61,8 +80,11 @@ Agar TWA hi use karna ho to `https://<domain>/.well-known/assetlinks.json`:
 ]
 ```
 
-**Mujhe do:** package name + SHA-256 fingerprint (Play Console → App integrity →
-App signing key certificate). Main file bana ke repo me daal dunga.
+SHA-256 `signing-key-info.txt` me bhi hota hai (`SHA-256 fingerprint:`), aur PWABuilder
+anta mein ye file khud bhi de deta hai. Na ho to:
+`keytool -list -v -keystore signing.keystore -alias android` se nikal sakte hain.
+
+**Mujhe do:** SHA-256 fingerprint — main file bana dunga aur batadunga kahan host karni hai.
 
 ## 3. Play Console — app ki tayyari
 
@@ -92,19 +114,30 @@ App signing key certificate). Main file bana ke repo me daal dunga.
 - Base plan par **free trial offer** banayein: **3 din**, naye subscribers ke liye.
 - Base plan ko **auto-renewing** rakhein; "Grace period" 3 din, "Account hold" on.
 
-## 5. Native billing bridge (`window.BayyinBilling`)
+## 5. Billing — TWA me Digital Goods API
 
-`billing.js` yahi contract maangta hai:
+TWA me native bridge nahi hota, is liye Chrome ka **Digital Goods API** use hota hai.
+`billing.js` me ye pehle se laga hua hai (`twaBuild()` detect karta hai):
 
 ```js
-window.BayyinBilling = {
-  purchase(sku),  // -> { ok, token }  (verify ke BAAD ok)
-  restore(),      // -> { ok, sku, token }
-  manage(),       // Play subscription management screen
-};
+const service = await window.getDigitalGoodsService('https://play.google.com/billing');
+const [plan] = await service.getDetails(['bayyin_pro_monthly']);
+const pay = new PaymentRequest(
+  [{ supportedMethods: 'https://play.google.com/billing', data: { sku: 'bayyin_pro_monthly' } }],
+  { total: { label: plan.title, amount: { currency: plan.price.currency, value: plan.price.value } } }
+);
+const res = await pay.show();
+await service.acknowledge(res.details.purchaseToken, 'repeatable');
 ```
 
-Kotlin me (Play Billing Library 7.x) skeleton:
+- Ye sirf **Play se install ki gayi TWA** me chalta hai (browser me nahi).
+- `restore()` = `service.listPurchases()`; `manage()` = Play subscription page.
+- Purchase token **server se verify** hona chahiye — `billing.js` ka `VERIFY_URL` release se
+  pehle set karein (Step 6), warna koi bhi token se Premium le sakta hai.
+
+### Agar kabhi native shell use karein (Capacitor)
+
+Wahan `window.BayyinBilling` bridge isi shape me chahiye (Kotlin skeleton):
 
 ```kotlin
 class BillingBridge(private val activity: Activity) {
@@ -114,8 +147,8 @@ class BillingBridge(private val activity: Activity) {
     val params = BillingFlowParams.newBuilder()
       .setProductDetailsParamsList(listOf(/* productDetails for sku */)).build()
     activity.runOnUiThread { billing.launchBillingFlow(activity, params) }
-    // onPurchasesUpdated -> token server ko bhejo -> verify -> webView.evaluateJavascript(
-    //   "window.__bayyinBillingOk && window.__bayyinBillingOk('$sku')")
+    // onPurchasesUpdated -> token server ko bhejo -> verify ->
+    //   "window.__bayyinBillingOk && window.__bayyinBillingOk('$sku')"
   }
 
   @JavascriptInterface fun restore() { /* queryPurchasesAsync(SUBS) -> ok/sku/token */ }
@@ -161,7 +194,7 @@ Play se aane wale token ko yahan verify karein:
 
 ## Mujhe kya chahiye (bas ye 3 jawab)
 
-1. **Package name** (e.g. `app.bayyin`) — asset links aur billing ke liye.
+1. **Package name** — fix ho gaya: `app.bayyin`
 2. **SHA-256 fingerprint** — Play Console → App integrity se.
 3. **"Key" ka matlab** — signing keystore hai ya Developer API service-account JSON?
 
