@@ -2,21 +2,37 @@
 // or modification without written permission is not permitted (see LICENSE).
 
 // Qari (reciter) audio — the correct recitation of an aya, played next to the
-// words the person got wrong.
+// words the person got wrong, or on its own from any aya in the reader.
 //
-// The files come from EveryAyah.com, which publishes these recitations free to
-// use (no key, no account, plain mp3). Only the reciters whose sets are marked
-// free on that site are listed here. Nothing is bundled with the app: the audio
-// streams on demand, so the download stays small and the files stay theirs.
+// Two free, key-less sources, tried in order:
+//   1. EveryAyah.com — one mp3 per aya, folder per reciter.
+//   2. Islamic Network CDN — one mp3 per aya, but numbered 1..6236, so the aya's
+//      position in the whole Quran is worked out from the surah lengths.
+// Nothing is bundled with the app: the audio streams on demand.
+
+import { ayaCount } from './quran.js';
 
 const BASE = 'https://everyayah.com/data/';
+const MIRROR = 'https://cdn.islamic.network/quran/audio/128/';
 const KEY = 'tc.qari';
 
 export const RECITERS = {
-  alafasy: { dir: 'Alafasy_128kbps', name: 'Mishary Rashid Alafasy' },
-  husary: { dir: 'Husary_128kbps', name: 'Mahmoud Khalil Al-Husary' },
-  basit: { dir: 'Abdul_Basit_Murattal_128kbps', name: 'Abdul Basit (Murattal)' },
-  minshawy: { dir: 'Minshawy_128kbps', name: 'Mohamed Al-Minshawy' },
+  alafasy: {
+    dir: 'Alafasy_128kbps',
+    mirror: 'ar.alafasy',
+    name: 'Mishary Rashid Alafasy',
+  },
+  husary: { dir: 'Husary_128kbps', mirror: 'ar.husary', name: 'Mahmoud Khalil Al-Husary' },
+  basit: {
+    dir: 'Abdul_Basit_Murattal_64kbps',
+    mirror: 'ar.abdulbasitmurattal',
+    name: 'Abdul Basit (Murattal)',
+  },
+  minshawy: {
+    dir: 'Minshawy_Murattal_128kbps',
+    mirror: 'ar.minshawy',
+    name: 'Mohamed Al-Minshawy',
+  },
 };
 
 const DEFAULT = 'alafasy';
@@ -34,7 +50,7 @@ export function current() {
   return read();
 }
 
-export function setReciter(id) {
+export function setCurrent(id) {
   if (!RECITERS[id]) return read();
   try {
     localStorage.setItem(KEY, id);
@@ -44,16 +60,39 @@ export function setReciter(id) {
   return id;
 }
 
+export const setReciter = setCurrent;
+
 export function reciters() {
   return Object.entries(RECITERS).map(([id, info]) => ({ id, name: info.name }));
 }
 
 const pad = (n) => String(n).padStart(3, '0');
 
-/** The mp3 of one aya (EveryAyah numbers the files by surah + aya). */
+/** The aya's number in the whole Quran (1..6236), 0 while the text is loading. */
+function globalIndex(surah, aya) {
+  let index = aya;
+  for (let s = 1; s < surah; s += 1) {
+    const count = ayaCount(s);
+    if (!count) return 0;
+    index += count;
+  }
+  return index;
+}
+
+/** Every URL for one aya, best first. */
+export function urlsFor(surah, aya) {
+  const info = RECITERS[read()];
+  const list = [`${BASE}${info.dir}/${pad(surah)}${pad(aya)}.mp3`];
+
+  const index = globalIndex(surah, aya);
+  if (index) list.push(`${MIRROR}${info.mirror}/${index}.mp3`);
+
+  return list;
+}
+
+/** The primary mp3 of one aya. */
 export function urlFor(surah, aya) {
-  const id = read();
-  return `${BASE}${RECITERS[id].dir}/${pad(surah)}${pad(aya)}.mp3`;
+  return urlsFor(surah, aya)[0];
 }
 
 let audio = null;
@@ -77,39 +116,67 @@ export function stop() {
   playing = null;
 }
 
-/** Play one aya; any other aya that was playing stops first. */
+/**
+ * Play one aya; any other aya that was playing stops first. If a source fails
+ * (404, offline, blocked), the next one is tried before giving up.
+ */
 export function play(surah, aya, options = {}) {
   stop();
   const onEnd = typeof options.onEnd === 'function' ? options.onEnd : () => {};
   const onError = typeof options.onError === 'function' ? options.onError : () => {};
+  const list = urlsFor(surah, aya);
+  let index = 0;
 
-  let el;
-  try {
-    el = new Audio(urlFor(surah, aya));
-  } catch (error) {
-    onError();
-    return false;
-  }
-
-  audio = el;
-  playing = { surah, aya };
-  el.preload = 'auto';
-  el.addEventListener('ended', () => {
+  const finish = () => {
     if (playing && playing.surah === surah && playing.aya === aya) playing = null;
-    onEnd();
-  });
-  el.addEventListener('error', () => {
-    if (playing && playing.surah === surah && playing.aya === aya) playing = null;
-    onError();
-  });
+  };
 
-  const started = el.play();
-  if (started && typeof started.catch === 'function') {
-    started.catch(() => {
-      if (playing && playing.surah === surah && playing.aya === aya) playing = null;
+  const tryNext = () => {
+    if (index >= list.length) {
+      finish();
       onError();
+      return;
+    }
+    const url = list[index];
+    index += 1;
+
+    let el;
+    try {
+      el = new Audio(url);
+    } catch (error) {
+      tryNext();
+      return;
+    }
+
+    audio = el;
+    playing = { surah, aya };
+    el.preload = 'auto';
+
+    el.addEventListener('ended', () => {
+      finish();
+      onEnd();
     });
-  }
+    el.addEventListener('error', () => {
+      if (index < list.length) tryNext();
+      else {
+        finish();
+        onError();
+      }
+    });
+
+    const started = el.play();
+    if (started && typeof started.catch === 'function') {
+      started.catch(() => {
+        if (index < list.length) tryNext();
+        else {
+          finish();
+          onError();
+        }
+      });
+    }
+  };
+
+  tryNext();
   return true;
 }
 

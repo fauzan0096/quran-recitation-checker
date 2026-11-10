@@ -1691,6 +1691,7 @@ body[data-theme='dark'] .badge-card.is-locked { background: repeating-linear-gra
 .qari-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; }
 .qari-btn { display: inline-flex; align-items: center; gap: 6px; }
 .qari-btn.is-on { background: linear-gradient(180deg, #f6d4a8, #d8a66b); color: #3a1119; border-color: transparent; }
+.aya-hear.is-on { background: linear-gradient(180deg, #f6d4a8, #d8a66b); color: #3a1119; border-color: transparent; }
 
 .rep-play {
   margin-inline-start: auto;

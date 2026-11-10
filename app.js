@@ -740,7 +740,7 @@ function ayaCard(verse) {
   share.textContent = '↗';
   share.addEventListener('click', () => shareAya(verse));
 
-  head.append(badge, starButton(key), share);
+  head.append(badge, starButton(key), hearButton(key), share);
 
   const text = document.createElement('div');
   text.className = 'aya-text';
@@ -910,7 +910,7 @@ function renderMushafPage() {
       status.className = 'aya-status';
       status.dataset.role = 'status';
 
-      bar.append(label, record, starButton(key), markChip(key), share, clear, status);
+      bar.append(label, record, starButton(key), hearButton(key), markChip(key), share, clear, status);
       page.appendChild(bar);
     }
   }
@@ -998,6 +998,37 @@ function renderMushafPage() {
 
   page.appendChild(actions);
   els.ayaList.appendChild(page);
+}
+
+/** The little 🔊 button — listen to this aya's qari before or after recording. */
+function hearButton(key) {
+  const [surah, aya] = String(key || '')
+    .split(':')
+    .map(Number);
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'icon-btn small aya-hear';
+  btn.title = t('qari.listen');
+  btn.textContent = '🔊';
+  if (!surah || !aya) return btn;
+
+  btn.addEventListener('click', () => {
+    toggleQari(surah, aya, {
+      onStop: () => setHearLabel(btn, false),
+      onEnd: () => setHearLabel(btn, false),
+      onError: () => {
+        setHearLabel(btn, false);
+        toast(t('qari.failed'));
+      },
+    });
+    setHearLabel(btn, isQariPlaying(surah, aya));
+  });
+  return btn;
+}
+
+function setHearLabel(btn, on) {
+  btn.textContent = on ? '⏹' : '🔊';
+  btn.classList.toggle('is-on', on);
 }
 
 function setQariLabel(btn, on) {
