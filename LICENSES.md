@@ -101,3 +101,13 @@ The "Qari sunen" button streams the recitation of one aya from
 <https://everyayah.com> (plain mp3, no key, no account). Nothing is bundled with
 the app and the audio is not re-sold. Reciters offered: Mishary Rashid Alafasy,
 Mahmoud Khalil Al-Husary, Abdul Basit (Murattal) and Mohamed Al-Minshawy.
+
+## IndoPak mushaf text — Quran.com (Quran Foundation)
+
+The IndoPak 15-line option reads its text from Quran.com's public API
+(<https://api.quran.com/api/v4/quran/verses/indopak>), page by page, and caches
+it on the device. Quran.com is a waqf run by Quran Foundation; the Madani
+mushaf stays fully offline from the bundled Tanzil text. Their newer Content
+API needs a registered app and a server-side secret, which is why the app only
+uses the public endpoint for this optional script.
+
