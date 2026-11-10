@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / model / Quran.com requests are left to the network.
 
-const CACHE = 'bayyin-v23';
+const CACHE = 'bayyin-v27';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -33,7 +33,9 @@ const SHELL = [
   'duas-data.js',
   'planners.js',
   'hifz-test.js',
+  'premium-tools.js',
   'premium.js',
+  'premium-strings.js',
   'qibla.js',
   'calendar.js',
   'asr.js',
@@ -42,12 +44,11 @@ const SHELL = [
   'quran.js',
   'surahs.js',
   'tajweed.js',
-  'selftest.js',
   'quran-pages.js',
   'indopak.js',
   'install.js',
   'manifest.webmanifest',
-  'amiri-quran.woff2',
+  'amiri-quran.ttf',
   'icon-96.png',
   'icon-192.png',
   'icon-512.png',
@@ -59,7 +60,7 @@ const SHELL = [
   'quran-pages.xml',
 ];
 
-const IMMUTABLE = /\.(?:png|ico|woff2|xml|txt)$/i;
+const IMMUTABLE = /\.(?:png|ico|woff2|ttf|xml|txt)$/i;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -81,7 +82,13 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     (async () => {
       const keys = await caches.keys();
-      await Promise.all(keys.filter((key) => key !== CACHE && key !== LIB_CACHE).map((key) => caches.delete(key)));
+      // Only this app's own old shells go. The speech model lives in
+      // "transformers-cache" and must survive every update.
+      await Promise.all(
+        keys
+          .filter((key) => key.startsWith('bayyin-') && key !== CACHE && key !== LIB_CACHE)
+          .map((key) => caches.delete(key))
+      );
       await self.clients.claim();
     })()
   );

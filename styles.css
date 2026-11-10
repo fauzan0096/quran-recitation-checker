@@ -23,7 +23,9 @@
   --arabic: 'SF Arabic', 'Geeza Pro', 'Noto Naskh Arabic', 'Amiri Quran', 'Scheherazade New',
     'Traditional Arabic', serif;
   --aya-size: 26px;
-  --aya-weight: 400;
+  /* Never fake a bold/italic face: with a single-weight Arabic font the
+     browser's synthetic bold breaks the joining of letters. */
+  font-synthesis: none;
 }
 
 * {
@@ -237,9 +239,39 @@ main {
   flex: 1 1 100%;
 }
 
+/* The search field in Quran / Mushaf: tall and roomy, not a thin line. */
+#picker-search {
+  gap: 10px;
+}
+
+#picker-search .field {
+  flex: 1 1 100%;
+  min-width: 100%;
+  gap: 6px;
+  font-size: 13px;
+}
+
+#search-input {
+  font-size: 17px;
+  padding: 15px 16px;
+  min-height: 54px;
+  border-radius: 14px;
+  border-width: 1.5px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+#picker-search .btn {
+  min-height: 46px;
+  padding: 12px 22px;
+  font-size: 15px;
+}
+
 select,
 input[type='number'],
-input[type='file'] {
+input[type='file'],
+input[type='text'],
+input[type='search'] {
   font: inherit;
   font-size: 15px;
   color: var(--ink);
@@ -378,19 +410,21 @@ button:focus-visible {
 .aya-text {
   font-family: var(--arabic);
   font-size: var(--aya-size);
-  font-weight: var(--aya-weight);
+  font-weight: 400;
   line-height: 2.05;
   text-align: right;
   direction: rtl;
   unicode-bidi: plaintext;
+  /* Quran text is printed exactly as the mushaf has it: every word must be
+     shaped as one run. Letter spacing, kerning tweaks and synthetic bold are
+     what split joined letters (الصلاة -> الص ل اة), so they are pinned here. */
+  letter-spacing: normal;
+  word-spacing: normal;
+  font-kerning: normal;
+  font-variant-ligatures: normal;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
   transition: filter 0.2s ease, opacity 0.2s ease;
-}
-
-.aya-text.is-hidden {
-  filter: blur(7px);
-  opacity: 0.6;
-  user-select: none;
-  pointer-events: none;
 }
 
 .w {
@@ -1001,18 +1035,17 @@ body[data-theme='dark'] .aya-score.bad {
 .page-text {
   font-family: var(--arabic);
   font-size: var(--aya-size);
-  font-weight: var(--aya-weight);
+  font-weight: 400;
   line-height: 2.2;
   text-align: justify;
   direction: rtl;
+  letter-spacing: normal;
+  word-spacing: normal;
+  font-kerning: normal;
+  font-variant-ligatures: normal;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
   transition: filter 0.2s ease, opacity 0.2s ease;
-}
-
-.page-text.is-hidden {
-  filter: blur(7px);
-  opacity: 0.6;
-  user-select: none;
-  pointer-events: none;
 }
 
 .aya-seg {
@@ -1243,7 +1276,7 @@ body[data-theme='dark'] .page-mistake {
   text-align: center;
   font-family: var(--arabic);
   font-size: calc(var(--aya-size) * 0.82);
-  font-weight: var(--aya-weight);
+  font-weight: 400;
   color: var(--green-dark);
   margin: 2px 0 10px;
   padding-bottom: 8px;

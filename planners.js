@@ -407,7 +407,7 @@ export function mountHifz(root) {
 
     const startBtn = button(L('Shuru karein', 'شروع کریں', 'Start'), 'btn', () => {
       if (!isPremium()) {
-        window.alert(L('Hifz planner Premium mein hai (₹99/mahina). Jald hi.', 'حفظ پلانر پریمیم میں ہے (₹99/ماہ)۔ جلد ہی۔', 'The Hifz planner is Premium (₹99/month). Coming soon.'));
+        window.dispatchEvent(new CustomEvent('bayyin:paywall'));
         return;
       }
       const scope = { kind: form.kind, from: form.from, to: form.to, reverse: form.reverse };

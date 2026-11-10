@@ -181,9 +181,25 @@ export function mountTasbeeh(root) {
     let beads = '';
     for (let i = 0; i < BEADS; i += 1) {
       const a = (-90 - (360 / BEADS) * i) * (Math.PI / 180);
-      beads += `<circle class="tsb-bead" cx="${(100 + RING_R * Math.cos(a)).toFixed(1)}" cy="${(100 + RING_R * Math.sin(a)).toFixed(1)}" r="7.4"></circle>`;
+      const cx = (100 + RING_R * Math.cos(a)).toFixed(1);
+      const cy = (100 + RING_R * Math.sin(a)).toFixed(1);
+      beads += `<circle class="tsb-bead" cx="${cx}" cy="${cy}" r="8.6"></circle>`;
     }
-    dial.innerHTML = `<svg class="tsb-svg" viewBox="0 0 200 200" aria-hidden="true">${beads}</svg>
+    // Round gold beads: a highlight up and left makes each one look like a
+    // little sphere, and the dim gold of the empty ones turns bright when lit.
+    const gold = `<defs>
+      <radialGradient id="tsbGold" cx="35%" cy="30%" r="72%">
+        <stop offset="0%" stop-color="#fff4d8"/>
+        <stop offset="42%" stop-color="#f0c193"/>
+        <stop offset="100%" stop-color="#a9743a"/>
+      </radialGradient>
+      <radialGradient id="tsbGoldDim" cx="35%" cy="30%" r="72%">
+        <stop offset="0%" stop-color="#c9a26c"/>
+        <stop offset="50%" stop-color="#7d5730"/>
+        <stop offset="100%" stop-color="#3f2713"/>
+      </radialGradient>
+    </defs>`;
+    dial.innerHTML = `<svg class="tsb-svg" viewBox="0 0 200 200" aria-hidden="true">${gold}${beads}</svg>
       <span class="tsb-core"><span class="tsb-count">0</span><span class="tsb-of"></span><span class="tsb-hint"></span></span>`;
     wrap.appendChild(dial);
     root.appendChild(wrap);

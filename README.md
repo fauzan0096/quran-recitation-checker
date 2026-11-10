@@ -9,7 +9,7 @@ upload nahi hota**.
 
 `index.html` (+ `privacy.html`), `styles.css`, `app.js` (UI), `i18n.js` (zubaan /
 translations), `asr.js` (mic + model), `align.js`, `normalize.js`,
-`tajweed.js`, `quran.js`, `surahs.js`, `selftest.js`, `quran-tanzil.txt`,
+`tajweed.js`, `quran.js`, `surahs.js`, `premium-tools.js` (Premium report), `quran-tanzil.txt`,
 `LICENSE` / `LICENSES.md`.
 
 ## Kaam kaise karta hai (pipeline)
@@ -48,8 +48,7 @@ on-device.
   page dono me har aya apne card me (ya mushaf page par apni jagah) hoti hai aur
   usi ke neeche apna **Record** button hota hai.
 - Settings ek alag page hai (gear icon): share, model, audio/mic, tajweed hints,
-  self-test, about/privacy aur licenses.
-- Mic ke baghair engine test: **Settings → Engine self-test**.
+  about/privacy aur licenses.
 
 ## Aya-ba-aya, mushaf-ba-mushaf
 
@@ -69,9 +68,9 @@ on-device.
 - **Search** tab: lafz se (harakat ke baghair bhi), aya se (`2:255`) ya juz number se
   (`5`) talash karein; nateeja tap karne par wahi aya khulti hai.
 
-## Hifz Test (murajaat) — `hifz-test.js`
+## Hifz Test (murajaat) — `hifz-test.js` (Premium)
 
-Home → **Hifz Test**. Yaad ki azmaish, teen andaaz me:
+Home → **Hifz Test** (Premium). Yaad ki azmaish, teen andaaz me:
 
 - **Agli aya** — pichli aya dikhti hai, agli chhupi hoti hai (sirf "؟"). Mic par yaad se padhein.
 - **Beech ki aya blur** — aage aur peechhe ki ayaat dikhti hain, beech ki blur.
@@ -88,13 +87,13 @@ sirf device ke `localStorage` (`tc.hztest`) me rehta hai.
 
 ## Padhna hai ya yaad se azmaish?
 
-- Ayat ka text upar khula hota hai — dekh kar padh sakte hain.
-- **Text chhupayein** dabaein to ayat blur ho jati hai (yaad se padhne ke liye).
-  Record rukne par text khud wapas aa jata hai aur usi par rang + natija dikhta hai.
+- Ayat ka text hamesha khula hota hai — dekh kar padh sakte hain.
 - **🌙 (upar right)** se **night mode** — poori app dark ho jati hai, raat me padhne ke
   liye. Phone already dark mode me ho to app khud dark khulti hai; pasand yaad rehti hai.
-- List ke neeche **A− / A+** se text ka size (18–44px) aur **− / +** se harf ki
-  motai (300–800; patla / aam / mota / bohot mota). Dono settings yaad rehti hain.
+- List ke neeche **A− / A+** se text ka size (18–44px); size yaad rehta hai.
+- Quran ka text poore **Amiri Quran** font (`amiri-quran.ttf`) me rehta hai aur har lafz
+  jud kar likha jata hai — tight letter-spacing, kerning tweaks aur synthetic motai hata
+  di gayi hai, kyunke unse harf alag ho jate the (الصلاة → الص ل اة).
 
 ## Yaad-dasht (bookmark / progress)
 
@@ -133,9 +132,9 @@ Header ke **⋯ (Mazeed)** se teen sections khulte hain — reader saaf rehta ha
   Note: chand dekhne ki bina par mahina 1 din aage/peeche ho sakta hai — app yahi
   likhti hai, andaze se "aaj Eid hai" ka dawa nahi karti.
 
-## Noor (roz ki aya, hadith aur sunnah)
+## Roz ki Naiki (pehle Noor) — roz ki aya, hadith aur sunnah
 
-Mazeed ke home grid par **Noor**:
+Mazeed ke home grid par **Roz ki Naiki**:
 
 - **Aaj ki aya** — 60 ayaton ki list se roz badalti hai; text hamesha bundled Tanzil
   mushaf se aata hai (kabhi retype nahi), neeche **aasan matlab** (Roman Urdu ya
@@ -334,12 +333,18 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
 - Transformers.js / ONNX Runtime Web: Hugging Face / Microsoft (Apache-2.0).
 
 ## v2 changes (Nov 2026)
-- Home screen opens instantly (Quran text loads in background); bottom bar: Home / Quran / Duaein / Tasbeeh / Noor.
+- Home screen opens instantly (Quran text loads in background); bottom bar: Home / Quran / Duaein / Tasbeeh / Naiki.
 - Duaein are now inside the app (duas.js + duas-data.js); Ruqya section has only dua + hawala.
 - New tasbeeh (tasbeeh-v2.js): own target, Aaj/Round/Kul, undo, zero, vibration, sound, screen-on.
-- "Aaj ka Noor": ayat + hadith + sunnah on one page, also on Home.
+- "Roz ki Naiki" (pehle Aaj ka Noor): ayat + hadith + sunnah on one page, also on Home.
 - Faster service worker (cache-first for heavy files). Amiri Quran font bundled (OFL, see OFL-AmiriQuran.txt).
+- Quran ka text poore Amiri Quran (`amiri-quran.ttf`) me: joined letters sahi, "hide text" option hata diya, aur motai slider bhi hata diya (synthetic bold Arabic ki joining tod deta tha).
 - Old Fahm-ul-Quran files (dua.js, tools.js, sounds.js ...) deleted - they were never loaded.
+- Premium: Hifz plan + be-paana checks paid, 3 din trial, roz 3 free checks, mulk ke
+  hisaab se price (neeche "Premium (subscription)" dekhein).
+- Settings me "Free ya Premium" ka chart (kaun si cheez free, kaun si paid) aur
+  Premium me **Meri report** (`premium-tools.js`): murajaa ki list, sab se zyada
+  ghalat hone wale lafz, aur roz ka tareekh. Engine self-test ka card hata diya gaya.
 
 ## Update: rasm, hamza, model ek baar
 
@@ -352,3 +357,67 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   agli dafa khud background me cache se load kar leti hai; storage `persist()` se maangi jati hai
   taake browser weights na hataye; Transformers.js library + wasm service worker me
   `bayyin-lib-v1` cache me rehti hai (offline bhi). Record aur Load ek hi load ka intezar karte hain.
+
+
+## Premium (subscription) — kaise chalta hai
+
+- **Free (hamesha)**: poora Quran, Duaein, Tasbeeh, Qibla, Calendar, Roz ki Naiki
+  (aya + hadith + sunnah), aur **roz 3 talaawat checks**.
+- **Premium**: **Hifz plan** (sabaq / sabqi / murajaa planner, reminder ke saath),
+  **Hifz Test**, **Meri report** (neeche) aur be-paana talaawat checks. In sab ka har
+  rasta (More card, home ka kaam, reminder) `setView()` se guzarta hai, is liye gate
+  wahin ek jagah lagi hai.
+- **Trial**: pehli dafa app khulne par **3 din** poora Premium khula rehta hai
+  (`tc.premiumSince`), uske baad free hadd lag jati hai.
+- **Plans aur SKUs** (`premium.js` me `PLANS`): `bayyin_pro_monthly` (30 din),
+  `bayyin_pro_yearly` (365 din).
+- **Price mulk ke hisaab se**: `region()` phone ke **time zone** se mulk nikalta
+  hai (Kolkata → IN, Karachi → PK, Dhaka → BD, Kathmandu → NP, Colombo → LK),
+  warna phone ki language ke region tag se; currency `Intl.NumberFormat` se banti
+  hai — **India, Pakistan, Bangladesh, Nepal aur Sri Lanka** me ₹99 jitna tier
+  (IN ₹99/₹799, PK 330/2640, BD 140/1120, NP 160/1280, LK 340/2720) aur **baqi
+  har mulk $3.33 / $29.99**. Paywall par mulk ka naam (`regionName`) aur local
+  price likha aata hai. Asli qeemat Play apne payment sheet me dikhata hai.
+- **Sab kuch device par**: `tc.premium`, `tc.premiumSince`, `tc.premiumExpires`,
+  `tc.premiumPlan`, `tc.premiumChecks` — koi account, koi server, koi audio upload
+  nahi. (Browser/OS ka data clear karna "restore purchase" se hoga.)
+- **Play Billing judne par**: verified purchase par sirf `activate('monthly' |
+  'yearly')` call karna hai; app khulte waqt `queryPurchasesAsync` mila purchase
+  par `setPremium(true)`; refund/cancel par `cancel()`. Ye teen functions hi UI
+  ke demo buttons bhi chalate hain, is liye abhi poora flow test ho sakta hai.
+- **Demo mode**: paywall par teen buttons hain — *Demo: Premium chalu*, *Trial
+  dobara shuru*, *Trial khatam*. `PAYWALL_ON = false` kar dene se app poori khuli
+  rehti hai (Play review ke liye kaam aata hai).
+- Test karne ka tareeqa: More → Hifz plan (lock) → Premium screen; ya 4th
+  talaawat check par paywall; trial khatam kar ke roz 3 checks ka limit dekhein.
+
+## Meri report (Premium) — `premium-tools.js`
+
+Settings → **Meri report**, ya More grid ka **Meri report** card. Teen tab:
+
+- **Murajaa** — jo ayaat dobara sunani chahiye: kam score, purani check, ya jahan
+  lafz chhoot gaye. Har row tap karne par wahi aya Quran me khul jati hai.
+- **Ghaltiyan** — sab se zyada ghalat/suna nahi gaya lafz, kitni dafa, kis aya me,
+  aur suna kya gaya. **Report share** se poora khulasa text me bhej sakte hain.
+- **Tareekh** — pichhle 14 din ki chhoti chart (kitne checks), kul checks, din aur
+  ausat score.
+
+Data sirf `tc.report` me device par rehta hai (`premium-tools.js`); check ke waqt
+`recordReport()` use bharta hai. Koi audio ya text bahar nahi jata.
+
+
+## Play Store: closed testing (14 din / 12 testers)
+
+- Personal developer account par Google ki shart: **kam az kam 12 testers** jo
+  **14 din lagataar** closed test me opted-in rahein, tab "production" access
+  milta hai (organization account par yeh shart nahi).
+- Tareeqa: Play Console → Testing → Closed testing → naya track → testers ki
+  email list ya Google Group daalein → build upload karein → opt-in link
+  (`play.google.com/apps/testing/<package>`) testers ko bhejein.
+- Testers ke liye aasan steps: link kholein → "Become a tester" → Play Store se
+  app install karein → 14 din tak app kuch dafa kholein (uninstall na karein).
+- 12 se zyada (14–15) rakhein, kyunke koi ek agar opt-out kar de to ginti poori
+  rahe.
+- Testers ko yeh cheezein zaroor karne ko kahein: Hifz plan aur Hifz Test (Premium
+  screen), trial khatam kar ke roz 3 checks ka limit, qibla compass, Roz ki Naiki
+  page, aur ek talaawat check (mic ki ijazat ke saath).

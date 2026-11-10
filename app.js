@@ -34,9 +34,10 @@ import {
   peakOf,
   libraryVersion,
 } from './asr.js';
-import { runSelfTest } from './selftest.js';
 import './strings-v2.js';
+import './premium-strings.js';
 import { mountTasbeeh } from './tasbeeh-v2.js';
+import { mountReport, recordReport } from './premium-tools.js';
 import { mountDuas } from './duas.js';
 import { mountHifz, mountKhatam, pendingToday, startReminderLoop } from './planners.js';
 import { mountHifzTest } from './hifz-test.js';
@@ -45,6 +46,18 @@ import { mountQibla } from './qibla.js';
 import { mountCalendar } from './calendar.js';
 import { mountDaily } from './daily.js';
 import { LANGUAGES, initLanguage, getLanguage, setLanguage, t } from './i18n.js';
+import {
+  PLANS,
+  activate as activatePlan,
+  canCheck,
+  cancel as cancelPlan,
+  isPremium,
+  premiumState,
+  recordCheck,
+  regionName,
+  resetDemo,
+  skipTrial,
+} from './premium.js';
 import {
   clearAll,
   cycleMark,
@@ -63,7 +76,6 @@ const STORAGE = {
   selection: 'tc.selection',
   model: 'tc.modelId',
   modelReady: 'tc.modelReady', // id of a model that finished loading once on this device
-  hidden: 'tc.textHidden',
   reading: 'tc.reading',
   welcomed: 'tc.welcomed',
 };
@@ -71,9 +83,6 @@ const CHUNK = 25;
 const ARABIC_DIGITS = '٠١٢٣٤٥٦٧٨٩';
 const SIZE_MIN = 18;
 const SIZE_MAX = 44;
-const WEIGHT_MIN = 300;
-const WEIGHT_MAX = 800;
-const WEIGHT_STEP = 100;
 
 const state = {
   mode: 'surah', // surah | page | search
@@ -85,10 +94,8 @@ const state = {
   results: new Map(),
   pageAlignment: null,
   selectedKey: null,
-  textHidden: false,
   theme: 'light',
   fontSize: 26,
-  fontWeight: 400,
   model: null,
   modelId: null,
   modelLoading: false,
@@ -117,6 +124,7 @@ const moreViews = {
   khatam: null,
   hifz: null,
   hztest: null,
+  report: null,
 };
 
 init();
@@ -237,10 +245,11 @@ function closeWelcome() {
 /** Switch language and redraw whatever is on screen. */
 async function changeLanguage(value) {
   setLanguage(value);
-  els.toggleText.textContent = state.textHidden ? t('text.show') : t('text.hide');
   applyReading(false);
   renderTajweed();
   renderProgress();
+  renderPremiumCard();
+  if (els.viewPremium && !els.viewPremium.hidden) renderPremium();
   paintHomeDate();
   moreViews.daily?.refresh();
   moreViews.homeNoor?.refresh();
@@ -259,23 +268,25 @@ async function changeLanguage(value) {
 function cacheElements() {
   const ids = [
     'open-settings', 'close-settings', 'view-reader', 'view-settings',
-    'toggle-theme', 'font-smaller', 'font-larger', 'weight-lighter', 'weight-bolder',
+    'toggle-theme', 'font-smaller', 'font-larger',
     'reading-meta',
     'tab-surah', 'tab-page', 'tab-search',
     'picker-surah', 'picker-page', 'picker-search',
     'surah-select', 'mushaf-select', 'page-prev', 'page-next', 'page-number', 'page-total',
     'search-input', 'search-go', 'search-results',
-    'toggle-text', 'list-title', 'global-status', 'range-error', 'aya-list',
+    'list-title', 'global-status', 'range-error', 'aya-list',
     'list-footer', 'load-more', 'share-app', 'model-select', 'load-model',
     'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
-    'mic-check', 'mic-check-output', 'player', 'tajweed', 'run-tests',
-    'test-results', 'toast',
+    'mic-check', 'mic-check-output', 'player', 'tajweed',
+    'toast',
     'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
     'resume-aya', 'progress-stats', 'progress-lists', 'progress-reset',
     'view-home', 'more-tasbeeh', 'more-qibla', 'more-calendar',
     'home-mushaf', 'home-dua', 'home-open-quran', 'home-todo', 'more-khatam', 'more-hifz',
     'view-khatam', 'view-hifz', 'khatam-root', 'hifz-root', 'close-khatam', 'close-hifz',
     'more-hztest', 'view-hztest', 'hztest-root', 'close-hztest',
+    'more-report', 'view-report', 'report-root', 'close-report', 'open-report',
+    'view-premium', 'close-premium', 'premium-root', 'open-premium', 'premium-status',
     'home-date', 'home-noor', 'view-dua', 'close-dua', 'dua-root', 'bottom-nav',
     'more-daily', 'view-daily', 'close-daily', 'daily-root',
     'view-tasbeeh', 'close-tasbeeh', 'tasbeeh-root',
@@ -335,8 +346,8 @@ function restoreSelection() {
       if (Number.isInteger(stored.surah)) state.surah = clamp(stored.surah, 1, 114);
       if (Number.isInteger(stored.page)) state.page = clamp(stored.page, 1, 610);
     }
-    state.textHidden = localStorage.getItem(STORAGE.hidden) === '1';
     const modelId = localStorage.getItem(STORAGE.model);
+
     if (modelId && MODELS.some((m) => m.id === modelId)) els.modelSelect.value = modelId;
   } catch (error) {
     console.warn('selection restore failed', error);
@@ -345,7 +356,6 @@ function restoreSelection() {
   els.surahSelect.value = String(state.surah);
   els.mushafSelect.value = state.mushaf;
   els.pageNumber.value = String(state.page);
-  els.toggleText.textContent = state.textHidden ? t('text.show') : t('text.hide');
 
   try {
     const reading = JSON.parse(localStorage.getItem(STORAGE.reading) || 'null');
@@ -353,9 +363,6 @@ function restoreSelection() {
       if (reading.theme === 'dark' || reading.theme === 'light') state.theme = reading.theme;
       if (Number.isFinite(reading.fontSize)) {
         state.fontSize = Math.min(SIZE_MAX, Math.max(SIZE_MIN, reading.fontSize));
-      }
-      if (Number.isFinite(reading.fontWeight)) {
-        state.fontWeight = Math.min(WEIGHT_MAX, Math.max(WEIGHT_MIN, reading.fontWeight));
       }
     } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       state.theme = 'dark';
@@ -378,7 +385,6 @@ function persistSelection() {
         page: state.page,
       })
     );
-    localStorage.setItem(STORAGE.hidden, state.textHidden ? '1' : '0');
   } catch (error) {
     console.warn('selection persist failed', error);
   }
@@ -390,23 +396,15 @@ function clamp(value, min, max) {
   return Math.min(max, Math.max(min, n));
 }
 
-function weightLabel() {
-  if (state.fontWeight <= 350) return t('weight.thin');
-  if (state.fontWeight <= 500) return t('weight.normal');
-  if (state.fontWeight <= 650) return t('weight.bold');
-  return t('weight.black');
-}
-
 function applyReading(persist = true) {
   document.body.dataset.theme = state.theme;
   document.documentElement.style.setProperty('--aya-size', `${state.fontSize}px`);
-  document.documentElement.style.setProperty('--aya-weight', String(state.fontWeight));
   if (els.toggleTheme) {
     els.toggleTheme.textContent = state.theme === 'dark' ? '☀' : '🌙';
     els.toggleTheme.setAttribute('aria-pressed', String(state.theme === 'dark'));
   }
   if (els.readingMeta) {
-    els.readingMeta.textContent = `${state.fontSize}px · ${weightLabel()}`;
+    els.readingMeta.textContent = `${state.fontSize}px`;
   }
   if (persist) {
     try {
@@ -415,7 +413,6 @@ function applyReading(persist = true) {
         JSON.stringify({
           theme: state.theme,
           fontSize: state.fontSize,
-          fontWeight: state.fontWeight,
         })
       );
     } catch (error) {
@@ -426,11 +423,6 @@ function applyReading(persist = true) {
 
 function stepFont(delta) {
   state.fontSize = Math.min(SIZE_MAX, Math.max(SIZE_MIN, state.fontSize + delta));
-  applyReading();
-}
-
-function stepWeight(delta) {
-  state.fontWeight = Math.min(WEIGHT_MAX, Math.max(WEIGHT_MIN, state.fontWeight + delta));
   applyReading();
 }
 
@@ -588,7 +580,6 @@ function ayaCard(verse) {
   text.className = 'aya-text';
   text.lang = 'ar';
   text.dir = 'rtl';
-  if (state.textHidden) text.classList.add('is-hidden');
   renderAyaText(text, verse, alignment);
 
   const status = document.createElement('p');
@@ -761,7 +752,6 @@ function renderMushafPage() {
   text.className = 'page-text';
   text.lang = 'ar';
   text.dir = 'rtl';
-  if (state.textHidden) text.classList.add('is-hidden');
 
   state.verses.forEach((verse) => {
     if (verse.basmala) text.appendChild(basmalaLine(verse.basmala));
@@ -1041,6 +1031,11 @@ async function toggleRecording(id, keys) {
     return;
   }
   if (state.recording || state.busyId || state.modelLoading || state.micChecking) return;
+  if (!canCheck()) {
+    toast(t('premium.limit'));
+    setView('premium');
+    return;
+  }
 
   state.recording = { id, keys };
   state.levelState = '';
@@ -1172,6 +1167,7 @@ async function checkTarget(id, keys, blob) {
 
     // Store a per-aya slice so each aya shows its own mistakes.
     const slices = verses.map(() => []);
+    const report = [];
     alignment.results.forEach((result, index) => {
       const vi = wordVerse[index];
       slices[vi].push({ ...result, index: slices[vi].length });
@@ -1182,8 +1178,16 @@ async function checkTarget(id, keys, blob) {
       const summary = summarise(slices[vi].slice(prefix), []);
       state.results.set(key, summary);
       setScore(key, summary.score);
+      report.push({
+        key,
+        score: summary.score,
+        problems: slices[vi].slice(prefix).filter((result) => result.status !== WORD_STATUS.CORRECT),
+      });
     });
+    recordReport(report);
     if (verses.length) setResume(keyOf(verses[0].surah, verses[0].aya));
+    recordCheck();
+    renderPremiumCard();
 
     state.pageAlignment =
       verses.length > 1 ? summarise(alignment.results, alignment.extras) : null;
@@ -1472,11 +1476,24 @@ function ensureMounted(name) {
         return ok ? state.model : null;
       },
     });
+  } else if (name === 'report') {
+    moreViews.report = mountReport(els.reportRoot, {
+      openAya: async (surah, aya) => {
+        setView('reader');
+        await jumpToAya(surah, aya);
+      },
+    });
   }
 }
 
 /** Show exactly one section, keep the bottom bar in step, and stop what is not on screen. */
 function setView(name) {
+  // The Hifz plan, the Hifz Test and the report are Premium: every way in (the
+  // More card, the home todo, a reminder) ends up here, so this is the one gate.
+  if ((name === 'hifz' || name === 'hztest' || name === 'report') && !isPremium()) {
+    toast(t('premium.locked'));
+    name = 'premium';
+  }
   const sections = {
     reader: els.viewReader,
     settings: els.viewSettings,
@@ -1489,6 +1506,8 @@ function setView(name) {
     khatam: els.viewKhatam,
     hifz: els.viewHifz,
     hztest: els.viewHztest,
+    report: els.viewReport,
+    premium: els.viewPremium,
   };
   if (currentView === 'qibla' && name !== 'qibla') moreViews.qibla?.stop();
   if (currentView === 'tasbeeh' && name !== 'tasbeeh') moreViews.tasbeeh?.stop();
@@ -1509,10 +1528,14 @@ function setView(name) {
   if (name === 'khatam') ensureMounted('khatam');
   if (name === 'hifz') ensureMounted('hifz');
   if (name === 'hztest') ensureMounted('hztest');
+  if (name === 'report') ensureMounted('report');
   if (name === 'khatam') moreViews.khatam?.refresh();
   if (name === 'hifz') moreViews.hifz?.refresh();
   if (name === 'hztest') moreViews.hztest?.refresh();
+  if (name === 'report') moreViews.report?.refresh();
   if (name === 'home') paintHomeTodo();
+  if (name === 'settings') renderPremiumCard();
+  if (name === 'premium') renderPremium();
   if (name === 'daily') moreViews.daily?.refresh();
   if (name === 'tasbeeh') moreViews.tasbeeh?.refresh();
   if (name === 'calendar') moreViews.calendar?.refresh();
@@ -1539,6 +1562,179 @@ function openSettings() {
 
 function closeSettings() {
   setView('home');
+}
+
+// ---------------------------------------------------------------- premium
+
+function premiumStatusText() {
+  const s = premiumState();
+  if (s.phase === 'open') return t('premium.statusOpen');
+  if (s.phase === 'paid') {
+    const date = s.expires ? new Date(s.expires).toLocaleDateString() : '';
+    return t('premium.statusPaid', { date });
+  }
+  if (s.phase === 'trial') return t('premium.statusTrial', { days: Math.max(1, s.trialDaysLeft) });
+  return t('premium.statusFree', { left: s.remaining, limit: s.limit });
+}
+
+/** The plan block in Settings. */
+function renderPremiumCard() {
+  if (els.premiumStatus) els.premiumStatus.textContent = premiumStatusText();
+  if (els.openPremium) {
+    els.openPremium.textContent =
+      premiumState().phase === 'paid' ? t('premium.manage') : t('premium.open');
+  }
+}
+
+function premiumLine(text) {
+  const row = document.createElement('li');
+  const mark = document.createElement('span');
+  mark.className = 'premium-mark';
+  mark.textContent = '✓';
+  const body = document.createElement('span');
+  body.textContent = text;
+  row.append(mark, body);
+  return row;
+}
+
+/** The paywall: region prices, the trial, the free limits and demo switches. */
+function renderPremium() {
+  const root = els.premiumRoot;
+  if (!root) return;
+  const s = premiumState();
+  root.innerHTML = '';
+  root.className = 'premium';
+
+  const status = document.createElement('p');
+  status.className = 'premium-status';
+  status.textContent = premiumStatusText();
+  root.appendChild(status);
+
+  if (s.phase !== 'paid') {
+    const regionLine = document.createElement('p');
+    regionLine.className = 'hint';
+    const where = regionName(s.prices.region) || t('premium.worldwide');
+    regionLine.textContent = t('premium.region', { region: where });
+    root.appendChild(regionLine);
+
+    const grid = document.createElement('div');
+    grid.className = 'premium-plans';
+    for (const id of ['yearly', 'monthly']) {
+      if (!PLANS[id]) continue;
+      const price = id === 'yearly' ? s.prices.yearly : s.prices.monthly;
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = id === 'yearly' ? 'premium-plan is-best' : 'premium-plan';
+
+      const name = document.createElement('span');
+      name.className = 'premium-plan-name';
+      name.textContent = id === 'yearly' ? t('premium.yearly') : t('premium.monthly');
+
+      const amount = document.createElement('strong');
+      amount.className = 'premium-plan-price';
+      amount.textContent = price.label;
+
+      const note = document.createElement('span');
+      note.className = 'premium-plan-note';
+      note.textContent = id === 'yearly' ? t('premium.yearlyNote') : t('premium.monthlyNote');
+
+      if (id === 'yearly') {
+        const badge = document.createElement('span');
+        badge.className = 'premium-badge';
+        badge.textContent = t('premium.bestValue');
+        card.appendChild(badge);
+      }
+      card.append(name, amount, note);
+      card.addEventListener('click', () => {
+        activatePlan(id);
+        toast(t('premium.activated'));
+        renderPremium();
+        renderPremiumCard();
+      });
+      grid.appendChild(card);
+    }
+    root.appendChild(grid);
+  } else {
+    const manage = document.createElement('button');
+    manage.type = 'button';
+    manage.className = 'btn ghost';
+    manage.textContent = t('premium.demoOff');
+    manage.addEventListener('click', () => {
+      cancelPlan();
+      toast(t('premium.cancelled'));
+      renderPremium();
+      renderPremiumCard();
+    });
+    root.appendChild(manage);
+  }
+
+  const features = document.createElement('div');
+  features.className = 'premium-features';
+
+  const freeBox = document.createElement('div');
+  freeBox.className = 'premium-feature';
+  const freeTitle = document.createElement('h4');
+  freeTitle.textContent = t('premium.freeHeading');
+  const freeList = document.createElement('ul');
+  for (const key of ['premium.free1', 'premium.free2', 'premium.free3']) {
+    freeList.appendChild(premiumLine(t(key)));
+  }
+  freeBox.append(freeTitle, freeList);
+
+  const proBox = document.createElement('div');
+  proBox.className = 'premium-feature is-pro';
+  const proTitle = document.createElement('h4');
+  proTitle.textContent = t('premium.proHeading');
+  const proList = document.createElement('ul');
+  for (const key of ['premium.pro1', 'premium.pro2', 'premium.pro3', 'premium.pro4']) {
+    proList.appendChild(premiumLine(t(key)));
+  }
+  proBox.append(proTitle, proList);
+
+  features.append(freeBox, proBox);
+  root.appendChild(features);
+
+  const demo = document.createElement('p');
+  demo.className = 'hint';
+  demo.textContent = t('premium.demoNote');
+  root.appendChild(demo);
+
+  const tools = document.createElement('div');
+  tools.className = 'premium-tools';
+  if (!s.premium) {
+    const on = document.createElement('button');
+    on.type = 'button';
+    on.className = 'btn ghost small';
+    on.textContent = t('premium.demoOn');
+    on.addEventListener('click', () => {
+      activatePlan('monthly');
+      toast(t('premium.activated'));
+      renderPremium();
+      renderPremiumCard();
+    });
+    tools.appendChild(on);
+  }
+  const skip = document.createElement('button');
+  skip.type = 'button';
+  skip.className = 'btn ghost small';
+  skip.textContent = t('premium.resetTrial');
+  skip.addEventListener('click', () => {
+    resetDemo();
+    toast(t('premium.reset'));
+    renderPremium();
+    renderPremiumCard();
+  });
+  const jump = document.createElement('button');
+  jump.type = 'button';
+  jump.className = 'btn ghost small';
+  jump.textContent = t('premium.skipTrial');
+  jump.addEventListener('click', () => {
+    skipTrial(4);
+    renderPremium();
+    renderPremiumCard();
+  });
+  tools.append(skip, jump);
+  root.appendChild(tools);
 }
 
 // --------------------------------------------------------------- progress
@@ -1608,16 +1804,6 @@ async function goToKey(key) {
   if (!surah || !aya) return;
   closeSettings();
   await jumpToAya(surah, aya);
-}
-
-function setTextHidden(hidden) {
-  state.textHidden = Boolean(hidden);
-  document.querySelectorAll('.aya-text, .page-text').forEach((element) => {
-    element.classList.toggle('is-hidden', state.textHidden);
-  });
-  els.toggleText.textContent = state.textHidden ? t('text.show') : t('text.hide');
-  els.toggleText.setAttribute('aria-pressed', String(state.textHidden));
-  persistSelection();
 }
 
 function setGlobalStatus(text) {
@@ -1765,32 +1951,6 @@ async function runMicCheck() {
   }
 }
 
-// ------------------------------------------------------------------ tests
-
-function runEngineTests() {
-  const context = isLoaded() ? { quran: { ayaCount, getVerses } } : {};
-  const results = runSelfTest(context);
-  els.testResults.innerHTML = '';
-  for (const result of results) {
-    const li = document.createElement('li');
-    li.className = `test ${result.pass ? 'pass' : 'fail'}`;
-    const mark = document.createElement('span');
-    mark.className = 'mark';
-    mark.textContent = result.pass ? 'PASS' : 'FAIL';
-    const body = document.createElement('div');
-    const name = document.createElement('span');
-    name.textContent = result.name;
-    const detail = document.createElement('span');
-    detail.className = 'detail';
-    detail.textContent = result.detail;
-    body.append(name, detail);
-    li.append(mark, body);
-    els.testResults.appendChild(li);
-  }
-  const passed = results.filter((result) => result.pass).length;
-  toast(t('self.pass', { passed, total: results.length }));
-}
-
 // ----------------------------------------------------------------- events
 
 function setMode(mode) {
@@ -1884,12 +2044,9 @@ function wireEvents() {
     }
   });
 
-  els.toggleText.addEventListener('click', () => setTextHidden(!state.textHidden));
   els.toggleTheme.addEventListener('click', toggleTheme);
   els.fontSmaller.addEventListener('click', () => stepFont(-1));
   els.fontLarger.addEventListener('click', () => stepFont(1));
-  els.weightLighter.addEventListener('click', () => stepWeight(-WEIGHT_STEP));
-  els.weightBolder.addEventListener('click', () => stepWeight(WEIGHT_STEP));
 
   els.loadMore.addEventListener('click', () => {
     state.visible += CHUNK;
@@ -1918,7 +2075,6 @@ function wireEvents() {
   });
 
   els.micCheck.addEventListener('click', runMicCheck);
-  els.runTests.addEventListener('click', runEngineTests);
 
   if (els.welcomeStart) els.welcomeStart.addEventListener('click', closeWelcome);
   if (els.welcomeLang) {
@@ -1955,8 +2111,17 @@ function wireEvents() {
   };
   go(els.homeMushaf, 'reader');
   go(els.moreKhatam, 'khatam');
-  go(els.moreHifz, 'hifz');
+  if (els.moreHifz) {
+    els.moreHifz.addEventListener('click', () => {
+      if (!isPremium()) {
+        setView('premium');
+        return;
+      }
+      setView('hifz');
+    });
+  }
   go(els.moreHztest, 'hztest');
+  go(els.moreReport, 'report');
   go(els.homeOpenQuran, 'reader');
   go(els.homeDua, 'dua');
   go(els.moreDaily, 'daily');
@@ -1972,9 +2137,14 @@ function wireEvents() {
     els.closeKhatam,
     els.closeHifz,
     els.closeHztest,
+    els.closeReport,
+    els.closePremium,
   ]) {
     go(closer, 'home');
   }
+  if (els.openReport) els.openReport.addEventListener('click', () => setView('report'));
+  if (els.openPremium) els.openPremium.addEventListener('click', () => setView('premium'));
+  window.addEventListener('bayyin:paywall', () => setView('premium'));
   document.querySelectorAll('.bn-item').forEach((item) => {
     item.addEventListener('click', () => setView(item.dataset.nav));
   });
