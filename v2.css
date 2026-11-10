@@ -1491,3 +1491,185 @@ body[data-theme='dark'] {
   font-size: 12.5px;
   color: var(--muted);
 }
+
+
+
+/* =====================================================================
+   INAAM (rewards) — stylish rebuild
+   ===================================================================== */
+.badges { gap: 16px; }
+
+.badges-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 20px 18px;
+  gap: 16px;
+  border-radius: 26px;
+  border: 1px solid rgba(240, 193, 147, 0.55);
+  background:
+    radial-gradient(90% 120% at 100% 0%, rgba(240, 193, 147, 0.28), transparent 55%),
+    repeating-conic-gradient(from 0deg at 50% 120%, rgba(255, 246, 235, 0.05) 0 6deg, transparent 6deg 12deg),
+    linear-gradient(155deg, #6b2233 0%, #4a1622 52%, #2c0b13 100%);
+  box-shadow: 0 16px 38px rgba(74, 22, 34, 0.34), inset 0 1px 0 rgba(255, 246, 235, 0.18);
+}
+.badges-hero-glow {
+  position: absolute;
+  width: 220px; height: 220px;
+  left: -60px; top: -90px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(246, 212, 168, 0.35), transparent 65%);
+  pointer-events: none;
+}
+.badges-ring {
+  width: 104px; height: 104px;
+  background: conic-gradient(from -90deg, #fff1cf, #f0c193 35%, #d8a66b calc(var(--pct) * 1%), rgba(255, 246, 235, 0.14) 0);
+  box-shadow: 0 0 0 4px rgba(240, 193, 147, 0.12), 0 8px 22px rgba(0, 0, 0, 0.35), inset 0 0 18px rgba(0, 0, 0, 0.3);
+}
+.badges-ring::before { inset: 9px; background: radial-gradient(circle at 35% 25%, #6b2233, #2a0c14); }
+.badges-ring-pct {
+  font-size: 26px;
+  background: linear-gradient(180deg, #fff6e0, #e9b97c);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.badges-hero-title { font-size: 20px; letter-spacing: 0.01em; color: #fff3df; }
+.badges-sub { font-size: 12.5px; opacity: 0.9; }
+.badges-meter {
+  display: block; height: 7px; margin-top: 6px; border-radius: 999px;
+  background: rgba(255, 246, 235, 0.16); overflow: hidden;
+}
+.badges-meter-fill {
+  display: block; height: 100%; border-radius: inherit;
+  background: linear-gradient(90deg, #f6d4a8, #d8a66b);
+  box-shadow: 0 0 10px rgba(240, 193, 147, 0.6);
+}
+
+.badges-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.badges-stat {
+  display: grid; justify-items: center; gap: 1px;
+  padding: 12px 6px 10px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: linear-gradient(180deg, var(--card), #f7ecd8);
+  box-shadow: 0 6px 16px rgba(74, 22, 34, 0.07);
+  text-align: center;
+}
+.badges-stat-ic { font-size: 16px; color: var(--gold); line-height: 1; }
+.badges-stat-n { font-size: 22px; color: var(--green-dark); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.badges-stat-l { font-size: 10.5px; color: var(--muted); line-height: 1.25; }
+
+.badges-sec {
+  margin: 6px 2px 0;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--green);
+}
+.badges-sec::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(176, 122, 60, 0.5), transparent); }
+
+.badge-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 560px) { .badge-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.badge-card {
+  justify-items: center; text-align: center;
+  padding: 18px 12px 14px;
+  border-radius: 20px;
+  gap: 7px;
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
+}
+.badge-card:active { transform: scale(0.98); }
+.badge-card.is-earned {
+  border: 1px solid transparent;
+  background:
+    linear-gradient(160deg, #fffaf0, #f6e8d1) padding-box,
+    linear-gradient(135deg, #f6d4a8, #b07a3c 45%, #f6d4a8) border-box;
+  box-shadow: 0 12px 26px rgba(176, 122, 60, 0.26), inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+}
+body[data-theme='dark'] .badge-card.is-earned {
+  background:
+    linear-gradient(160deg, #3a2416, #241610) padding-box,
+    linear-gradient(135deg, #f0c193, #8a5a28 45%, #f0c193) border-box;
+}
+.badge-card.is-locked { background: repeating-linear-gradient(135deg, var(--card) 0 10px, #f8f1e3 10px 20px); }
+.badge-card.is-next {
+  border-color: rgba(176, 122, 60, 0.8);
+  box-shadow: 0 0 0 3px rgba(176, 122, 60, 0.16), 0 10px 24px rgba(176, 122, 60, 0.18);
+}
+.badge-next-tag {
+  position: absolute; top: 9px; inset-inline-start: 9px;
+  padding: 2px 8px; border-radius: 999px;
+  font-size: 9.5px; font-weight: 800; letter-spacing: 0.03em;
+  color: #fff6eb; background: linear-gradient(180deg, #7a2a3c, #4a1622);
+}
+.badge-lock { position: absolute; top: 9px; inset-inline-end: 10px; font-size: 12px; opacity: 0.5; }
+.badge-card.is-next .badge-lock { opacity: 0.8; }
+.badge-card.is-next .badge-coin { margin-top: 14px; }
+
+/* the medal */
+.badge-coin {
+  width: 62px; height: 62px;
+  font-size: 26px;
+  border: 3px solid rgba(255, 255, 255, 0.55);
+  background: radial-gradient(circle at 32% 26%, #fff8e3, #e9bd82 46%, #a56f34 100%);
+  box-shadow:
+    0 0 0 4px rgba(216, 166, 107, 0.22),
+    inset 0 -4px 8px rgba(80, 40, 10, 0.35),
+    inset 0 3px 6px rgba(255, 255, 255, 0.6),
+    0 8px 16px rgba(110, 70, 25, 0.38);
+}
+.badge-coin-ic { position: relative; z-index: 1; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55); }
+.badge-card.tier-bronze .badge-coin { background: radial-gradient(circle at 32% 26%, #ffe9d2, #d99a63 46%, #8d5224 100%); }
+.badge-card.tier-silver .badge-coin {
+  background: radial-gradient(circle at 32% 26%, #ffffff, #d7dde3 46%, #8a949e 100%);
+  box-shadow: 0 0 0 4px rgba(150, 160, 170, 0.25), inset 0 -4px 8px rgba(40, 50, 60, 0.35), inset 0 3px 6px rgba(255, 255, 255, 0.7), 0 8px 16px rgba(60, 70, 80, 0.32);
+}
+.badge-card.tier-gold .badge-coin {
+  background: radial-gradient(circle at 32% 26%, #fffbe0, #f6d27a 44%, #b8801f 100%);
+  box-shadow: 0 0 0 4px rgba(240, 193, 90, 0.35), 0 0 22px rgba(240, 193, 90, 0.5), inset 0 -4px 8px rgba(110, 70, 10, 0.4), inset 0 3px 6px rgba(255, 255, 255, 0.7), 0 8px 16px rgba(120, 80, 10, 0.4);
+}
+.badge-card.is-locked .badge-coin { filter: grayscale(1) opacity(0.5); box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.18); }
+.badge-ribbon { width: 24px; height: 24px; font-size: 13px; top: 9px; inset-inline-end: 9px; }
+.badge-title { font-size: 13.5px; font-weight: 800; }
+.badge-hint { font-size: 11px; }
+.badge-track { height: 7px; margin-top: 3px; background: rgba(74, 22, 34, 0.1); }
+.badge-step { background: linear-gradient(90deg, #e8b878, #b07a3c); box-shadow: 0 0 6px rgba(176, 122, 60, 0.5); }
+.badge-count { font-variant-numeric: tabular-nums; }
+
+/* celebration */
+.badge-party-card {
+  width: min(100%, 350px);
+  padding: 34px 24px 24px;
+  border-radius: 28px;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(246, 212, 168, 0.4), transparent 62%),
+    linear-gradient(165deg, #6b2233, #3a111b 70%, #240910);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(240, 193, 147, 0.4);
+}
+.badge-party-rays {
+  position: absolute; left: 50%; top: 22px;
+  width: 340px; height: 340px; margin-left: -170px;
+  background: repeating-conic-gradient(from 0deg, rgba(246, 212, 168, 0.22) 0 7deg, transparent 7deg 20deg);
+  -webkit-mask-image: radial-gradient(circle, #000 0, transparent 62%);
+  mask-image: radial-gradient(circle, #000 0, transparent 62%);
+  animation: badge-spin 14s linear infinite;
+  pointer-events: none;
+}
+.badge-party-coin {
+  position: relative;
+  width: 104px; height: 104px; font-size: 46px;
+  border: 4px solid rgba(255, 255, 255, 0.55);
+  box-shadow: 0 0 0 8px rgba(240, 193, 147, 0.2), 0 0 40px rgba(246, 212, 168, 0.55), inset 0 -6px 12px rgba(80, 40, 10, 0.35), 0 14px 34px rgba(0, 0, 0, 0.5);
+  animation: badge-bounce 1.6s ease-in-out infinite;
+}
+.badge-party-card.tier-silver .badge-party-coin { background: radial-gradient(circle at 32% 26%, #fff, #d7dde3 46%, #8a949e); }
+.badge-party-card.tier-gold .badge-party-coin { background: radial-gradient(circle at 32% 26%, #fffbe0, #f6d27a 44%, #b8801f); }
+.badge-party-title { font-size: 21px; color: #fff3df; position: relative; }
+.badge-party-sub { position: relative; font-size: 13.5px; }
+.badge-party .btn { position: relative; border-radius: 999px; }
+@keyframes badge-spin { to { transform: rotate(360deg); } }
+@keyframes badge-bounce { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-6px) scale(1.04); } }
+@media (prefers-reduced-motion: reduce) { .badge-party-rays, .badge-party-coin { animation: none; } }
+
+body[data-theme='dark'] .badges-stat { background: linear-gradient(180deg, #2a1a1e, #221518); border-color: #4a3338; }
+body[data-theme='dark'] .badge-card.is-locked { background: repeating-linear-gradient(135deg, #261a1d 0 10px, #2b1e21 10px 20px); }

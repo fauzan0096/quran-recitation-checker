@@ -172,6 +172,25 @@ const BADGES = [
   },
 ];
 
+// Inaam ka darja: bronze (shuruaat) -> silver -> gold (bade maqsad).
+const TIERS = {
+  first: 'bronze',
+  hundred: 'bronze',
+  perfect: 'bronze',
+  quarter: 'silver',
+  half: 'silver',
+  perfect25: 'silver',
+  accurate: 'silver',
+  surah1: 'silver',
+  streak7: 'silver',
+  three: 'gold',
+  khatam: 'gold',
+  surah5: 'gold',
+  streak30: 'gold',
+  days30: 'gold',
+};
+const tierOf = (id) => TIERS[id] || 'bronze';
+
 function context() {
   const basic = stats();
   const exact = scoreStats();
@@ -243,6 +262,7 @@ export function mountBadges(root, options = {}) {
     const percent = Math.min(100, Math.round((ctx.checked / ctx.total) * 100));
 
     const hero = el('div', 'badges-hero');
+    hero.appendChild(el('span', 'badges-hero-glow'));
     const ring = el('div', 'badges-ring');
     ring.style.setProperty('--pct', String(percent));
     ring.appendChild(el('span', 'badges-ring-pct', `${percent}%`));
@@ -256,34 +276,73 @@ export function mountBadges(root, options = {}) {
     heroText.appendChild(
       el('span', 'badges-sub', t('badges.earned', { earned, total: list.length }))
     );
+    const meter = el('span', 'badges-meter');
+    const meterFill = el('span', 'badges-meter-fill');
+    meterFill.style.width = `${Math.round((earned / Math.max(1, list.length)) * 100)}%`;
+    meter.appendChild(meterFill);
+    heroText.appendChild(meter);
     hero.appendChild(heroText);
     root.appendChild(hero);
 
-    const grid = el('div', 'badge-grid');
-    for (const badge of list) {
-      const card = el('div', `badge-card${badge.earned ? ' is-earned' : ''}`);
-      if (badge.earned) card.appendChild(el('span', 'badge-ribbon', '✓'));
+    const chips = el('div', 'badges-stats');
+    const chip = (icon, value, label) => {
+      const box = el('div', 'badges-stat');
+      box.appendChild(el('span', 'badges-stat-ic', icon));
+      box.appendChild(el('strong', 'badges-stat-n', String(value)));
+      box.appendChild(el('span', 'badges-stat-l', label));
+      return box;
+    };
+    chips.append(
+      chip('☾', ctx.streak, L('Din lagataar', 'دن لگاتار', 'Day streak')),
+      chip('✓', ctx.perfect, L('Be-ghalti ayaat', 'بے غلطی آیات', 'Perfect ayas')),
+      chip('❖', ctx.surahs, L('Surah mukammal', 'سورتیں مکمل', 'Surahs done'))
+    );
+    root.appendChild(chips);
 
-      card.appendChild(el('span', 'badge-coin', badge.icon));
-      card.appendChild(el('strong', 'badge-title', badge.title()));
+    // Agla maqsad: jo inaam sab se qareeb hai.
+    const open = list.filter((badge) => !badge.earned);
+    const nextBadge = open.reduce((best, badge) => (!best || badge.ratio > best.ratio ? badge : best), null);
 
-      if (badge.hint) card.appendChild(el('span', 'badge-hint', badge.hint()));
+    const card = (badge, isNext) => {
+      const node = el(
+        'div',
+        `badge-card tier-${tierOf(badge.id)}${badge.earned ? ' is-earned' : ' is-locked'}${isNext ? ' is-next' : ''}`
+      );
+      if (badge.earned) node.appendChild(el('span', 'badge-ribbon', '✓'));
+      else node.appendChild(el('span', 'badge-lock', '🔒'));
+      if (isNext) node.appendChild(el('span', 'badge-next-tag', L('Agla maqsad', 'اگلا مقصد', 'Next goal')));
+
+      const coin = el('span', 'badge-coin');
+      coin.appendChild(el('span', 'badge-coin-ic', badge.icon));
+      node.appendChild(coin);
+      node.appendChild(el('strong', 'badge-title', badge.title()));
+      if (badge.hint) node.appendChild(el('span', 'badge-hint', badge.hint()));
 
       if (!badge.earned) {
         const track = el('span', 'badge-track');
         const step = el('span', 'badge-step');
         step.style.width = `${Math.round(badge.ratio * 100)}%`;
         track.appendChild(step);
-        card.appendChild(track);
-        card.appendChild(
+        node.appendChild(track);
+        node.appendChild(
           el('span', 'badge-count', `${Math.min(badge.value, badge.target)} / ${badge.target}`)
         );
       } else {
-        card.appendChild(el('span', 'badge-count is-done', t('badges.done')));
+        node.appendChild(el('span', 'badge-count is-done', t('badges.done')));
       }
-      grid.appendChild(card);
-    }
-    root.appendChild(grid);
+      return node;
+    };
+
+    const section = (title, items) => {
+      if (!items.length) return;
+      root.appendChild(el('h3', 'badges-sec', title));
+      const grid = el('div', 'badge-grid');
+      for (const badge of items) grid.appendChild(card(badge, nextBadge && badge.id === nextBadge.id));
+      root.appendChild(grid);
+    };
+
+    section(L('Mile hue inaam', 'ملے ہوئے انعام', 'Earned'), list.filter((badge) => badge.earned));
+    section(L('Aage ke maqsad', 'آگے کے مقاصد', 'Goals ahead'), open);
   }
 
   build();
@@ -304,12 +363,16 @@ export function celebrate(list) {
   overlay.setAttribute('aria-label', badge.title());
 
   const card = document.createElement('div');
-  card.className = 'badge-party-card';
+  card.className = `badge-party-card tier-${tierOf(badge.id)}`;
 
-  for (let i = 0; i < 14; i += 1) {
+  const rays = document.createElement('span');
+  rays.className = 'badge-party-rays';
+  card.appendChild(rays);
+
+  for (let i = 0; i < 28; i += 1) {
     const spark = document.createElement('span');
     spark.className = 'badge-spark';
-    spark.textContent = i % 3 === 0 ? '✦' : '•';
+    spark.textContent = ['✦', '•', '✧', '★'][i % 4];
     spark.style.setProperty('--x', `${8 + Math.random() * 84}%`);
     spark.style.setProperty('--d', `${(Math.random() * 1.4).toFixed(2)}s`);
     spark.style.setProperty('--r', `${Math.round(Math.random() * 360)}deg`);

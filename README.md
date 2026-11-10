@@ -461,11 +461,23 @@ More → **Inaam**. Har badge pehle se mehfooz data se banta hai (`progress.js` 
 - **Surah**: pehli surah mukammal, 5 surahs mukammal (saari ayaat ✓).
 - **Consistency**: 7 din lagataar, 30 din lagataar, 30 din ka safar.
 
-Naya badge milne par ek **celebration overlay** aata hai — bara gold medallion, sparkles,
-"Mubarak ho!" aur ek button. Screen par upar aap ki Quran progress ek ring me dikhti hai,
-aur har badge ek **gold coin** ki tarah (earned = chamakta hua, locked = halka aur progress
-bar ke saath). Sab **free** hai (premium nahi). Data `tc.badges` me sirf earned ids ke
-tor par rehta hai.
+Screen (naya design):
+
+- **Hero card**: dark maroon panel, gold ring me poori Quran progress (%), aur neeche ek
+  patli **meter** jo dikhati hai kitne badges mile.
+- Uske neeche teen **stats** chips: lambi streak, be-ghalti ayaat aur mukammal surahs.
+- Badges ke teen **darje**: **bronze** (shuruaat — pehla qadam, 100 ayaat, pehli
+  be-ghalti), **silver** (chauthai, aadha, 25 be-ghalti, saaf talaawat, pehli surah,
+  7 din), **gold** (teen chauthai, khatam, 5 surahs, 30 din, 30 din ka safar). Medal ka
+  rang darje se badalta hai.
+- List do hisson me: **"Haasil kiye"** (earned) aur **"Aage ke lakshya"** (locked, 🔒).
+  Jo maqsad sab se qareeb hai us par **"Next goal"** ka tag.
+- Locked badge par progress bar aur `x / target`.
+
+Naya badge milne par **celebration** overlay: gold medallion, ghoomti kirnein, 28
+chamakte sitare, "Mubarak ho!" aur ek button. Sab **free** hai (premium nahi). Data
+`tc.badges` me sirf earned ids ke tor par rehta hai.
+
 
 ## Murajaa — `murajaa.js` (Premium)
 
