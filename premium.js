@@ -8,6 +8,17 @@
 
 export const PAYWALL_ON = true;
 
+// Demo switches ("Premium chalu karein", "Trial khatam") are for testing only.
+// They appear with ?demo=1 in the URL and never in a normal release — on Play
+// Store a purchase must come from Play Billing (see billing.js).
+export const DEMO_UI = (() => {
+  try {
+    return new URLSearchParams(window.location.search).has('demo');
+  } catch (error) {
+    return false;
+  }
+})();
+
 // First days are a full Premium trial, then the everyday free limits.
 export const TRIAL_DAYS = 3;
 export const FREE_CHECKS_PER_DAY = 3;

@@ -113,9 +113,48 @@ export async function loadModel(modelId, onProgress = () => {}) {
   }
 }
 
-/** Transcribe 16 kHz mono Float32 audio and return plain text. */
-export async function transcribe(instance, audioFloat32) {
+/** Drop leading/trailing silence so the model does not decode it. */
+function trimSilence(samples, threshold = 0.006, padSeconds = 0.12) {
+  const pad = Math.round(padSeconds * TARGET_RATE);
+  let start = 0;
+  while (start < samples.length && Math.abs(samples[start]) < threshold) start += 1;
+  if (start >= samples.length - 1) return samples; // all quiet: leave it to the caller
+
+  let end = samples.length - 1;
+  while (end > start && Math.abs(samples[end]) < threshold) end -= 1;
+
+  start = Math.max(0, start - pad);
+  end = Math.min(samples.length - 1, end + pad);
+  return samples.subarray(start, end + 1);
+}
+
+/**
+ * Transcribe 16 kHz mono Float32 audio and return plain text.
+ * @param {object} [options] { fast?: boolean } — fast is greedy decoding (default).
+ */
+export async function transcribe(instance, audioFloat32, options = {}) {
   if (!instance) throw new Error('Model load nahi hua');
+
+  const fast = options.fast !== false;
+  const audio = trimSilence(audioFloat32 || new Float32Array(0));
+  const seconds = audio.length / TARGET_RATE;
+
+  // Greedy (num_beams 1) is several times faster than Whisper's default beam
+  // search and is plenty for a short aya; the accurate mode keeps beams.
+  const args = {
+    language: 'ar',
+    task: 'transcribe',
+    return_timestamps: false,
+    num_beams: fast ? 1 : 5,
+    do_sample: false,
+    max_new_tokens: Math.max(96, Math.min(448, Math.round(seconds * 8) + 64)),
+  };
+  // Chunking only helps long audio; on a short aya it just adds overlap work.
+  if (seconds > 30) {
+    args.chunk_length_s = 30;
+    args.stride_length_s = 5;
+  }
+
   let timer = null;
   const timeout = new Promise((_, reject) => {
     timer = setTimeout(
@@ -124,15 +163,7 @@ export async function transcribe(instance, audioFloat32) {
     );
   });
   try {
-    const output = await Promise.race([
-      instance(audioFloat32, {
-        language: 'ar',
-        task: 'transcribe',
-        chunk_length_s: 30,
-        stride_length_s: 5,
-      }),
-      timeout,
-    ]);
+    const output = await Promise.race([instance(audio, args), timeout]);
     const text = Array.isArray(output)
       ? output.map((part) => (part && part.text) || '').join(' ')
       : (output && output.text) || '';

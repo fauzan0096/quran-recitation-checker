@@ -36,6 +36,16 @@ import {
 } from './asr.js';
 import './strings-v2.js';
 import './premium-strings.js';
+import './extra-strings.js';
+import { mountPrayer } from './prayer.js';
+import {
+  available as billingAvailable,
+  buy as billingBuy,
+  manage as billingManage,
+  manageAvailable as billingManageAvailable,
+  restore as billingRestore,
+} from './billing.js';
+import { download as backupDownload, restore as backupRestore } from './backup.js';
 import { mountTasbeeh } from './tasbeeh-v2.js';
 import { mountReport, recordReport } from './premium-tools.js';
 import { mountDuas } from './duas.js';
@@ -47,6 +57,7 @@ import { mountCalendar } from './calendar.js';
 import { mountDaily } from './daily.js';
 import { LANGUAGES, initLanguage, getLanguage, setLanguage, t } from './i18n.js';
 import {
+  DEMO_UI,
   PLANS,
   activate as activatePlan,
   canCheck,
@@ -77,6 +88,7 @@ const STORAGE = {
   model: 'tc.modelId',
   modelReady: 'tc.modelReady', // id of a model that finished loading once on this device
   reading: 'tc.reading',
+  speed: 'tc.speed',
   welcomed: 'tc.welcomed',
 };
 const CHUNK = 25;
@@ -109,6 +121,32 @@ const state = {
 };
 
 const els = {};
+const ERROR_KEY = 'tc.errors';
+
+function readErrors() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(ERROR_KEY) || '[]');
+    return Array.isArray(raw) ? raw : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+function logError(message) {
+  const list = readErrors();
+  list.push(`${new Date().toISOString()} ${message}`);
+  try {
+    localStorage.setItem(ERROR_KEY, JSON.stringify(list.slice(-20)));
+  } catch (error) {
+    /* private mode */
+  }
+}
+
+function paintErrors() {
+  if (!els.errorLog) return;
+  const list = readErrors();
+  els.errorLog.textContent = list.length ? list.join('\n') : t('errors.none');
+}
 let toastTimer = null;
 const bootAt = Date.now();
 let splashGone = false;
@@ -125,6 +163,7 @@ const moreViews = {
   hifz: null,
   hztest: null,
   report: null,
+  prayer: null,
 };
 
 init();
@@ -139,11 +178,18 @@ async function init() {
   wireEvents();
   setGlobalStatus('');
 
+  window.addEventListener('error', (event) => {
+    logError(`${event.message} @ ${event.filename || '?'}:${event.lineno || 0}`);
+  });
+  window.addEventListener('unhandledrejection', (event) => {
+    logError(String(event.reason || 'unhandled rejection'));
+  });
+
   // Show the home screen at once. The Quran text (1.3 MB) loads in the
   // background, so the app opens instantly instead of waiting for it.
   paintHomeDate();
   const go = new URLSearchParams(window.location.search).get('go');
-  setView(['dua', 'tasbeeh', 'daily', 'reader', 'qibla', 'calendar'].includes(go) ? go : 'home');
+  setView(['dua', 'tasbeeh', 'daily', 'reader', 'qibla', 'calendar', 'prayer'].includes(go) ? go : 'home');
   hideSplash();
   maybeWelcome();
   loadQuranInBackground();
@@ -277,6 +323,7 @@ function cacheElements() {
     'list-title', 'global-status', 'range-error', 'aya-list',
     'list-footer', 'load-more', 'share-app', 'model-select', 'load-model',
     'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
+    'accurate-mode',
     'mic-check', 'mic-check-output', 'player', 'tajweed',
     'toast',
     'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
@@ -286,6 +333,8 @@ function cacheElements() {
     'view-khatam', 'view-hifz', 'khatam-root', 'hifz-root', 'close-khatam', 'close-hifz',
     'more-hztest', 'view-hztest', 'hztest-root', 'close-hztest',
     'more-report', 'view-report', 'report-root', 'close-report', 'open-report',
+    'more-prayer', 'view-prayer', 'prayer-root', 'close-prayer',
+    'backup-export', 'backup-import', 'backup-file', 'error-log', 'errors-copy',
     'view-premium', 'close-premium', 'premium-root', 'open-premium', 'premium-status',
     'home-date', 'home-noor', 'view-dua', 'close-dua', 'dua-root', 'bottom-nav',
     'more-daily', 'view-daily', 'close-daily', 'daily-root',
@@ -349,6 +398,7 @@ function restoreSelection() {
     const modelId = localStorage.getItem(STORAGE.model);
 
     if (modelId && MODELS.some((m) => m.id === modelId)) els.modelSelect.value = modelId;
+    if (els.accurateMode) els.accurateMode.checked = localStorage.getItem(STORAGE.speed) === 'accurate';
   } catch (error) {
     console.warn('selection restore failed', error);
   }
@@ -887,6 +937,7 @@ function renderAyaText(target, verse, alignment) {
 
   const tokens = source.split(/(\s+)/);
   let wordIndex = -1;
+  const notes = [];
 
   for (const token of tokens) {
     if (!token) continue;
@@ -905,12 +956,17 @@ function renderAyaText(target, verse, alignment) {
     const span = document.createElement('span');
     span.className = `w is-${result.status}`;
     span.textContent = token;
+    target.appendChild(span);
+    notes.push(`${token} — ${noteFor(result)}`);
+  }
 
-    const note = document.createElement('span');
-    note.className = 'w-note';
-    note.textContent = ` (${noteFor(result)})`;
-
-    target.append(span, note);
+  // Notes sit on their own line: putting Latin text inside the Arabic line
+  // breaks the right-to-left flow (and the joining) around that word.
+  if (notes.length) {
+    const line = document.createElement('div');
+    line.className = 'aya-notes';
+    line.textContent = notes.join(' · ');
+    target.appendChild(line);
   }
 
   if (alignment.extras && alignment.extras.length) {
@@ -1023,6 +1079,15 @@ function updateRecordButtons() {
       button.textContent = button.dataset.label || t('record');
     }
   });
+
+  // A page reload for a new service worker must wait until nothing is running.
+  const busy = Boolean(state.recording || state.busyId || state.modelLoading || state.micChecking);
+  document.body.dataset.busy = busy ? '1' : '0';
+  if (!busy && typeof window.bayyinReloadPending === 'function') {
+    const reload = window.bayyinReloadPending;
+    window.bayyinReloadPending = null;
+    reload();
+  }
 }
 
 async function toggleRecording(id, keys) {
@@ -1141,7 +1206,22 @@ async function checkTarget(id, keys, blob) {
     }
 
     setStatus(id, t('status.transcribing'));
-    const text = await transcribe(state.model, audio);
+    const accurate = Boolean(els.accurateMode && els.accurateMode.checked);
+    const seconds = Math.max(1, Math.round(audio.length / 16000));
+    const startedAt = Date.now();
+    const ticker = window.setInterval(() => {
+      const s = Math.max(1, Math.round((Date.now() - startedAt) / 1000));
+      setGlobalStatus(t('status.thinking', { s, audio: seconds }));
+    }, 1000);
+    setGlobalStatus(t('status.thinking', { s: 0, audio: seconds }));
+
+    let text;
+    try {
+      text = await transcribe(state.model, audio, { fast: !accurate });
+    } finally {
+      window.clearInterval(ticker);
+      setGlobalStatus('');
+    }
     if (!text) throw new Error(t('status.nothing'));
 
     const expected = [];
@@ -1331,7 +1411,7 @@ function onModelProgress(progress) {
     setProgress(progress.progress);
     const pct = Math.round(progress.progress);
     if (progress.file) els.modelStatus.textContent = `${progress.file} — ${pct}%`;
-    if (progress.file && pct % 20 < 5) setGlobalStatus(`Model download: ${progress.file} ${pct}%`);
+    if (progress.file) setGlobalStatus(t('model.downloadingPct', { pct }));
   } else if (progress.status === 'initiate' && progress.file) {
     els.modelStatus.textContent = t('model.start', { file: progress.file });
   } else if (progress.status === 'done' && progress.file) {
@@ -1483,6 +1563,8 @@ function ensureMounted(name) {
         await jumpToAya(surah, aya);
       },
     });
+  } else if (name === 'prayer') {
+    moreViews.prayer = mountPrayer(els.prayerRoot);
   }
 }
 
@@ -1507,6 +1589,7 @@ function setView(name) {
     hifz: els.viewHifz,
     hztest: els.viewHztest,
     report: els.viewReport,
+    prayer: els.viewPrayer,
     premium: els.viewPremium,
   };
   if (currentView === 'qibla' && name !== 'qibla') moreViews.qibla?.stop();
@@ -1529,12 +1612,17 @@ function setView(name) {
   if (name === 'hifz') ensureMounted('hifz');
   if (name === 'hztest') ensureMounted('hztest');
   if (name === 'report') ensureMounted('report');
+  if (name === 'prayer') ensureMounted('prayer');
   if (name === 'khatam') moreViews.khatam?.refresh();
   if (name === 'hifz') moreViews.hifz?.refresh();
   if (name === 'hztest') moreViews.hztest?.refresh();
   if (name === 'report') moreViews.report?.refresh();
+  if (name === 'prayer') moreViews.prayer?.refresh();
   if (name === 'home') paintHomeTodo();
-  if (name === 'settings') renderPremiumCard();
+  if (name === 'settings') {
+    renderPremiumCard();
+    paintErrors();
+  }
   if (name === 'premium') renderPremium();
   if (name === 'daily') moreViews.daily?.refresh();
   if (name === 'tasbeeh') moreViews.tasbeeh?.refresh();
@@ -1645,16 +1733,70 @@ function renderPremium() {
         card.appendChild(badge);
       }
       card.append(name, amount, note);
-      card.addEventListener('click', () => {
-        activatePlan(id);
-        toast(t('premium.activated'));
-        renderPremium();
-        renderPremiumCard();
+      card.addEventListener('click', async () => {
+        if (billingAvailable()) {
+          card.disabled = true;
+          const result = await billingBuy(id);
+          card.disabled = false;
+          if (result.ok) {
+            toast(t('premium.activated'));
+            renderPremium();
+            renderPremiumCard();
+          } else if (result.reason === 'unavailable') {
+            toast(t('premium.notAvailable'));
+          } else {
+            toast(t('premium.purchaseFailed'));
+          }
+          return;
+        }
+        if (DEMO_UI) {
+          activatePlan(id);
+          toast(t('premium.activated'));
+          renderPremium();
+          renderPremiumCard();
+          return;
+        }
+        toast(t('premium.notAvailable'));
       });
       grid.appendChild(card);
     }
     root.appendChild(grid);
-  } else {
+
+    const hint = document.createElement('p');
+    hint.className = 'hint';
+    hint.textContent = t('premium.buyHint');
+    root.appendChild(hint);
+
+    if (billingAvailable()) {
+      const restore = document.createElement('button');
+      restore.type = 'button';
+      restore.className = 'btn ghost small';
+      restore.textContent = t('premium.restore');
+      restore.addEventListener('click', async () => {
+        const result = await billingRestore();
+        if (result.ok) {
+          toast(t('premium.restored'));
+          renderPremium();
+          renderPremiumCard();
+        } else {
+          toast(t('premium.restoreNone'));
+        }
+      });
+      root.appendChild(restore);
+    } else if (!DEMO_UI) {
+      const note = document.createElement('p');
+      note.className = 'hint';
+      note.textContent = t('premium.notAvailable');
+      root.appendChild(note);
+    }
+  } else if (billingManageAvailable()) {
+    const manage = document.createElement('button');
+    manage.type = 'button';
+    manage.className = 'btn ghost';
+    manage.textContent = t('premium.managePlay');
+    manage.addEventListener('click', () => billingManage());
+    root.appendChild(manage);
+  } else if (DEMO_UI) {
     const manage = document.createElement('button');
     manage.type = 'button';
     manage.className = 'btn ghost';
@@ -1694,47 +1836,49 @@ function renderPremium() {
   features.append(freeBox, proBox);
   root.appendChild(features);
 
-  const demo = document.createElement('p');
-  demo.className = 'hint';
-  demo.textContent = t('premium.demoNote');
-  root.appendChild(demo);
+  if (DEMO_UI) {
+    const demo = document.createElement('p');
+    demo.className = 'hint';
+    demo.textContent = t('premium.demoNote');
+    root.appendChild(demo);
 
-  const tools = document.createElement('div');
-  tools.className = 'premium-tools';
-  if (!s.premium) {
-    const on = document.createElement('button');
-    on.type = 'button';
-    on.className = 'btn ghost small';
-    on.textContent = t('premium.demoOn');
-    on.addEventListener('click', () => {
-      activatePlan('monthly');
-      toast(t('premium.activated'));
+    const tools = document.createElement('div');
+    tools.className = 'premium-tools';
+    if (!s.premium) {
+      const on = document.createElement('button');
+      on.type = 'button';
+      on.className = 'btn ghost small';
+      on.textContent = t('premium.demoOn');
+      on.addEventListener('click', () => {
+        activatePlan('monthly');
+        toast(t('premium.activated'));
+        renderPremium();
+        renderPremiumCard();
+      });
+      tools.appendChild(on);
+    }
+    const skip = document.createElement('button');
+    skip.type = 'button';
+    skip.className = 'btn ghost small';
+    skip.textContent = t('premium.resetTrial');
+    skip.addEventListener('click', () => {
+      resetDemo();
+      toast(t('premium.reset'));
       renderPremium();
       renderPremiumCard();
     });
-    tools.appendChild(on);
+    const jump = document.createElement('button');
+    jump.type = 'button';
+    jump.className = 'btn ghost small';
+    jump.textContent = t('premium.skipTrial');
+    jump.addEventListener('click', () => {
+      skipTrial(4);
+      renderPremium();
+      renderPremiumCard();
+    });
+    tools.append(skip, jump);
+    root.appendChild(tools);
   }
-  const skip = document.createElement('button');
-  skip.type = 'button';
-  skip.className = 'btn ghost small';
-  skip.textContent = t('premium.resetTrial');
-  skip.addEventListener('click', () => {
-    resetDemo();
-    toast(t('premium.reset'));
-    renderPremium();
-    renderPremiumCard();
-  });
-  const jump = document.createElement('button');
-  jump.type = 'button';
-  jump.className = 'btn ghost small';
-  jump.textContent = t('premium.skipTrial');
-  jump.addEventListener('click', () => {
-    skipTrial(4);
-    renderPremium();
-    renderPremiumCard();
-  });
-  tools.append(skip, jump);
-  root.appendChild(tools);
 }
 
 // --------------------------------------------------------------- progress
@@ -2122,6 +2266,7 @@ function wireEvents() {
   }
   go(els.moreHztest, 'hztest');
   go(els.moreReport, 'report');
+  go(els.morePrayer, 'prayer');
   go(els.homeOpenQuran, 'reader');
   go(els.homeDua, 'dua');
   go(els.moreDaily, 'daily');
@@ -2138,11 +2283,57 @@ function wireEvents() {
     els.closeHifz,
     els.closeHztest,
     els.closeReport,
+    els.closePrayer,
     els.closePremium,
   ]) {
     go(closer, 'home');
   }
   if (els.openReport) els.openReport.addEventListener('click', () => setView('report'));
+
+  if (els.backupExport) {
+    els.backupExport.addEventListener('click', () => {
+      const result = backupDownload();
+      toast(result.ok ? t('backup.done', { count: result.count }) : t('backup.failed'));
+    });
+  }
+
+  if (els.backupImport && els.backupFile) {
+    els.backupImport.addEventListener('click', () => els.backupFile.click());
+    els.backupFile.addEventListener('change', async () => {
+      const file = els.backupFile.files && els.backupFile.files[0];
+      els.backupFile.value = '';
+      if (!file) return;
+      const result = await backupRestore(file);
+      if (!result.ok) {
+        toast(t('backup.badFile'));
+        return;
+      }
+      toast(t('backup.restored', { count: result.count }));
+      window.setTimeout(() => window.location.reload(), 1200);
+    });
+  }
+
+  if (els.errorsCopy) {
+    els.errorsCopy.addEventListener('click', async () => {
+      const text = readErrors().join('\n') || t('errors.none');
+      try {
+        await navigator.clipboard.writeText(text);
+        toast(t('errors.copied'));
+      } catch (error) {
+        toast(t('errors.none'));
+      }
+    });
+  }
+
+  if (els.accurateMode) {
+    els.accurateMode.addEventListener('change', () => {
+      try {
+        localStorage.setItem(STORAGE.speed, els.accurateMode.checked ? 'accurate' : 'fast');
+      } catch (error) {
+        /* private mode: the choice lasts this session only */
+      }
+    });
+  }
   if (els.openPremium) els.openPremium.addEventListener('click', () => setView('premium'));
   window.addEventListener('bayyin:paywall', () => setView('premium'));
   document.querySelectorAll('.bn-item').forEach((item) => {

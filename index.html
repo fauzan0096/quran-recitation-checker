@@ -3,6 +3,10 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://cdn.jsdelivr.net https://esm.sh; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; media-src 'self' blob:; connect-src 'self' blob: data: https://cdn.jsdelivr.net https://esm.sh https://huggingface.co https://*.huggingface.co https://*.hf.co https://api.quran.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-src 'none';"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#4b1b21" />
     <meta
@@ -186,7 +190,7 @@
           <span id="reading-meta" class="rc-meta"></span>
         </div>
 
-        <div id="global-status" class="global-status" hidden></div>
+        <div id="global-status" class="global-status" role="status" aria-live="polite" hidden></div>
         <p id="range-error" class="error" hidden></p>
 
         <div id="aya-list" class="aya-list"></div>
@@ -303,6 +307,20 @@
           </button>
         </div>
 
+        <div class="card">
+          <h3 data-i18n="backup.heading">Backup</h3>
+          <p class="hint" data-i18n="backup.hint">
+            Progress, report aur settings ek file me — phone badalne ya data mitne se pehle save karein.
+          </p>
+          <button type="button" id="backup-export" class="btn primary small" data-i18n="backup.export">
+            Backup file save karein
+          </button>
+          <button type="button" id="backup-import" class="btn ghost small" data-i18n="backup.import">
+            Backup wapas laayein
+          </button>
+          <input id="backup-file" type="file" accept="application/json,.json" hidden />
+        </div>
+
         <div class="card" id="install-card">
           <h3 data-i18n="install.heading">App install karein</h3>
           <p class="hint" data-i18n="install.hint">
@@ -326,6 +344,13 @@
             <span data-i18n="model.label">Model</span>
             <select id="model-select"></select>
           </label>
+          <label class="check-row">
+            <input type="checkbox" id="accurate-mode" />
+            <span data-i18n="model.accurate">Behtar accuracy (deri zyada)</span>
+          </label>
+          <p class="hint" data-i18n="model.speedHint">
+            Default tez hai. "Behtar accuracy" par har check thoda deri lagta hai, natija behtar ho sakta hai.
+          </p>
           <button type="button" id="load-model" class="btn" data-i18n="model.load">Model load karein</button>
           <div class="progress" id="model-progress" hidden>
             <div class="progress-bar" id="model-progress-bar"></div>
@@ -373,6 +398,19 @@
         </details>
 
         <details class="card">
+          <summary data-i18n="errors.heading">Error report</summary>
+          <div class="prose">
+            <p data-i18n="errors.hint">
+              App me kuch toota to yahan akhri error likha hota hai — copy kar ke bhej dein.
+            </p>
+            <pre id="error-log" class="error-log"></pre>
+            <button type="button" id="errors-copy" class="btn ghost small" data-i18n="errors.copy">
+              Copy karein
+            </button>
+          </div>
+        </details>
+
+        <details class="card">
           <summary data-i18n="licenses.summary">Licenses / Open source</summary>
           <div class="prose">
             <p>
@@ -397,6 +435,13 @@
                 substantial portion of this text.
               </li>
             </ul>
+            <p>
+              <strong>Quran font — Amiri Quran</strong><br />
+              Copyright 2010-2022 The Amiri Project Authors (https://github.com/aliftype/amiri).
+              Licensed under the SIL Open Font License, Version 1.1 —
+              <a href="https://scripts.sil.org/OFL" target="_blank" rel="noreferrer">scripts.sil.org/OFL</a>.
+              The full licence text is in <code>OFL-AmiriQuran.txt</code> in the source.
+            </p>
             <p>
               Mushaf page data: Tanzil Quran metadata (CC-BY). Updates:
               <a href="https://tanzil.net/updates/" target="_blank" rel="noreferrer">tanzil.net/updates</a>.
@@ -495,6 +540,11 @@
             <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-calendar" /></svg></span>
             <strong data-i18n="more.calendar">Islami calendar</strong>
             <span data-i18n="more.calendarHint">Hijri tareekh aur mahina</span>
+          </button>
+          <button type="button" class="more-card" id="more-prayer">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
+            <strong data-i18n="more.prayer">Namaz ke auqaat</strong>
+            <span data-i18n="more.prayerHint">Fajr se Isha tak, aap ki jagah ke hisaab se</span>
           </button>
         </div>
 
@@ -604,6 +654,17 @@
         </div>
         <div id="calendar-root"></div>
       </section>
+
+      <section id="view-prayer" hidden>
+        <div class="settings-head">
+          <button type="button" id="close-prayer" class="btn ghost small" data-i18n="back">◀ Wapas</button>
+          <h2>
+            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
+            <span data-i18n="prayer.heading">Namaz ke auqaat</span>
+          </h2>
+        </div>
+        <div id="prayer-root"></div>
+      </section>
     </main>
 
     <div id="welcome" class="welcome" hidden>
@@ -656,7 +717,7 @@
       </button>
     </nav>
 
-    <div id="toast" class="toast" hidden></div>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     <script type="module" src="install.js"></script>
     <script type="module" src="app.js"></script>
   </body>

@@ -1,0 +1,166 @@
+// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// or modification without written permission is not permitted (see LICENSE).
+
+// Strings for the pieces added after v2: Play billing messages, prayer times,
+// backup/restore, the local error log and the report's "old" reason.
+
+import { addStrings } from './i18n.js';
+
+addStrings('roman', {
+  'premium.notAvailable':
+    'Subscription sirf Play Store wali app me milti hai — browser me nahi. Play se install kar ke wahin se lein.',
+  'premium.purchaseFailed': 'Khareedari mukammal nahi hui. Dobara koshish karein.',
+  'premium.restore': 'Purchase restore karein',
+  'premium.restored': 'Aap ka Premium wapas mil gaya.',
+  'premium.restoreNone': 'Is account par koi purchase nahi mili.',
+  'premium.managePlay': 'Play Store me manage karein',
+  'premium.buyHint': 'Payment Play Store apne payment sheet me lega — is app me kuch save nahi hota.',
+
+  'more.prayer': 'Namaz ke auqaat',
+  'more.prayerHint': 'Fajr se Isha tak, aap ki jagah ke hisaab se',
+  'prayer.heading': 'Namaz ke auqaat',
+  'prayer.fajr': 'Fajr',
+  'prayer.dhuhr': 'Zuhr',
+  'prayer.asr': 'Asr',
+  'prayer.maghrib': 'Maghrib',
+  'prayer.isha': 'Isha',
+  'prayer.nextAt': 'Agli: {name} {time}',
+  'prayer.needPlace': 'Auqaat ke liye ek dafa apni jagah batayein — sab kuch phone par hisaab hota hai.',
+  'prayer.locate': 'Meri jagah lein',
+  'prayer.locateAgain': 'Jagah badlein',
+  'prayer.manual': 'Ya khud latitude / longitude daalein',
+  'prayer.save': 'Save',
+  'prayer.note': 'Hisaab: Fajr 18°, Isha 17°, Asr {school}. Masjid ke auqaat se halka farq ho sakta hai.',
+  'prayer.hanafi': 'Hanafi (2 sāya)',
+  'prayer.shafi': 'Shafi (1 sāya)',
+  'prayer.useHanafi': 'Asr Hanafi par',
+  'prayer.useShafi': 'Asr Shafi par',
+
+  'backup.heading': 'Backup',
+  'backup.hint': 'Progress, report aur settings ek file me — phone badalne ya data mitne se pehle save karein.',
+  'backup.export': 'Backup file save karein',
+  'backup.import': 'Backup wapas laayein',
+  'backup.done': 'Backup save ho gaya ({count} cheezein).',
+  'backup.failed': 'Backup nahi ban saka.',
+  'backup.restored': 'Backup wapas aa gaya ({count} cheezein) — app ab reload hogi.',
+  'backup.badFile': 'Yeh file Bayyin ka backup nahi lagti.',
+
+  'errors.heading': 'Error report',
+  'errors.hint': 'App me kuch toota to yahan akhri error likha hota hai — copy kar ke bhej dein.',
+  'errors.none': 'Koi error darj nahi.',
+  'errors.copy': 'Copy karein',
+  'errors.copied': 'Copy ho gaya.',
+
+  'rep.old': 'purani talaawat',
+  'status.thinking': 'Samajh rahe hain… {s}s ({audio}s audio)',
+  'model.downloadingPct': 'Model download: {pct}%',
+  'model.accurate': 'Behtar accuracy (deri zyada)',
+  'model.speedHint':
+    'Default tez hai. "Behtar accuracy" par har check thoda deri lagta hai, natija behtar ho sakta hai.',
+});
+
+addStrings('ur', {
+  'premium.notAvailable':
+    'سبسکرپشن صرف پلے اسٹور والی ایپ میں ملتی ہے — براؤزر میں نہیں۔ پلے سے انسٹال کر کے وہیں سے لیں۔',
+  'premium.purchaseFailed': 'خریداری مکمل نہیں ہوئی۔ دوبارہ کوشش کریں۔',
+  'premium.restore': 'خریداری بحال کریں',
+  'premium.restored': 'آپ کا پریمیم واپس مل گیا۔',
+  'premium.restoreNone': 'اس اکاؤنٹ پر کوئی خریداری نہیں ملی۔',
+  'premium.managePlay': 'پلے اسٹور میں مینیج کریں',
+  'premium.buyHint': 'ادائیگی پلے اسٹور اپنے پیمنٹ شیٹ میں لے گا — اس ایپ میں کچھ محفوظ نہیں ہوتا۔',
+
+  'more.prayer': 'نماز کے اوقات',
+  'more.prayerHint': 'فجر سے عشاء تک، آپ کی جگہ کے حساب سے',
+  'prayer.heading': 'نماز کے اوقات',
+  'prayer.fajr': 'فجر',
+  'prayer.dhuhr': 'ظہر',
+  'prayer.asr': 'عصر',
+  'prayer.maghrib': 'مغرب',
+  'prayer.isha': 'عشاء',
+  'prayer.nextAt': 'اگلی: {name} {time}',
+  'prayer.needPlace': 'اوقات کے لیے ایک بار اپنی جگہ بتائیں — سب کچھ فون پر حساب ہوتا ہے۔',
+  'prayer.locate': 'میری جگہ لیں',
+  'prayer.locateAgain': 'جگہ بدلیں',
+  'prayer.manual': 'یا خود latitude / longitude ڈالیں',
+  'prayer.save': 'محفوظ کریں',
+  'prayer.note': 'حساب: فجر 18°، عشاء 17°، عصر {school}۔ مسجد کے اوقات سے ہلکا فرق ہو سکتا ہے۔',
+  'prayer.hanafi': 'حنفی (2 سایہ)',
+  'prayer.shafi': 'شافعی (1 سایہ)',
+  'prayer.useHanafi': 'عصر حنفی پر',
+  'prayer.useShafi': 'عصر شافعی پر',
+
+  'backup.heading': 'بیک اپ',
+  'backup.hint': 'پروگریس، رپورٹ اور سیٹنگز ایک فائل میں — فون بدلنے یا ڈیٹا مٹنے سے پہلے محفوظ کریں۔',
+  'backup.export': 'بیک اپ فائل محفوظ کریں',
+  'backup.import': 'بیک اپ واپس لائیں',
+  'backup.done': 'بیک اپ محفوظ ہو گیا ({count} چیزیں)۔',
+  'backup.failed': 'بیک اپ نہیں بن سکا۔',
+  'backup.restored': 'بیک اپ واپس آ گیا ({count} چیزیں) — ایپ اب ری لوڈ ہوگی۔',
+  'backup.badFile': 'یہ فائل بیّن کا بیک اپ نہیں لگتی۔',
+
+  'errors.heading': 'ایرر رپورٹ',
+  'errors.hint': 'ایپ میں کچھ ٹوٹا تو یہاں آخری ایرر لکھا ہوتا ہے — کاپی کر کے بھیج دیں۔',
+  'errors.none': 'کوئی ایرر درج نہیں۔',
+  'errors.copy': 'کاپی کریں',
+  'errors.copied': 'کاپی ہو گیا۔',
+
+  'rep.old': 'پرانی تلاوت',
+  'status.thinking': 'سمجھ رہے ہیں… {s} س ({audio} س آڈیو)',
+  'model.downloadingPct': 'ماڈل ڈاؤن لوڈ: {pct}%',
+  'model.accurate': 'بہتر درستگی (دیری زیادہ)',
+  'model.speedHint':
+    'ڈیفالٹ تیز ہے۔ "بہتر درستگی" پر ہر چیک تھوڑی دیر لیتا ہے، نتیجہ بہتر ہو سکتا ہے۔',
+});
+
+addStrings('en', {
+  'premium.notAvailable':
+    'Subscriptions are sold only in the Play Store app, not in a browser. Install from Play and buy there.',
+  'premium.purchaseFailed': 'Purchase did not finish. Please try again.',
+  'premium.restore': 'Restore purchase',
+  'premium.restored': 'Your Premium is back.',
+  'premium.restoreNone': 'No purchase found on this account.',
+  'premium.managePlay': 'Manage in Play Store',
+  'premium.buyHint': 'Play Store takes the payment on its own sheet — nothing is stored in this app.',
+
+  'more.prayer': 'Prayer times',
+  'more.prayerHint': 'Fajr to Isha, worked out for your place',
+  'prayer.heading': 'Prayer times',
+  'prayer.fajr': 'Fajr',
+  'prayer.dhuhr': 'Dhuhr',
+  'prayer.asr': 'Asr',
+  'prayer.maghrib': 'Maghrib',
+  'prayer.isha': 'Isha',
+  'prayer.nextAt': 'Next: {name} {time}',
+  'prayer.needPlace': 'Share your place once — everything is calculated on the phone.',
+  'prayer.locate': 'Use my location',
+  'prayer.locateAgain': 'Change place',
+  'prayer.manual': 'Or enter latitude / longitude yourself',
+  'prayer.save': 'Save',
+  'prayer.note': 'Method: Fajr 18°, Isha 17°, Asr {school}. A mosque may be a minute or two different.',
+  'prayer.hanafi': 'Hanafi (2 shadows)',
+  'prayer.shafi': 'Shafi (1 shadow)',
+  'prayer.useHanafi': 'Asr Hanafi',
+  'prayer.useShafi': 'Asr Shafi',
+
+  'backup.heading': 'Backup',
+  'backup.hint': 'Progress, report and settings in one file — save it before changing phones or clearing data.',
+  'backup.export': 'Save backup file',
+  'backup.import': 'Restore a backup',
+  'backup.done': 'Backup saved ({count} items).',
+  'backup.failed': 'Could not create the backup.',
+  'backup.restored': 'Backup restored ({count} items) — the app will reload.',
+  'backup.badFile': 'That file does not look like a Bayyin backup.',
+
+  'errors.heading': 'Error report',
+  'errors.hint': 'If something broke, the last error is kept here — copy it and send it on.',
+  'errors.none': 'No error recorded.',
+  'errors.copy': 'Copy',
+  'errors.copied': 'Copied.',
+
+  'rep.old': 'old recitation',
+  'status.thinking': 'Working it out… {s}s ({audio}s audio)',
+  'model.downloadingPct': 'Model download: {pct}%',
+  'model.accurate': 'Better accuracy (slower)',
+  'model.speedHint':
+    'The default is fast. "Better accuracy" makes every check slower but may improve the result.',
+});

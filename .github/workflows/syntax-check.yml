@@ -1,0 +1,22 @@
+name: Syntax check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Parse every JavaScript module
+        run: |
+          files=$(git ls-files '*.js' | tr '\n' ' ')
+          npx --yes esbuild@0.21.5 $files --outdir=.check --format=esm --log-level=warning
+      - name: Check the web manifest and JSON files
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('manifest.webmanifest','utf8')); console.log('manifest ok')"

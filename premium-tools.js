@@ -66,20 +66,23 @@ function refLabel(key) {
  * { key: '2:255', score: 78, problems: [{ expected, heard, status }] }
  */
 export function recordReport(entries) {
+  const list = (entries || []).filter((entry) => entry && entry.key);
+  if (!list.length) return;
+
   const store = load();
   const day = dayString();
-  let changed = false;
 
-  for (const entry of entries || []) {
-    if (!entry || !entry.key) continue;
-    changed = true;
+  // One check is one session, even when it covered a whole mushaf page: the
+  // day box counts checks, not ayaat.
+  const scores = list.map((entry) => Math.max(0, Math.min(100, Math.round(Number(entry.score) || 0))));
+  const average = Math.round(scores.reduce((sum, score) => sum + score, 0) / scores.length);
+  const box = store.days[day] || { n: 0, sum: 0 };
+  box.n += 1;
+  box.sum += average;
+  store.days[day] = box;
 
+  for (const entry of list) {
     const score = Math.max(0, Math.min(100, Math.round(Number(entry.score) || 0)));
-
-    const box = store.days[day] || { n: 0, sum: 0 };
-    box.n += 1;
-    box.sum += score;
-    store.days[day] = box;
 
     const aya = store.ayat[entry.key] || { score: 0, at: 0, n: 0, ghalti: 0, chhoot: 0 };
     aya.score = score;
@@ -108,8 +111,6 @@ export function recordReport(entries) {
     }
     store.ayat[entry.key] = aya;
   }
-
-  if (!changed) return;
 
   store.words.sort((a, b) => b.n - a.n || b.at - a.at);
   store.words = store.words.slice(0, MAX_WORDS);
@@ -286,15 +287,10 @@ export function mountReport(root, options = {}) {
       const main = el('span', 'rep-main');
       main.appendChild(el('strong', '', refLabel(row.key)));
       const days = Math.max(0, Math.round(row.age));
+      const when = days <= 0 ? t('rep.today') : t('rep.daysAgo', { days });
+      const total = row.ghalti + row.chhoot;
       main.appendChild(
-        el(
-          'span',
-          'rep-sub',
-          t('rep.sub', {
-            ghalti: row.ghalti + row.chhoot,
-            when: days <= 0 ? t('rep.today') : t('rep.daysAgo', { days }),
-          })
-        )
+        el('span', 'rep-sub', total ? t('rep.sub', { ghalti: total, when }) : `${t('rep.old')} · ${when}`)
       );
 
       item.append(main, el('span', `rep-score${row.score < 70 ? ' is-low' : ''}`, `${row.score}%`));

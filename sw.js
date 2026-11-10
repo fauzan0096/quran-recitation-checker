@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / model / Quran.com requests are left to the network.
 
-const CACHE = 'bayyin-v27';
+const CACHE = 'bayyin-v28';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -36,6 +36,10 @@ const SHELL = [
   'premium-tools.js',
   'premium.js',
   'premium-strings.js',
+  'extra-strings.js',
+  'billing.js',
+  'backup.js',
+  'prayer.js',
   'qibla.js',
   'calendar.js',
   'asr.js',
@@ -117,12 +121,14 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     (async () => {
       const cache = await caches.open(CACHE);
-      const hit = await cache.match(request, { ignoreSearch: true });
+      // One entry per path: "?go=dua" and "?demo=1" must not make copies.
+      const cacheKey = new Request(`${url.origin}${url.pathname}`);
+      const hit = await cache.match(cacheKey);
 
       const refresh = fetch(request)
         .then((fresh) => {
           if (fresh && fresh.ok && fresh.type === 'basic') {
-            cache.put(request, fresh.clone()).catch(() => {});
+            cache.put(cacheKey, fresh.clone()).catch(() => {});
           }
           return fresh;
         })

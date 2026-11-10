@@ -9,7 +9,8 @@ upload nahi hota**.
 
 `index.html` (+ `privacy.html`), `styles.css`, `app.js` (UI), `i18n.js` (zubaan /
 translations), `asr.js` (mic + model), `align.js`, `normalize.js`,
-`tajweed.js`, `quran.js`, `surahs.js`, `premium-tools.js` (Premium report), `quran-tanzil.txt`,
+`tajweed.js`, `quran.js`, `surahs.js`, `premium-tools.js` (Premium report), `billing.js`
+(Play Billing adapter), `prayer.js` (namaz ke auqaat), `backup.js`, `quran-tanzil.txt`,
 `LICENSE` / `LICENSES.md`.
 
 ## Kaam kaise karta hai (pipeline)
@@ -345,6 +346,8 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
 - Settings me "Free ya Premium" ka chart (kaun si cheez free, kaun si paid) aur
   Premium me **Meri report** (`premium-tools.js`): murajaa ki list, sab se zyada
   ghalat hone wale lafz, aur roz ka tareekh. Engine self-test ka card hata diya gaya.
+- Namaz ke auqaat (`prayer.js`), Backup (`backup.js`), error report, Play Billing
+  adapter (`billing.js`), CSP aur CI syntax check. Demo buttons sirf `?demo=1` par.
 
 ## Update: rasm, hamza, model ek baar
 
@@ -383,11 +386,13 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   nahi. (Browser/OS ka data clear karna "restore purchase" se hoga.)
 - **Play Billing judne par**: verified purchase par sirf `activate('monthly' |
   'yearly')` call karna hai; app khulte waqt `queryPurchasesAsync` mila purchase
-  par `setPremium(true)`; refund/cancel par `cancel()`. Ye teen functions hi UI
-  ke demo buttons bhi chalate hain, is liye abhi poora flow test ho sakta hai.
-- **Demo mode**: paywall par teen buttons hain — *Demo: Premium chalu*, *Trial
-  dobara shuru*, *Trial khatam*. `PAYWALL_ON = false` kar dene se app poori khuli
-  rehti hai (Play review ke liye kaam aata hai).
+  par `setPremium(true)`; refund/cancel par `cancel()`. `billing.js` yahi bridge
+  use karta hai (`window.BayyinBilling`).
+- **Test karna**: URL ke aakhir me `?demo=1` lagayein to paywall par demo buttons
+  aa jate hain; normal app me wo kabhi nahi dikhte.
+- **Demo mode**: demo buttons ("Premium chalu", "Trial khatam") sirf `?demo=1` wale URL par
+  dikhte hain — normal app me kabhi nahi. Is liye release me koi muft Premium nahi le sakta.
+  `PAYWALL_ON = false` kar dene se app poori khuli rehti hai (Play review ke liye kaam aata hai).
 - Test karne ka tareeqa: More → Hifz plan (lock) → Premium screen; ya 4th
   talaawat check par paywall; trial khatam kar ke roz 3 checks ka limit dekhein.
 
@@ -404,6 +409,64 @@ Settings → **Meri report**, ya More grid ka **Meri report** card. Teen tab:
 
 Data sirf `tc.report` me device par rehta hai (`premium-tools.js`); check ke waqt
 `recordReport()` use bharta hai. Koi audio ya text bahar nahi jata.
+
+## Talaawat check ki raftaar
+
+- **Default ab tez hai**: greedy decoding (`num_beams = 1`) — Whisper ka default beam search
+  (5 beams) se kai guna tez.
+- **Chhote audio par chunking nahi**: sirf 30 second se lambi recording chunk hoti hai;
+  ek aya ke liye overlap ka extra kaam khatam.
+- **Shuru/aakhir ki khamoshi hata di jati hai** (`asr.js` → `trimSilence`), is liye model
+  khali waqt decode nahi karta.
+- **Token limit**: audio ki lambai ke hisaab se `max_new_tokens` tay hota hai (448 se zyada nahi).
+- Settings → **Model** me **"Behtar accuracy (deri zyada)"** checkbox: beam search (5 beams),
+  dheri lagti hai magar natija behtar ho sakta hai.
+- Sab se bara waqt pehli dafa **model download (~105 MB)** ka hota hai; uske baad cache se
+  chalta hai. **Tiny** model chun kar inference aur bhi tez ho jata hai (accuracy kam).
+- Check ke doran status me **kitne second lag rahe hain** aur **audio kitni der ka hai** dikhta hai.
+
+## Play Store billing — `billing.js`
+
+Browser paisa nahi le sakta. Play par app ko TWA (Bubblewrap) ya Capacitor jaisi shell me
+chalna hoga jo ek chhota bridge de:
+
+```js
+window.BayyinBilling = {
+  purchase(sku) { /* Play Billing -> verify -> { ok, token } */ },
+  restore()     { /* queryPurchasesAsync -> { ok, sku, token } */ },
+  manage()      { /* Play subscription management screen */ },
+};
+```
+
+Jab tak bridge nahi hai, paywall saaf kehta hai ke subscription Play app me milti hai
+(koi demo button nahi). Bridge hone par plan card `billing.buy()` chalata hai, "Purchase
+restore karein" aur "Play Store me manage karein" buttons khud aa jate hain.
+
+Play policy: digital subscription sirf Play Billing se — is liye `assetlinks.json` (TWA)
+aur native shell bina release nahi ho sakta. Verify server-side (RTDN) karna behtar hai;
+client par `activate()` sirf verified jawab ke baad chalta hai.
+
+## Namaz ke auqaat — `prayer.js`
+
+More → **Namaz ke auqaat**. Auqaat phone par hisaab hote hain (NOAA solar equations:
+Fajr 18°, Isha 17°, Asr Hanafi 2 sāya / Shafi 1 sāya). Jagah geolocation se ya khud
+latitude/longitude daal kar; sirf `tc.prayer` me save hoti hai. Network ki zaroorat nahi.
+
+## Backup — `backup.js`
+
+Settings → **Backup**: ek JSON file me saara `tc.*` data (progress, report, settings,
+premium status). Wapas laane par app reload hoti hai. File device se bahar nahi jati
+jab tak aap khud share na karein.
+
+## Error report
+
+App me `window.onerror` / unhandled rejection akhri 20 errors `tc.errors` me rakhte hain;
+Settings → **Error report** se copy kar ke bhej sakte hain.
+
+## CI
+
+`.github/workflows/syntax-check.yml` har push/PR par saari `.js` files ko esbuild se parse
+karta hai aur `manifest.webmanifest` ka JSON check karta hai.
 
 
 ## Play Store: closed testing (14 din / 12 testers)

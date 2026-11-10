@@ -28,7 +28,14 @@ import { t } from './i18n.js';
       // Only reload when this page was already controlled by an older worker.
       if (!hadController || refreshing) return;
       refreshing = true;
-      window.location.reload();
+
+      const reload = () => window.location.reload();
+      // Never cut a recording or a model download in half.
+      if (document.body.dataset.busy === '1') {
+        window.bayyinReloadPending = reload;
+        return;
+      }
+      reload();
     });
 
     window.addEventListener('load', () => {
