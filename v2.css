@@ -1716,3 +1716,15 @@ body[data-theme='dark'] .badge-card.is-locked { background: repeating-linear-gra
   background: var(--card);
   color: var(--ink);
 }
+
+
+
+/* ----------------------------------------------------------- about / credits */
+ul.credits {
+  margin: 6px 0 10px;
+  padding-inline-start: 18px;
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--ink);
+}
+ul.credits a { color: #8a5a28; text-decoration: underline; }

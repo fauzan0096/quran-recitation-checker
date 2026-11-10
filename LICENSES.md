@@ -40,6 +40,13 @@ License text: <https://creativecommons.org/licenses/by/3.0/>
 
 Poora notice `quran-tanzil.txt` ke aakhir me bhi maujood hai — usay hatayein na.
 
+## 1b. Amiri Quran font — SIL Open Font License 1.1
+
+`amiri-quran.ttf` is the Amiri Quran typeface (Khaled Hosny / Amiri Project,
+<https://github.com/aliftype/amiri>), released under the SIL Open Font License
+1.1. The full licence text is in `OFL-AmiriQuran.txt`. The font is used
+unmodified, embedded only for the mushaf text.
+
 ## 2. Quran-tuned Whisper models — Apache License 2.0
 
 - Base fine-tunes: `tarteel-ai/whisper-base-ar-quran` and
