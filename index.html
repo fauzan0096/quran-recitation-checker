@@ -811,18 +811,66 @@
 
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
     <script>
-      // Never leave the logo spinning forever if a module fails to load.
-      window.addEventListener('error', function () {
-        var splash = document.getElementById('splash');
-        if (splash) splash.classList.add('is-gone');
-      });
-      window.setTimeout(function () {
-        var splash = document.getElementById('splash');
-        if (splash && !splash.classList.contains('is-gone')) {
+      // A logo that spins for ever is the worst failure: say it plainly and
+      // leave one button that really fixes it — it drops the service worker and
+      // its caches, which is what a stale app.js hides behind.
+      (function () {
+        var shown = false;
+
+        function trouble() {
+          if (shown) return;
+          var splash = document.getElementById('splash');
+          // Gone from the page? Then the app painted, and this is not a boot
+          // failure at all.
+          if (!splash) return;
+          shown = true;
+
           var sub = splash.querySelector('.splash-sub');
-          if (sub) sub.textContent = 'App load nahi hui — internet check kar ke dobara kholein.';
+          if (sub) sub.textContent = 'App load nahi hui.';
+          var loader = splash.querySelector('.splash-loader');
+          if (loader) loader.parentNode.removeChild(loader);
+
+          var button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'btn primary small';
+          button.textContent = 'Dobara koshish';
+          button.addEventListener('click', function () {
+            button.disabled = true;
+            button.textContent = 'Saaf kar rahe hain…';
+            var go = function () {
+              window.location.reload();
+            };
+            var registrations =
+              navigator.serviceWorker && navigator.serviceWorker.getRegistrations
+                ? navigator.serviceWorker.getRegistrations()
+                : Promise.resolve([]);
+            var keys = window.caches ? caches.keys() : Promise.resolve([]);
+            Promise.all([registrations, keys])
+              .then(function (out) {
+                var regs = out[0] || [];
+                var names = out[1] || [];
+                return Promise.all(
+                  regs
+                    .map(function (reg) {
+                      return reg.unregister();
+                    })
+                    .concat(
+                      names.map(function (name) {
+                        return caches.delete(name);
+                      })
+                    )
+                );
+              })
+              .then(go, go);
+          });
+          splash.appendChild(button);
         }
-      }, 12000);
+
+        window.addEventListener('error', function () {
+          if (document.getElementById('splash')) window.setTimeout(trouble, 1200);
+        });
+        window.setTimeout(trouble, 9000);
+      })();
     </script>
     <script type="module" src="install.js"></script>
     <script type="module" src="app.js"></script>

@@ -273,6 +273,34 @@ async function init() {
   startDailyReminder();
   handleLaunch();  autoLoadModel();
   syncSubscription();
+  watchForUpdate();
+}
+
+/**
+ * A new service worker means new code on the phone. Take it once, quietly, so a
+ * fix is not stuck behind whatever the old worker had cached.
+ */
+let updateReloaded = false;
+
+function watchForUpdate() {
+  if (!('serviceWorker' in navigator)) return;
+  const hadController = Boolean(navigator.serviceWorker.controller);
+
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    // The very first install also "changes" the controller: that is not an
+    // update and must not reload the page.
+    if (!hadController || updateReloaded) return;
+    if (state.recording) return;
+    updateReloaded = true;
+    window.location.reload();
+  });
+
+  navigator.serviceWorker
+    .getRegistration()
+    .then((registration) => registration && registration.update())
+    .catch(() => {
+      /* offline: try again next launch */
+    });
 }
 
 /**

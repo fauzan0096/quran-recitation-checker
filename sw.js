@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v63';
+const CACHE = 'bayyin-v65';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -158,30 +158,41 @@ self.addEventListener('fetch', (event) => {
       const cache = await caches.open(CACHE);
       // One entry per path: "?go=dua" and "?demo=1" must not make copies.
       const cacheKey = new Request(`${url.origin}${url.pathname}`);
-      const hit = await cache.match(cacheKey);
 
-      const refresh = fetch(request)
-        .then((fresh) => {
+      // Code (html / js / css / manifest) always asks the network first: a stale
+      // app.js is a broken app, and it was exactly that which kept an old build
+      // on the phone. The cache is the fallback, so offline still works.
+      if (!IMMUTABLE.test(url.pathname)) {
+        try {
+          const fresh = await fetch(request);
           if (fresh && fresh.ok && fresh.type === 'basic') {
             cache.put(cacheKey, fresh.clone()).catch(() => {});
           }
           return fresh;
-        })
-        .catch(() => null);
-
-      if (hit) {
-        // Heavy files: cache only. Code: cache now, refresh quietly.
-        if (!IMMUTABLE.test(url.pathname)) event.waitUntil(refresh);
-        return hit;
+        } catch (error) {
+          const hit = await cache.match(cacheKey);
+          if (hit) return hit;
+          if (request.mode === 'navigate') {
+            const shell = await cache.match('index.html');
+            if (shell) return shell;
+          }
+          return Response.error();
+        }
       }
 
-      const fresh = await refresh;
-      if (fresh) return fresh;
-      if (request.mode === 'navigate') {
-        const shell = await cache.match('index.html');
-        if (shell) return shell;
+      // Big, never-changing files (Quran text, pages, images, font): cache only.
+      const hit = await cache.match(cacheKey);
+      if (hit) return hit;
+
+      try {
+        const fresh = await fetch(request);
+        if (fresh && fresh.ok && fresh.type === 'basic') {
+          cache.put(cacheKey, fresh.clone()).catch(() => {});
+        }
+        return fresh;
+      } catch (error) {
+        return Response.error();
       }
-      return Response.error();
     })()
   );
 });

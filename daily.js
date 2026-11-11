@@ -120,7 +120,9 @@ export function mountDaily(root, options = {}) {
           reference,
         })
       );
-    } else {
+    } else if (!compact) {
+      // The home screen quietly leaves the ayah out until the Quran text
+      // arrives (it is refreshed right after) instead of warning about it.
       const missing = document.createElement('p');
       missing.className = 'hint';
       missing.textContent = t('daily.missing');
