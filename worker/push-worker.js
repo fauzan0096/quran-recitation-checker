@@ -144,6 +144,17 @@ function localNow(timezone) {
   }
 }
 
+/** Send once and say what happened: ok, fail, or gone (subscription dead). */
+async function deliver(subscription, config) {
+  try {
+    const status = await send(subscription, config);
+    if (status === 404 || status === 410) return 'gone';
+    return status >= 200 && status < 300 ? 'ok' : 'fail';
+  } catch (error) {
+    return 'fail';
+  }
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return cors();
@@ -183,7 +194,9 @@ export default {
           time: String(data.time || data.hour || '20:00').slice(0, 5),
           timezone: data.timezone || 'UTC',
           body: String(data.body || '').slice(0, 160),
+          prayers: Array.isArray(data.prayers) ? data.prayers.slice(0, 70) : [],
           lastDay: '',
+          sentPrayers: [],
         })
       );
       return json({ ok: true });
@@ -223,6 +236,11 @@ export default {
         const config = await settings(env);
         if (!config.publicKey || privateKeyState(config.privateKey) !== 'ok') return;
 
+        const toMinutes = (text) => {
+          const [h, m] = String(text || '0:0').split(':').map(Number);
+          return h * 60 + (m || 0);
+        };
+
         const list = await env.SUBS.list({ prefix: 'sub:' });
         for (const item of list.keys) {
           const raw = await env.SUBS.get(item.name);
@@ -235,25 +253,48 @@ export default {
           }
           if (!saved || !saved.subscription) continue;
 
-          // Send once a day, as soon as the person's own clock passes their time.
           const local = localNow(saved.timezone);
-          const target = saved.time || `${saved.hour || '20'}:00`;
-          if (saved.lastDay === local.date) continue;
-          if (local.time < target) continue;
+          let changed = false;
 
-          try {
-            const status = await send(saved.subscription, config);
-            if (status === 404 || status === 410) {
+          // 1. The daily reminder, once the person's own clock passes their time.
+          const target = saved.time || `${saved.hour || '20'}:00`;
+          if (saved.lastDay !== local.date && local.time >= target) {
+            const sent = await deliver(saved.subscription, config);
+            if (sent === 'gone') {
               await env.SUBS.delete(item.name);
               continue;
             }
-            if (status >= 200 && status < 300) {
+            if (sent === 'ok') {
               saved.lastDay = local.date;
-              await env.SUBS.put(item.name, JSON.stringify(saved));
+              changed = true;
             }
-          } catch (error) {
-            /* transient: try again on the next run */
           }
+
+          // 2. Azaan at each prayer time (the schedule is sent by the app).
+          const prayers = Array.isArray(saved.prayers) ? saved.prayers : [];
+          const done = Array.isArray(saved.sentPrayers) ? saved.sentPrayers : [];
+          const due = prayers.find((prayer) => {
+            if (!prayer || prayer.date !== local.date) return false;
+            if (!done.includes(`${prayer.date} ${prayer.name}`)) {
+              const gap = toMinutes(local.time) - toMinutes(prayer.time);
+              return gap >= 0 && gap <= 20;
+            }
+            return false;
+          });
+
+          if (due) {
+            const sent = await deliver(saved.subscription, config);
+            if (sent === 'gone') {
+              await env.SUBS.delete(item.name);
+              continue;
+            }
+            if (sent === 'ok') {
+              saved.sentPrayers = [...done, `${due.date} ${due.name}`].slice(-60);
+              changed = true;
+            }
+          }
+
+          if (changed) await env.SUBS.put(item.name, JSON.stringify(saved));
         }
       })()
     );

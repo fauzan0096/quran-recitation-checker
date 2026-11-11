@@ -8,6 +8,8 @@
 // daily cron. Its URL and the VAPID public key are saved on the phone (Settings →
 // Roz yaad dehani → Push) — no code change needed after the worker is deployed.
 
+import { upcomingPrayers } from './prayer.js';
+
 const STORE = 'tc.pushConfig';
 
 // The Worker this app talks to (fixed, so nobody has to type it).
@@ -121,6 +123,7 @@ export async function enable(hour, body) {
       time: String(hour || '20:00').slice(0, 5),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       body: body || '',
+      prayers: upcomingPrayers(7),
     });
     return { ok: true };
   } catch (error) {

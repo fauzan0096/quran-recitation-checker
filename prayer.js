@@ -42,6 +42,36 @@ function write(data) {
   }
 }
 
+/** The saved location (shared with the azaan player). */
+export function location() {
+  return read();
+}
+
+/** The next `days` days of prayer times, for the push scheduler. */
+export function upcomingPrayers(days = 7) {
+  const saved = read();
+  if (!saved.lat || !saved.lon) return [];
+
+  const out = [];
+  const base = new Date();
+  for (let i = 0; i < days; i += 1) {
+    const day = new Date(base.getFullYear(), base.getMonth(), base.getDate() + i);
+    const times = prayerTimes(saved.lat, saved.lon, saved.hanafi, day);
+    const date = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+    for (const [key] of PRAYERS) {
+      const minutes = times[key];
+      if (minutes === null || minutes === undefined) continue;
+      const total = Math.round(minutes);
+      out.push({
+        date,
+        time: `${String(Math.floor(total / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`,
+        name: key,
+      });
+    }
+  }
+  return out;
+}
+
 function dayOfYear(date) {
   const start = new Date(date.getFullYear(), 0, 0);
   return Math.floor((date - start) / 86400000);

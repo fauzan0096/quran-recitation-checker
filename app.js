@@ -60,6 +60,18 @@ import {
 } from './qari.js';
 import { mountCard as mountReminderCard, start as startDailyReminder } from './reminder.js';
 import { playWord } from './word-audio.js';
+import {
+  ADHANS,
+  list as adhanList,
+  current as currentAdhan,
+  setId as setAdhanId,
+  state as adhanState,
+  setOn as setAdhanOn,
+  play as playAdhan,
+  stop as stopAdhan,
+  check as checkAdhan,
+} from './adhan.js';
+import { location as prayerLocation } from './prayer.js';
 import { mountMurajaa, dueCount, updateFromCheck } from './murajaa.js';
 import { mountTasbeeh } from './tasbeeh-v2.js';
 import { mountReport, recordReport } from './premium-tools.js';
@@ -209,6 +221,7 @@ async function init() {
   fillSurahs();
   fillModels();
   fillQaris();
+  fillAdhans();
   mountReminderCardUI();
   restoreSelection();
   wireEvents();
@@ -231,8 +244,7 @@ async function init() {
   loadQuranInBackground();
   startReminderLoop();
   startDailyReminder();
-  handleLaunch();
-  autoLoadModel();
+  handleLaunch();  autoLoadModel();
   syncSubscription();
 }
 
@@ -421,7 +433,7 @@ function cacheElements() {
     'search-input', 'search-go', 'search-results',
     'list-title', 'global-status', 'range-error', 'aya-list', 'qari-all',
     'list-footer', 'load-more', 'share-app', 'model-select', 'load-model',
-    'remind-root', 'qari-select', 'qari-repeat',
+    'remind-root', 'qari-select', 'qari-repeat', 'adhan-select', 'adhan-toggle', 'adhan-test', 'adhan-credit',
     'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
     'accurate-mode',
     'mic-check', 'mic-check-output', 'player', 'tajweed',
@@ -489,8 +501,7 @@ function fillModels() {
 }
 
 /** The reciter list for the "Qari ki tilawat" setting. */
-function fillQaris() {
-  if (!els.qariSelect) return;
+function fillQaris() {  if (!els.qariSelect) return;
   els.qariSelect.textContent = '';
   for (const item of reciters()) {
     const option = document.createElement('option');
@@ -510,6 +521,58 @@ function fillQaris() {
 /** The daily reminder card lives in Settings. */
 function mountReminderCardUI() {
   if (els.remindRoot) mountReminderCard(els.remindRoot);
+}
+
+/** Azaan: pick a muazzin, turn it on, and try it. */
+function fillAdhans() {
+  if (!els.adhanSelect) return;
+
+  els.adhanSelect.textContent = '';
+  for (const item of adhanList()) {
+    const option = document.createElement('option');
+    option.value = item.id;
+    option.textContent = item.name;
+    els.adhanSelect.appendChild(option);
+  }
+  els.adhanSelect.value = Object.keys(ADHANS).includes(adhanState().id)
+    ? adhanState().id
+    : 'aaqib';
+  els.adhanSelect.addEventListener('change', () => {
+    setAdhanId(els.adhanSelect.value);
+    paintAdhan();
+  });
+
+  if (els.adhanToggle) {
+    els.adhanToggle.addEventListener('click', () => {
+      setAdhanOn(!adhanState().on);
+      paintAdhan();
+    });
+  }
+  if (els.adhanTest) {
+    els.adhanTest.addEventListener('click', () => {
+      const started = playAdhan();
+      if (els.adhanCredit) {
+        els.adhanCredit.textContent = started
+          ? currentAdhan().credit
+          : t('adhan.failed');
+      }
+    });
+  }
+
+  paintAdhan();
+  window.setInterval(() => {
+    const loc = prayerLocation();
+    if (loc.lat && loc.lon) checkAdhan(loc.lat, loc.lon, loc.hanafi);
+  }, 60000);
+}
+
+function paintAdhan() {
+  const on = adhanState().on;
+  if (els.adhanToggle) {
+    els.adhanToggle.textContent = on ? t('adhan.on') : t('adhan.off');
+    els.adhanToggle.className = `btn small ${on ? 'ghost' : 'primary'}`;
+  }
+  if (els.adhanCredit) els.adhanCredit.textContent = currentAdhan().credit;
 }
 
 /** One qari button at the top of the reader plays the whole list, aya by aya. */

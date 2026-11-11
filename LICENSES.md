@@ -122,3 +122,17 @@ licensed under Creative Commons Attribution 4.0 International
 (<https://creativecommons.org/licenses/by/4.0/>). The `qari-timings.json` file
 in this repo is extracted from their published archive (Alafasy set) and is
 used only to seek inside the EveryAyah recording of the same aya.
+
+
+
+## Azaan recordings — Wikimedia Commons
+
+The Settings → Azaan player streams one of four free recordings:
+
+- **Adhan** by Aishatu98 — CC0 (public domain).
+- **Adhan — Jarih** — CC BY-SA 3.0.
+- **The Adhan — Aaqib Azeez** (Atcovi) — CC BY-SA 4.0.
+- **Llamada a oración, Mezquita Hassan II** by Fraguando — CC BY-SA 4.0.
+
+All four are on <https://commons.wikimedia.org> and are used unmodified with the
+credit shown in Settings. Nothing is bundled with the app.
