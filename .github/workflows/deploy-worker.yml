@@ -1,0 +1,43 @@
+name: Deploy push worker
+
+# Deploys worker/push-worker.js to Cloudflare with wrangler.
+#
+# One-time setup in this repository:
+#   Settings → Secrets and variables → Actions
+#     • Secret   CLOUDFLARE_API_TOKEN   (Cloudflare → My Profile → API Tokens →
+#                                        "Edit Cloudflare Workers" template)
+#     • Secret   CLOUDFLARE_ACCOUNT_ID  (Cloudflare dashboard URL ka hissa)
+#     • Variable CLOUDFLARE_DEPLOY = true   (is workflow ko on karne ke liye)
+#
+# Jab tak CLOUDFLARE_DEPLOY set nahi hai, ye workflow chup chaap skip ho jata hai.
+
+on:
+  push:
+    paths:
+      - 'worker/**'
+      - 'wrangler.toml'
+      - '.github/workflows/deploy-worker.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: ${{ vars.CLOUDFLARE_DEPLOY == 'true' }}
+    runs-on: ubuntu-latest
+    env:
+      CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check secrets
+        if: ${{ env.CF_TOKEN == '' || env.CF_ACCOUNT == '' }}
+        run: |
+          echo "CLOUDFLARE_API_TOKEN ya CLOUDFLARE_ACCOUNT_ID missing hai."
+          exit 1
+
+      - name: Deploy
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
