@@ -218,8 +218,6 @@ const moreViews = {
   murajaa: null,
 };
 
-init();
-
 async function init() {
   cacheElements();
   initLanguage();
@@ -3116,4 +3114,17 @@ function toast(message) {
   toastTimer = window.setTimeout(() => {
     els.toast.hidden = true;
   }, 3200);
+}
+
+
+
+// Start last, on purpose: `init()` reaches into consts and lets declared further
+// down this file (the Premium tabs, the azaan timer key). Calling it above them
+// throws "Cannot access before initialization" and leaves the splash on screen
+// forever — which is exactly what a boot at the top of the file did.
+try {
+  init();
+} catch (error) {
+  logError(`init: ${error && error.message ? error.message : error}`);
+  hideSplash();
 }
