@@ -35,11 +35,31 @@ Do cheezein milengi:
    **KV Namespace** → Variable name **`SUBS`** → namespace `bayyin_subs` → **Save**.
 
 **D. Variables (VAPID)**
-8. Wahi **Settings → Variables and Secrets** → **Add**:
-   - `VAPID_PUBLIC` = public key (push-setup.html se) — type: Text
-   - `VAPID_PRIVATE` = private JWK (poora JSON, ek hi line me) — type: **Secret**
-   - `VAPID_SUBJECT` = `mailto:aapka@email.com` — type: Text
-9. **Deploy** dabayein (bindings/variables ke baad worker restart hota hai).
+
+Jagah: **Worker → Settings → Variables and Secrets** (purane UI me sirf "Variables").
+**Add** / **Add variable** dabayein aur teen entries banayein — naam **bilkul** aise
+(capital letters, koi space nahi):
+
+| Variable name | Type | Value |
+| --- | --- | --- |
+| `VAPID_PUBLIC` | Text (plain) | public key — ek hi line, ~87 characters, `B` se shuru |
+| `VAPID_PRIVATE` | **Secret** (Encrypt) | private JWK — poora JSON `{ "kty":"EC", … "d":"…" }` |
+| `VAPID_SUBJECT` | Text | `mailto:aapka@email.com` |
+
+- Private JWK me line breaks ho to koi masla nahi — JSON waise bhi parse ho jata hai.
+  Bas naam/values me extra space na ho.
+- `VAPID_PRIVATE` ko **Secret** rakhein: dashboard me dobara padha nahi ja sakega.
+- Add karne ke baad **Deploy** (ya "Save and Deploy") dabayein, warna values live nahi hotin.
+
+**Check (GET par health JSON)**:
+
+```json
+{"ok":true,"service":"bayyin-push","kv":true,
+ "vapidPublic":true,"vapidPrivate":"ok","vapidSubject":true}
+```
+
+`vapidPrivate` me `"ok"` aana chahiye. `"invalid-json"` = JSON toota hua,
+`"invalid"` = `d` field nahi mila, `"missing"` = variable hi nahi laga.
 
 **E. Cron (roz bhejne ke liye)**
 10. **Settings → Triggers → Cron Triggers → Add Cron Trigger** → `0 * * * *` → **Save**.
