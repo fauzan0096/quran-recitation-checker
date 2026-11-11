@@ -197,8 +197,9 @@ export function mountCard(root) {
         save({ ...load(), push: true });
         build();
       } else if (note) {
+        const detail = result && result.reason ? ` (${result.reason})` : '';
         note.textContent =
-          result.reason === 'denied' ? t('remind.denied') : t('push.failed');
+          result.reason === 'denied' ? t('remind.denied') : t('push.failed') + detail;
       }
     });
     row.appendChild(pushBtn);
