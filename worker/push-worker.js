@@ -88,7 +88,7 @@ async function send(subscription, env) {
   const headers = await vapidHeaders(`${endpoint.protocol}//${endpoint.host}`, env);
   const response = await fetch(subscription.endpoint, {
     method: 'POST',
-    headers: { ...headers, 'Content-Length': '0' },
+    headers,
   });
   return response.status;
 }
@@ -109,6 +109,7 @@ function localHour(timezone) {
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return cors();
+    if (request.method === 'GET') return json({ ok: true, service: 'bayyin-push' });
     if (request.method !== 'POST') return json({ ok: false, error: 'POST only' }, 405);
 
     const url = new URL(request.url);

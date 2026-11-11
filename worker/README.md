@@ -17,16 +17,38 @@ Do cheezein milengi:
 - **Public key** — `push.js` ke `PUBLIC_KEY` me.
 - **Private JWK** — sirf Worker me (`VAPID_PRIVATE`). Kisi ke sath share na karein, git me na daalein.
 
-## 2. Worker deploy karein
+## 2. Worker deploy karein (phone se bhi ho jata hai)
 
-1. <https://workers.cloudflare.com> → **Create** → **Worker**.
-2. `worker/push-worker.js` ka poora code paste karein → **Deploy**.
-3. **Settings → Variables and Secrets**:
-   - `VAPID_PUBLIC` = public key
-   - `VAPID_PRIVATE` = private JWK (poora JSON, ek line me)
-   - `VAPID_SUBJECT` = `mailto:aapka@email.com`
-4. **KV Namespace** banayein (e.g. `bayyin_subs`) aur binding ka naam **`SUBS`** rakhein.
-5. **Triggers → Cron Triggers** → add `0 * * * *` (har ghante).
+**A. Account**
+1. <https://dash.cloudflare.com/sign-up> par free account banayein (card nahi chahiye).
+2. Login ke baad left menu → **Workers & Pages**.
+
+**B. Worker banayein**
+3. **Create** → **Workers** → **Start with Hello World!** (ya "Create Worker").
+4. Naam: `bayyin-push` → **Deploy**.
+5. **Edit code** kholein → andar ka saara code mita dein → `worker/push-worker.js` ka
+   poora code paste karein → **Deploy**.
+
+**C. KV (subscriptions yahan rehti hain)**
+6. Left menu → **Storage & Databases → KV** → **Create a namespace** → naam `bayyin_subs`.
+7. Wapas **Workers & Pages → bayyin-push → Settings → Bindings** → **Add binding** →
+   **KV Namespace** → Variable name **`SUBS`** → namespace `bayyin_subs` → **Save**.
+
+**D. Variables (VAPID)**
+8. Wahi **Settings → Variables and Secrets** → **Add**:
+   - `VAPID_PUBLIC` = public key (push-setup.html se) — type: Text
+   - `VAPID_PRIVATE` = private JWK (poora JSON, ek hi line me) — type: **Secret**
+   - `VAPID_SUBJECT` = `mailto:aapka@email.com` — type: Text
+9. **Deploy** dabayein (bindings/variables ke baad worker restart hota hai).
+
+**E. Cron (roz bhejne ke liye)**
+10. **Settings → Triggers → Cron Triggers → Add Cron Trigger** → `0 * * * *` → **Save**.
+    (Har ghanta chalta hai; Worker khud user ke timezone ka ghanta dekh kar bhejta hai.)
+
+**F. Check**
+11. Worker ka URL kholein (`https://bayyin-push.<aapka-subdomain>.workers.dev`) —
+    browser me `{"ok":true,"service":"bayyin-push"}` dikhna chahiye.
+12. Wahi URL `push.js` ke `ENDPOINT` me aur public key `PUBLIC_KEY` me daalein.
 
 ## 3. App me jodein
 
