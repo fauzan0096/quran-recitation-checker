@@ -108,9 +108,18 @@ function stripArticle(word) {
   return word;
 }
 
+// Long vowels a recogniser drops all the time: ظلمات comes back as ظلمت,
+// يهدي as يهد. They are not consonants, so the word was still recited right.
+const LONG_VOWELS = /[\u0627\u0648\u064A]/g;
+
+function withoutLongVowels(word) {
+  return word.replace(LONG_VOWELS, '');
+}
+
 /**
  * Distance used for judging "close enough": the best of the plain edit
- * distance and the distance with the definite article removed on both sides.
+ * distance, the distance with the definite article removed on both sides, and
+ * the distance with the long vowels left out.
  */
 export function compareDistance(a, b) {
   if (a === b) return 0;
@@ -119,6 +128,13 @@ export function compareDistance(a, b) {
   const b2 = stripArticle(b);
   if (a2 !== a || b2 !== b) {
     const alt = levenshtein(a2, b2);
+    if (alt < best) best = alt;
+  }
+
+  const av = withoutLongVowels(a2);
+  const bv = withoutLongVowels(b2);
+  if (av.length >= 2 && bv.length >= 2) {
+    const alt = levenshtein(av, bv);
     if (alt < best) best = alt;
   }
   return best;

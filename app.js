@@ -2347,33 +2347,48 @@ function setNamazTab(tab) {
 const navStack = [];
 let navSkipPush = false;
 
-function rememberNav(name) {
-  if (navSkipPush) return;
-  if (navStack[navStack.length - 1] === name) return;
-  navStack.push(name);
-  if (navStack.length > 30) navStack.shift();
+function pushHistory() {
   try {
-    history.pushState({ nav: navStack.length }, '');
+    history.pushState({ bayyin: true }, '');
   } catch (error) {
     /* some in-app browsers refuse */
   }
 }
 
-/** One step back; at the first screen it goes home instead of doing nothing. */
-function navigateBack() {
-  navSkipPush = true;
-  if (navStack.length > 1) navStack.pop();
-  const target = navStack[navStack.length - 1] || 'home';
-  setView(target);
-  navSkipPush = false;
+function rememberNav(name) {
+  if (navSkipPush) return;
+  if (navStack[navStack.length - 1] === name) return;
+  navStack.push(name);
+  if (navStack.length > 30) navStack.shift();
+  pushHistory();
 }
 
-window.addEventListener('popstate', () => {
+/**
+ * Work the back out here, then leave a fresh history entry behind so that the
+ * NEXT back is caught the same way. Without that, a web view with a single
+ * history entry sends the person straight to the start.
+ */
+function handleBack() {
+  const had = navStack.length > 1;
+  if (had) navStack.pop();
+  const target = navStack[navStack.length - 1] || 'home';
   navSkipPush = true;
-  if (navStack.length > 1) navStack.pop();
-  setView(navStack[navStack.length - 1] || 'home');
+  setView(target);
   navSkipPush = false;
-});
+  // Still screens behind this one? keep a sentinel so back does not escape.
+  if (had && navStack.length > 1) pushHistory();
+}
+
+/** One step back, through the browser so both stay in step. */
+function navigateBack() {
+  try {
+    history.back();
+  } catch (error) {
+    handleBack();
+  }
+}
+
+window.addEventListener('popstate', handleBack);
 
 function watchBackSwipe() {
   let start = null;
