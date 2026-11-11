@@ -5,14 +5,43 @@
 //
 // A page cannot wake itself up; the notification has to come from a server. The
 // small Worker in `worker/push-worker.js` holds the subscriptions and runs the
-// daily cron. Fill these two values in after deploying it — the setup helper
-// `push-setup.html` generates the matching key pair.
+// daily cron. Its URL and the VAPID public key are saved on the phone (Settings →
+// Roz yaad dehani → Push) — no code change needed after the worker is deployed.
 
-const ENDPOINT = ''; // e.g. https://bayyin-push.your-name.workers.dev
-const PUBLIC_KEY = ''; // the VAPID public key (base64url) the Worker uses
+const STORE = 'tc.pushConfig';
+
+// Optional defaults, if you would rather ship them with the app.
+const ENDPOINT = '';
+const PUBLIC_KEY = '';
+
+export function config() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (raw && typeof raw === 'object' && raw.endpoint && raw.key) {
+      return { endpoint: String(raw.endpoint), key: String(raw.key) };
+    }
+  } catch (error) {
+    /* private mode */
+  }
+  return { endpoint: ENDPOINT, key: PUBLIC_KEY };
+}
+
+export function saveConfig(endpoint, key) {
+  const value = {
+    endpoint: String(endpoint || '').trim().replace(/\/+$/, ''),
+    key: String(key || '').trim(),
+  };
+  try {
+    localStorage.setItem(STORE, JSON.stringify(value));
+  } catch (error) {
+    /* private mode */
+  }
+  return value;
+}
 
 export function configured() {
-  return Boolean(ENDPOINT && PUBLIC_KEY);
+  const { endpoint, key } = config();
+  return Boolean(endpoint && key);
 }
 
 function toBytes(base64url) {
@@ -28,7 +57,8 @@ export function supported() {
 }
 
 async function post(path, payload) {
-  const response = await fetch(`${ENDPOINT}${path}`, {
+  const { endpoint } = config();
+  const response = await fetch(`${endpoint}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
@@ -39,7 +69,8 @@ async function post(path, payload) {
 
 /** Ask permission, subscribe, and tell the Worker the hour to send at. */
 export async function enable(hour, body) {
-  if (!configured()) return { ok: false, reason: 'config' };
+  const settings = config();
+  if (!settings.endpoint || !settings.key) return { ok: false, reason: 'config' };
   if (!supported()) return { ok: false, reason: 'unsupported' };
 
   if (Notification.permission !== 'granted') {
@@ -53,7 +84,7 @@ export async function enable(hour, body) {
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: toBytes(PUBLIC_KEY),
+        applicationServerKey: toBytes(settings.key),
       });
     }
 

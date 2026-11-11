@@ -13,7 +13,7 @@
 import { t } from './i18n.js';
 import { dueCount } from './murajaa.js';
 import { isPremium } from './premium.js';
-import { configured as pushConfigured, enable as pushEnable, disable as pushDisable } from './push.js';
+import { configured as pushConfigured, saveConfig, enable as pushEnable, disable as pushDisable } from './push.js';
 
 const KEY = 'tc.reminder';
 const DEFAULT_TIME = '20:00';
@@ -186,8 +186,11 @@ export function mountCard(root) {
         return;
       }
       if (!pushConfigured()) {
-        if (note) note.textContent = t('push.notSet');
-        return;
+        const endpoint = window.prompt(t('push.askEndpoint'));
+        if (!endpoint) return;
+        const key = window.prompt(t('push.askKey'));
+        if (!key) return;
+        saveConfig(endpoint, key);
       }
       const result = await pushEnable(s.time || DEFAULT_TIME, t('remind.body'));
       if (result.ok) {
