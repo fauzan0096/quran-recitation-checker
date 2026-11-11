@@ -45,6 +45,16 @@ async function loadLibrary() {
             if (lib.env) {
               lib.env.allowLocalModels = false;
               lib.env.useBrowserCache = true;
+              // Use the phone's cores: on Android the default single thread is
+              // what makes the first check feel so slow.
+              try {
+                const cores = Math.min(4, Math.max(1, navigator.hardwareConcurrency || 2));
+                if (lib.env.backends && lib.env.backends.onnx && lib.env.backends.onnx.wasm) {
+                  lib.env.backends.onnx.wasm.numThreads = cores;
+                }
+              } catch (error) {
+                /* older build without the setting */
+              }
             }
             libVersion = (lib.env && lib.env.version) || '';
             return lib;
@@ -145,10 +155,17 @@ export async function transcribe(instance, audioFloat32, options = {}) {
     language: 'ar',
     task: 'transcribe',
     return_timestamps: false,
+    temperature: 0,
+    condition_on_previous_text: false,
     num_beams: fast ? 1 : 5,
     do_sample: false,
     max_new_tokens: Math.max(96, Math.min(448, Math.round(seconds * 8) + 64)),
   };
+
+  // Knowing the aya makes Whisper far more accurate: it stops inventing words
+  // and stays inside the verses being recited.
+  const prompt = String(options.prompt || '').trim();
+  if (prompt) args.initial_prompt = prompt.slice(0, 900);
   // Chunking only helps long audio; on a short aya it just adds overlap work.
   if (seconds > 30) {
     args.chunk_length_s = 30;

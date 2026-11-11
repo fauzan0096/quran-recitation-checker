@@ -1709,7 +1709,10 @@ async function checkTarget(id, keys, blob) {
 
     let text;
     try {
-      text = await transcribe(state.model, audio, { fast: !accurate });
+      text = await transcribe(state.model, audio, {
+        fast: !accurate,
+        prompt: verses.map((verse) => verse.ayaText || verse.text).join(' '),
+      });
     } finally {
       window.clearInterval(ticker);
       setGlobalStatus('');
