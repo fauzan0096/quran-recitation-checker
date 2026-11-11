@@ -12,11 +12,6 @@ const STORE = 'tc.pushConfig';
 
 // The Worker this app talks to (fixed, so nobody has to type it).
 const ENDPOINT = 'https://bayyin-push.anbiyawarsatul.workers.dev';
-// Left empty on purpose: the app asks the Worker for the public key (/vapid).
-const PUBLIC_KEY = '';
-
-// The Worker this app talks to (fixed, so nobody has to type it).
-const ENDPOINT = 'https://bayyin-push.anbiyawarsatul.workers.dev';
 // The VAPID public key (safe to ship: it is meant to be public).
 const PUBLIC_KEY =
   'BJ3rZgQbKYGrS8oDBO1axJxzFybPMNi2WN7otPnCVd8WMxigLyqmyfDGEBiODBh5b_zv-JjkOB5B3BvOsm0WTOw';

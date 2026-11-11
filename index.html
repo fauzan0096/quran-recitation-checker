@@ -810,6 +810,20 @@
     </nav>
 
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <script>
+      // Never leave the logo spinning forever if a module fails to load.
+      window.addEventListener('error', function () {
+        var splash = document.getElementById('splash');
+        if (splash) splash.classList.add('is-gone');
+      });
+      window.setTimeout(function () {
+        var splash = document.getElementById('splash');
+        if (splash && !splash.classList.contains('is-gone')) {
+          var sub = splash.querySelector('.splash-sub');
+          if (sub) sub.textContent = 'App load nahi hui — internet check kar ke dobara kholein.';
+        }
+      }, 12000);
+    </script>
     <script type="module" src="install.js"></script>
     <script type="module" src="app.js"></script>
   </body>
