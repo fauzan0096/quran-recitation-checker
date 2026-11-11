@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v62';
+const CACHE = 'bayyin-v63';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -126,6 +126,32 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   if (url.origin !== self.location.origin) return;
+
+  // Opening the app: ask the network first, so a fix reaches the phone on the
+  // very next open instead of after another launch. Offline it falls back to the
+  // cached page, so nothing is lost.
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        const cache = await caches.open(CACHE);
+        const cacheKey = new Request(`${url.origin}${url.pathname}`);
+        try {
+          const fresh = await fetch(request);
+          if (fresh && fresh.ok && fresh.type === 'basic') {
+            cache.put(cacheKey, fresh.clone()).catch(() => {});
+          }
+          return fresh;
+        } catch (error) {
+          const hit = await cache.match(cacheKey);
+          if (hit) return hit;
+          const shell = await cache.match('index.html');
+          if (shell) return shell;
+          return Response.error();
+        }
+      })()
+    );
+    return;
+  }
 
   event.respondWith(
     (async () => {
