@@ -1913,3 +1913,40 @@ body[data-theme='dark'] .aya-text .w.is-close,
 body[data-theme='dark'] .page-text .w.is-close { color: #ffc46b; }
 body[data-theme='dark'] .aya-text .w.is-missing,
 body[data-theme='dark'] .page-text .w.is-missing { color: #f0a6b8; }
+
+
+
+/* ------------------------------------------- namaz + premium: four tabs */
+/* The Premium screen now holds Hifz plan, Hifz Test, Murajaa and the report,
+   and Namaz holds the times, the qibla and the azaan. */
+.tabs.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.tabs.cols-4 .tab {
+  gap: 4px;
+  padding: 9px 4px;
+  font-size: 12px;
+}
+
+.tabs.cols-4 .tab-ic {
+  width: 18px;
+  height: 18px;
+}
+
+@media (max-width: 380px) {
+  .tabs.cols-4 .tab {
+    font-size: 11px;
+    padding: 8px 2px;
+  }
+}
+
+/* The home screen opens on Roz ki Naiki now — keep the read calm. */
+#view-home .home-hero {
+  margin-bottom: 10px;
+}
+
+#home-daily-all {
+  display: block;
+  margin: 14px auto 4px;
+}

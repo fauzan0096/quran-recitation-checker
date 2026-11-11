@@ -224,79 +224,12 @@
 
         <div class="card">
           <h3><span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-premium" /></svg></span> <span data-i18n="premium.heading">Bayyin Premium</span></h3>
-          <p class="hint" id="premium-status"></p>
+          <p class="hint" data-i18n="premium.chartShort">
+            Har cheez ek jagah: plan, Hifz Test, Murajaa aur report — "Bayyin Premium" me.
+          </p>
           <button type="button" id="open-premium" class="btn primary" data-i18n="premium.open">
-            Premium lein
+            Premium kholein
           </button>
-        </div>
-
-        <div class="card">
-          <h3 data-i18n="rep.heading">Meri report</h3>
-          <p class="hint" data-i18n="rep.settingsHint">
-            Ghaltiyan ki report, sab se zyada ghalat lafz, aur roz ka tareekh.
-          </p>
-          <button type="button" id="open-report" class="btn primary" data-i18n="rep.open">
-            Report kholein
-          </button>
-        </div>
-
-        <div class="card">
-          <h3 data-i18n="premium.chartHeading">Free ya Premium — kya milta hai</h3>
-          <div class="compare" role="table">
-            <div class="compare-row is-head" role="row">
-              <span class="compare-name" role="columnheader" data-i18n="premium.chartFeature">Cheez</span>
-              <span role="columnheader" data-i18n="premium.chartFree">Free</span>
-              <span class="compare-pro" role="columnheader" data-i18n="premium.chartPro">Premium</span>
-            </div>
-            <div class="compare-row" role="row">
-              <span class="compare-name" role="cell" data-i18n="premium.chartEveryday">Quran, Duaein, Tasbeeh, Qibla, Calendar</span>
-              <span class="compare-yes" role="cell">✓</span>
-              <span class="compare-yes compare-pro" role="cell">✓</span>
-            </div>
-            <div class="compare-row" role="row">
-              <span class="compare-name" role="cell" data-i18n="premium.chartNaiki">Roz ki Naiki — aya, hadith, sunnah</span>
-              <span class="compare-yes" role="cell">✓</span>
-              <span class="compare-yes compare-pro" role="cell">✓</span>
-            </div>
-            <div class="compare-row" role="row">
-              <span class="compare-name" role="cell" data-i18n="premium.chartKhatam">Khatam plan</span>
-              <span class="compare-yes" role="cell">✓</span>
-              <span class="compare-yes compare-pro" role="cell">✓</span>
-            </div>
-            <div class="compare-row" role="row">
-              <span class="compare-name" role="cell" data-i18n="premium.chartChecks">Talaawat checks</span>
-              <span role="cell" data-i18n="premium.chartChecksFree">Roz 3</span>
-              <span class="compare-pro" role="cell" data-i18n="premium.chartChecksPro">Be-paana</span>
-            </div>
-            <div class="compare-row" role="row">
-              <span class="compare-name" role="cell" data-i18n="premium.chartHifz">Hifz plan — sabaq, sabqi, murajaa</span>
-              <span class="compare-no" role="cell">–</span>
-              <span class="compare-yes compare-pro" role="cell">✓</span>
-            </div>
-            <div class="compare-row" role="row">
-              <span class="compare-name" role="cell" data-i18n="premium.chartHzTest">Hifz Test</span>
-              <span class="compare-no" role="cell">–</span>
-              <span class="compare-yes compare-pro" role="cell">✓</span>
-            </div>
-            <div class="compare-row" role="row">
-              <span class="compare-name" role="cell" data-i18n="premium.chartMurajaa">Murajaa — kya dobara sunna hai</span>
-              <span class="compare-no" role="cell">–</span>
-              <span class="compare-yes compare-pro" role="cell">✓</span>
-            </div>
-            <div class="compare-row" role="row">
-              <span class="compare-name" role="cell" data-i18n="premium.chartMistakes">Ghaltiyan — kaun sa lafz ghalat</span>
-              <span class="compare-no" role="cell">–</span>
-              <span class="compare-yes compare-pro" role="cell">✓</span>
-            </div>
-            <div class="compare-row" role="row">
-              <span class="compare-name" role="cell" data-i18n="premium.chartHistory">Tareekh — roz ka chart</span>
-              <span class="compare-no" role="cell">–</span>
-              <span class="compare-yes compare-pro" role="cell">✓</span>
-            </div>
-          </div>
-          <p class="hint" data-i18n="premium.chartTrial">
-            Pehle 3 din poora Premium muft — us ke baad yeh farq rehta hai.
-          </p>
         </div>
 
         <div class="card">
@@ -363,14 +296,6 @@
         </div>
 
         <div class="card">
-          <h3 data-i18n="remind.heading">Roz yaad dehani</h3>
-          <p class="hint" data-i18n="remind.hint">
-            Ek notification roz, aap ke chune hue waqt par — aaj kitni ayaat baqi hain.
-          </p>
-          <div id="remind-root"></div>
-        </div>
-
-        <div class="card">
           <h3 data-i18n="qari.heading">Qari ki tilawat</h3>
           <p class="hint" data-i18n="qari.hint">
             Ghalti par sahi tilawat sunne ke liye qari chunein (internet chahiye).
@@ -390,24 +315,6 @@
           <p class="hint" data-i18n="qari.credit">
             Audio: EveryAyah.com — muft, bina key. Koi audio app ke saath bundle nahi hota.
           </p>
-        </div>
-
-        <div class="card">
-          <h3 data-i18n="adhan.heading">Azaan</h3>
-          <p class="hint" data-i18n="adhan.hint">
-            Namaz ke waqt azaan bajegi (app khuli ho tab). Neeche se muazzin chunein.
-          </p>
-          <label class="field">
-            <span data-i18n="adhan.label">Muazzin</span>
-            <select id="adhan-select"></select>
-          </label>
-          <div class="row-actions">
-            <button type="button" id="adhan-toggle" class="btn small"></button>
-            <button type="button" id="adhan-test" class="btn ghost small" data-i18n="adhan.test">
-              Azaan test
-            </button>
-          </div>
-          <p class="hint" id="adhan-credit"></p>
         </div>
 
         <div class="card">
@@ -569,10 +476,28 @@
 
         <div id="home-todo"></div>
 
-        <h2 class="home-h" data-i18n="home.all">Sab kuch yahin</h2>
+        <div class="home-noor-head">
+          <h2 class="home-h" data-i18n="home.noor">Roz ki Naiki</h2>
+        </div>
+        <div id="home-noor"></div>
+
+        <button type="button" id="home-daily-all" class="btn ghost wide" data-i18n="daily.all">
+          Poora Roz ki Naiki dekhein
+        </button>
+      </section>
+
+      <section id="view-more" hidden>
+        <div class="settings-head">
+          <h2 data-i18n="more.heading">Aur</h2>
+        </div>
         <div class="more-grid home-grid">
-          
-          <button type="button" class="more-card" id="home-dua">
+          <button type="button" class="more-card" id="more-premium">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-premium" /></svg></span>
+            <em class="more-count" id="more-murajaa-count" hidden>0</em>
+            <strong><span data-i18n="premium.heading">Bayyin Premium</span></strong>
+            <span data-i18n="premium.cardHint">Hifz, test, murajaa aur report</span>
+          </button>
+          <button type="button" class="more-card" id="more-dua">
             <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-dua" /></svg></span>
             <strong data-i18n="more.dua">Duaein</strong>
             <span data-i18n="more.duaHint">Masnoon duaein aur azkar</span>
@@ -592,53 +517,23 @@
             <strong data-i18n="more.khatam">Khatam plan</strong>
             <span data-i18n="more.khatamHint">Roz ka hissa aur yaad dehani</span>
           </button>
-          <button type="button" class="more-card" id="more-hifz">
-            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-hifz" /></svg></span>
-            <strong><span data-i18n="more.hifz">Hifz plan</span> <em class="pro-badge">Premium</em></strong>
-            <span data-i18n="more.hifzHint">Kitne din mein yaad hoga</span>
-          </button>
-          <button type="button" class="more-card" id="more-hztest">
-            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-hztest" /></svg></span>
-            <strong><span data-i18n="more.hztest">Hifz Test</span> <em class="pro-badge">Premium</em></strong>
-            <span data-i18n="more.hztestHint">Pichli aya se agli yaad karein</span>
-          </button>
-          <button type="button" class="more-card" id="more-murajaa">
-            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-murajaa" /></svg></span>
-            <em class="more-count" id="more-murajaa-count" hidden>0</em>
-            <strong><span data-i18n="murajaa.more">Murajaa</span> <em class="pro-badge">Premium</em></strong>
-            <span data-i18n="murajaa.moreHint">Aaj ki dohrai — jo bhool rahe hain</span>
-          </button>
-          <button type="button" class="more-card" id="more-report">
-            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-report" /></svg></span>
-            <strong><span data-i18n="rep.more">Meri report</span> <em class="pro-badge">Premium</em></strong>
-            <span data-i18n="rep.moreHint">Ghaltiyan aur tareekh</span>
-          </button>
-          <button type="button" class="more-card" id="more-qibla">
-            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
-            <strong data-i18n="more.qibla">Qibla</strong>
-            <span data-i18n="more.qiblaHint">Kaaba ki simt, compass ke sath</span>
-          </button>
           <button type="button" class="more-card" id="more-calendar">
             <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-calendar" /></svg></span>
             <strong data-i18n="more.calendar">Islami calendar</strong>
             <span data-i18n="more.calendarHint">Hijri tareekh aur mahina</span>
-          </button>
-          <button type="button" class="more-card" id="more-prayer">
-            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
-            <strong data-i18n="more.prayer">Namaz ke auqaat</strong>
-            <span data-i18n="more.prayerHint">Fajr se Isha tak, aap ki jagah ke hisaab se</span>
           </button>
           <button type="button" class="more-card" id="more-badges">
             <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-khatam" /></svg></span>
             <strong data-i18n="badges.more">Inaam</strong>
             <span data-i18n="badges.moreHint">Badges — aadha Quran, be-ghalti, streak</span>
           </button>
+          <button type="button" class="more-card" id="more-settings">
+            <span class="more-mark"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-premium" /></svg></span>
+            <strong data-i18n="more.settings">Settings</strong>
+            <span data-i18n="more.settingsHint">Model, zubaan, backup aur yaad-dasht</span>
+          </button>
         </div>
 
-        <div class="home-noor-head">
-          <h2 class="home-h" data-i18n="home.noor">Roz ki Naiki</h2>
-        </div>
-        <div id="home-noor"></div>
       </section>
 
       <section id="view-dua" hidden>
@@ -660,33 +555,6 @@
         <div id="khatam-root"></div>
       </section>
 
-      <section id="view-hifz" hidden>
-        <div class="settings-head">
-          <button type="button" id="close-hifz" class="btn ghost small" data-i18n="back">◀ Wapas</button>
-          <h2><span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-hifz" /></svg></span><span data-i18n="more.hifz">Hifz plan</span> <em class="pro-badge">Premium</em></h2>
-        </div>
-        <div id="hifz-root"></div>
-      </section>
-
-      <section id="view-hztest" hidden>
-        <div class="settings-head">
-          <button type="button" id="close-hztest" class="btn ghost small" data-i18n="back">◀ Wapas</button>
-          <h2><span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-hztest" /></svg></span><span data-i18n="more.hztest">Hifz Test</span> <em class="pro-badge">Premium</em></h2>
-        </div>
-        <div id="hztest-root"></div>
-      </section>
-
-      <section id="view-report" hidden>
-        <div class="settings-head">
-          <button type="button" id="close-report" class="btn ghost small" data-i18n="back">◀ Wapas</button>
-          <h2>
-            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-report" /></svg></span>
-            <span data-i18n="rep.heading">Meri report</span> <em class="pro-badge">Premium</em>
-          </h2>
-        </div>
-        <div id="report-root"></div>
-      </section>
-
       <section id="view-premium" hidden>
         <div class="settings-head">
           <button type="button" id="close-premium" class="btn ghost small" data-i18n="back">◀ Wapas</button>
@@ -695,7 +563,99 @@
             <span data-i18n="premium.heading">Bayyin Premium</span>
           </h2>
         </div>
+
+        <div id="premium-chart">
+          <div class="card">
+            <h3 data-i18n="premium.chartHeading">Free ya Premium — kya milta hai</h3>
+            <div class="compare" role="table">
+              <div class="compare-row is-head" role="row">
+                <span class="compare-name" role="columnheader" data-i18n="premium.chartFeature">Cheez</span>
+                <span role="columnheader" data-i18n="premium.chartFree">Free</span>
+                <span class="compare-pro" role="columnheader" data-i18n="premium.chartPro">Premium</span>
+              </div>
+              <div class="compare-row" role="row">
+                <span class="compare-name" role="cell" data-i18n="premium.chartEveryday">Quran, Duaein, Tasbeeh, Qibla, Calendar</span>
+                <span class="compare-yes" role="cell">✓</span>
+                <span class="compare-yes compare-pro" role="cell">✓</span>
+              </div>
+              <div class="compare-row" role="row">
+                <span class="compare-name" role="cell" data-i18n="premium.chartNaiki">Roz ki Naiki — aya, hadith, sunnah</span>
+                <span class="compare-yes" role="cell">✓</span>
+                <span class="compare-yes compare-pro" role="cell">✓</span>
+              </div>
+              <div class="compare-row" role="row">
+                <span class="compare-name" role="cell" data-i18n="premium.chartKhatam">Khatam plan</span>
+                <span class="compare-yes" role="cell">✓</span>
+                <span class="compare-yes compare-pro" role="cell">✓</span>
+              </div>
+              <div class="compare-row" role="row">
+                <span class="compare-name" role="cell" data-i18n="premium.chartChecks">Talaawat checks</span>
+                <span role="cell" data-i18n="premium.chartChecksFree">Roz 3</span>
+                <span class="compare-pro" role="cell" data-i18n="premium.chartChecksPro">Be-paana</span>
+              </div>
+              <div class="compare-row" role="row">
+                <span class="compare-name" role="cell" data-i18n="premium.chartHifz">Hifz plan — sabaq, sabqi, murajaa</span>
+                <span class="compare-no" role="cell">–</span>
+                <span class="compare-yes compare-pro" role="cell">✓</span>
+              </div>
+              <div class="compare-row" role="row">
+                <span class="compare-name" role="cell" data-i18n="premium.chartHzTest">Hifz Test</span>
+                <span class="compare-no" role="cell">–</span>
+                <span class="compare-yes compare-pro" role="cell">✓</span>
+              </div>
+              <div class="compare-row" role="row">
+                <span class="compare-name" role="cell" data-i18n="premium.chartMurajaa">Murajaa — kya dobara sunna hai</span>
+                <span class="compare-no" role="cell">–</span>
+                <span class="compare-yes compare-pro" role="cell">✓</span>
+              </div>
+              <div class="compare-row" role="row">
+                <span class="compare-name" role="cell" data-i18n="premium.chartMistakes">Ghaltiyan — kaun sa lafz ghalat</span>
+                <span class="compare-no" role="cell">–</span>
+                <span class="compare-yes compare-pro" role="cell">✓</span>
+              </div>
+              <div class="compare-row" role="row">
+                <span class="compare-name" role="cell" data-i18n="premium.chartHistory">Tareekh — roz ka chart</span>
+                <span class="compare-no" role="cell">–</span>
+                <span class="compare-yes compare-pro" role="cell">✓</span>
+              </div>
+            </div>
+            <p class="hint" data-i18n="premium.chartTrial">
+              Pehle 3 din poora Premium muft — us ke baad yeh farq rehta hai.
+            </p>
+          </div>
+        </div>
+
         <div id="premium-root"></div>
+
+        <div id="premium-tabs" hidden>
+          <div class="tabs cols-4" role="tablist">
+            <button type="button" class="tab is-active" data-premium-tab="plan">
+              <span data-i18n="more.hifz">Hifz plan</span>
+            </button>
+            <button type="button" class="tab" data-premium-tab="test">
+              <span data-i18n="more.hztest">Hifz Test</span>
+            </button>
+            <button type="button" class="tab" data-premium-tab="murajaa">
+              <span data-i18n="murajaa.more">Murajaa</span>
+            </button>
+            <button type="button" class="tab" data-premium-tab="report">
+              <span data-i18n="rep.heading">Report</span>
+            </button>
+          </div>
+
+          <div id="premium-plan">
+            <div id="hifz-root"></div>
+          </div>
+          <div id="premium-test" hidden>
+            <div id="hztest-root"></div>
+          </div>
+          <div id="premium-murajaa" hidden>
+            <div id="murajaa-root"></div>
+          </div>
+          <div id="premium-report" hidden>
+            <div id="report-root"></div>
+          </div>
+        </div>
       </section>
 
       <section id="view-daily" hidden>
@@ -720,15 +680,59 @@
         <div id="tasbeeh-root"></div>
       </section>
 
-      <section id="view-qibla" hidden>
-        <div class="settings-head">
-          <button type="button" id="close-qibla" class="btn ghost small" data-i18n="back">◀ Wapas</button>
-          <h2>
-            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
+      <section id="view-namaz" hidden>
+        <div class="tabs" role="tablist" id="namaz-tabs">
+          <button type="button" class="tab is-active" data-namaz-tab="times">
+            <svg class="tab-ic" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg>
+            <span data-i18n="prayer.heading">Namaz ke auqaat</span>
+          </button>
+          <button type="button" class="tab" data-namaz-tab="qibla">
+            <svg class="tab-ic" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg>
             <span data-i18n="qibla.heading">Qibla</span>
-          </h2>
+          </button>
+          <button type="button" class="tab" data-namaz-tab="adhan">
+            <svg class="tab-ic" viewBox="0 0 32 32" aria-hidden="true"><use href="#i-daily" /></svg>
+            <span data-i18n="adhan.heading">Azaan</span>
+          </button>
         </div>
-        <div id="qibla-root"></div>
+
+        <div id="namaz-times">
+          <div id="prayer-root"></div>
+        </div>
+
+        <div id="namaz-qibla" hidden>
+          <div id="qibla-root"></div>
+        </div>
+
+        <div id="namaz-adhan" hidden>
+          <div class="card">
+            <h3 data-i18n="adhan.heading">Azaan</h3>
+            <p class="hint" data-i18n="adhan.hint">
+              Namaz ke waqt azaan bajegi (app khuli ho tab). Neeche se muazzin chunein.
+            </p>
+            <label class="field">
+              <span data-i18n="adhan.label">Muazzin</span>
+              <select id="adhan-select"></select>
+            </label>
+            <div class="row-actions">
+              <button type="button" id="adhan-toggle" class="btn small"></button>
+              <button type="button" id="adhan-test" class="btn ghost small" data-i18n="adhan.test">
+                Azaan test
+              </button>
+            </div>
+            <p class="hint" id="adhan-credit"></p>
+          </div>
+          <div class="card">
+            <h3 data-i18n="remind.heading">Roz yaad dehani</h3>
+            <p class="hint" data-i18n="remind.hint">
+              Ek notification roz, aap ke chune hue waqt par — aaj kitni ayaat baqi hain.
+            </p>
+            <div id="remind-root"></div>
+            <p class="hint" data-i18n="remind.locationHint">
+              Namaz ke auqaat ke liye jagah "Auqaat" tab me set karein — tab hi waqt sahi aata hai.
+            </p>
+          </div>
+        </div>
       </section>
 
       <section id="view-calendar" hidden>
@@ -742,17 +746,6 @@
         <div id="calendar-root"></div>
       </section>
 
-      <section id="view-prayer" hidden>
-        <div class="settings-head">
-          <button type="button" id="close-prayer" class="btn ghost small" data-i18n="back">◀ Wapas</button>
-          <h2>
-            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg></span>
-            <span data-i18n="prayer.heading">Namaz ke auqaat</span>
-          </h2>
-        </div>
-        <div id="prayer-root"></div>
-      </section>
-
       <section id="view-badges" hidden>
         <div class="settings-head">
           <button type="button" id="close-badges" class="btn ghost small" data-i18n="back">◀ Wapas</button>
@@ -764,17 +757,6 @@
         <div id="badges-root"></div>
       </section>
 
-      <section id="view-murajaa" hidden>
-        <div class="settings-head">
-          <button type="button" id="close-murajaa" class="btn ghost small" data-i18n="back">◀ Wapas</button>
-          <h2>
-            <span class="h-ic"><svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-murajaa" /></svg></span>
-            <span data-i18n="murajaa.heading">Murajaa</span>
-            <em class="pro-badge">Premium</em>
-          </h2>
-        </div>
-        <div id="murajaa-root"></div>
-      </section>
     </main>
 
     <div id="welcome" class="welcome" hidden>
@@ -806,24 +788,24 @@
 
     <nav class="bottom-nav" id="bottom-nav" aria-label="Main">
       <button type="button" class="bn-item" data-nav="home">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 15.2L16 5l12 10.2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M7 13.4V26a1 1 0 0 0 1 1h5.5v-7h5v7H24a1 1 0 0 0 1-1V13.4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span data-i18n="nav.home">Home</span>
+        <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-daily" /></svg>
+        <span data-i18n="nav.noor">Naiki</span>
       </button>
       <button type="button" class="bn-item" data-nav="reader">
         <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-mushaf" /></svg>
         <span data-i18n="nav.quran">Quran</span>
       </button>
-      <button type="button" class="bn-item" data-nav="dua">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-dua" /></svg>
-        <span data-i18n="nav.dua">Duaein</span>
+      <button type="button" class="bn-item" data-nav="namaz">
+        <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-qibla" /></svg>
+        <span data-i18n="nav.prayer">Namaz</span>
       </button>
-      <button type="button" class="bn-item" data-nav="tasbeeh">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-tasbeeh" /></svg>
-        <span data-i18n="nav.tasbeeh">Tasbeeh</span>
-      </button>
-      <button type="button" class="bn-item" data-nav="daily">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><use href="#i-daily" /></svg>
-        <span data-i18n="nav.noor">Naiki</span>
+      <button type="button" class="bn-item" data-nav="more">
+        <svg viewBox="0 0 32 32" aria-hidden="true">
+          <circle cx="9" cy="16" r="2.1" fill="currentColor" stroke="none" />
+          <circle cx="16" cy="16" r="2.1" fill="currentColor" stroke="none" />
+          <circle cx="23" cy="16" r="2.1" fill="currentColor" stroke="none" />
+        </svg>
+        <span data-i18n="nav.more">Aur</span>
       </button>
     </nav>
 

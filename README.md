@@ -48,8 +48,22 @@ on-device.
   (page-wise, Madani ya IndoPak) aur **Talash** (lafz / aya / juz se). Surah aur
   page dono me har aya apne card me (ya mushaf page par apni jagah) hoti hai aur
   usi ke neeche apna **Record** button hota hai.
-- Settings ek alag page hai (gear icon): share, model, audio/mic, tajweed hints,
-  about/privacy aur licenses.
+- Settings ek alag page hai (gear icon ya "Aur" ka card): share, model, audio/mic,
+  tajweed hints, about/privacy aur licenses.
+
+## Screens — chaar darwaze
+
+App khulne par seedha **Roz ki Naiki** aati hai (aya, hadith, sunnah + aaj ka
+kaam), kyunke wahi roz wapas laane wali cheez hai. Neeche bar me sirf chaar:
+
+- **Naiki** — aaj ki aya, hadith aur sunnah (poora page ek tap door).
+- **Quran** — aya ba aya ya mushaf, Record ke saath (asli kaam).
+- **Namaz** — teen tabs: **Auqaat**, **Qibla**, **Azaan** (ek hi jagah).
+- **Aur** — Duaein, Tasbeeh, Khatam plan, Islami calendar, Inaam, Settings, aur
+  ek hi **Bayyin Premium** card.
+
+Premium ke andar bhi tabs hain: **Hifz plan**, **Hifz Test**, **Murajaa**,
+**Report** — chaar alag alag screens nahi, ek jagah.
 
 ## Aya-ba-aya, mushaf-ba-mushaf
 

@@ -82,18 +82,22 @@ export function mountDaily(root, options = {}) {
 
     const now = new Date();
     const hijri = todayHijri();
-    const strip = document.createElement('div');
-    strip.className = 'daily-date';
-    const en = document.createElement('span');
-    en.className = 'date-en';
-    en.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    const ar = document.createElement('span');
-    ar.className = 'date-ar';
-    ar.lang = 'ar';
-    ar.dir = 'rtl';
-    ar.textContent = hijriArabic(hijri);
-    strip.append(en, ar);
-    root.appendChild(strip);
+    // The home screen already shows the date in its own header, so the compact
+    // copy there does not repeat it.
+    if (!compact) {
+      const strip = document.createElement('div');
+      strip.className = 'daily-date';
+      const en = document.createElement('span');
+      en.className = 'date-en';
+      en.textContent = now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+      const ar = document.createElement('span');
+      ar.className = 'date-ar';
+      ar.lang = 'ar';
+      ar.dir = 'rtl';
+      ar.textContent = hijriArabic(hijri);
+      strip.append(en, ar);
+      root.appendChild(strip);
+    }
 
     const sheet = document.createElement('div');
     sheet.className = 'noor-sheet';

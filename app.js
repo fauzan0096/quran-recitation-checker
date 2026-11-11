@@ -469,21 +469,25 @@ function cacheElements() {
     'toast',
     'splash', 'welcome', 'welcome-start', 'welcome-lang', 'lang-select',
     'resume-aya', 'progress-stats', 'progress-lists', 'progress-reset',
-    'view-home', 'more-tasbeeh', 'more-qibla', 'more-calendar',
-    'home-mushaf', 'home-dua', 'home-open-quran', 'home-todo', 'more-khatam', 'more-hifz',
-    'view-khatam', 'view-hifz', 'khatam-root', 'hifz-root', 'close-khatam', 'close-hifz',
-    'more-hztest', 'view-hztest', 'hztest-root', 'close-hztest',
-    'more-report', 'view-report', 'report-root', 'close-report', 'open-report',
-    'more-prayer', 'view-prayer', 'prayer-root', 'close-prayer',
+    'view-home', 'more-tasbeeh', 'more-calendar',
+    'home-mushaf', 'home-open-quran', 'home-todo', 'home-daily-all',
+    'more-khatam', 'more-premium', 'view-more',
+    'view-khatam', 'khatam-root', 'close-khatam',
+    'hifz-root', 'hztest-root', 'murajaa-root', 'report-root', 'open-report',
     'more-badges', 'view-badges', 'badges-root', 'close-badges',
-    'more-murajaa', 'view-murajaa', 'murajaa-root', 'close-murajaa', 'more-murajaa-count',
+    'more-murajaa-count',
     'backup-export', 'backup-import', 'backup-file', 'error-log', 'errors-copy',
     'view-premium', 'close-premium', 'premium-root', 'open-premium', 'premium-status',
+    'premium-chart', 'premium-tabs', 'premium-plan', 'premium-test',
+    'premium-murajaa', 'premium-report',
+    'view-namaz', 'namaz-tabs', 'namaz-times', 'namaz-qibla', 'namaz-adhan',
+    'prayer-root', 'qibla-root',
     'home-date', 'home-noor', 'view-dua', 'close-dua', 'dua-root', 'bottom-nav',
     'more-daily', 'view-daily', 'close-daily', 'daily-root',
+    'more-dua', 'more-settings',
     'view-tasbeeh', 'close-tasbeeh', 'tasbeeh-root',
-    'view-qibla', 'close-qibla', 'qibla-root',
     'view-calendar', 'close-calendar', 'calendar-root',
+    'more-settings',
   ];
   for (const id of ids) {
     const name = id.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
@@ -2218,42 +2222,112 @@ function ensureMounted(name) {
   }
 }
 
-/** Show exactly one section, keep the bottom bar in step, and stop what is not on screen. */
-function setView(name) {
-  // The Hifz plan, the Hifz Test, Murajaa and the report are Premium: every way
-  // in (the More card, the home todo, a reminder) ends up here, so this is the one gate.
-  if (
-    (name === 'hifz' || name === 'hztest' || name === 'report' || name === 'murajaa') &&
-    !isPremium()
-  ) {
-    toast(t('premium.locked'));
-    name = 'premium';
+/** The four Premium tabs: Hifz plan, Hifz Test, Murajaa and the report. */
+const PREMIUM_TABS = { plan: 'hifz', test: 'hztest', murajaa: 'murajaa', report: 'report' };
+let premiumTab = 'plan';
+let namazTab = 'times';
+
+/** Show one Premium tab; only Premium has them at all. */
+function setPremiumTab(tab) {
+  const key = PREMIUM_TABS[tab] ? tab : 'plan';
+  if (premiumTab === 'test' && key !== 'test') moreViews.hztest?.stop?.();
+  premiumTab = key;
+
+  for (const button of document.querySelectorAll('[data-premium-tab]')) {
+    button.classList.toggle('is-active', button.dataset.premiumTab === key);
   }
+  const panels = {
+    plan: els.premiumPlan,
+    test: els.premiumTest,
+    murajaa: els.premiumMurajaa,
+    report: els.premiumReport,
+  };
+  for (const [id, panel] of Object.entries(panels)) {
+    if (panel) panel.hidden = id !== key;
+  }
+
+  const mounted = PREMIUM_TABS[key];
+  ensureMounted(mounted);
+  if (typeof moreViews[mounted]?.refresh === 'function') moreViews[mounted].refresh();
+}
+
+/** Premium in one screen: plans when free, the four tools once it is paid. */
+function paintPremiumTabs() {
+  const on = isPremium();
+  if (els.premiumTabs) els.premiumTabs.hidden = !on;
+  if (els.premiumChart) els.premiumChart.hidden = on;
+  if (on) setPremiumTab(premiumTab);
+}
+
+/** Auqaat, Qibla and the Azaan card live on one screen, under three tabs. */
+function setNamazTab(tab) {
+  const key = ['times', 'qibla', 'adhan'].includes(tab) ? tab : 'times';
+  namazTab = key;
+
+  if (els.namazTabs) {
+    for (const button of els.namazTabs.querySelectorAll('[data-namaz-tab]')) {
+      button.classList.toggle('is-active', button.dataset.namazTab === key);
+    }
+  }
+  if (els.namazTimes) els.namazTimes.hidden = key !== 'times';
+  if (els.namazQibla) els.namazQibla.hidden = key !== 'qibla';
+  if (els.namazAdhan) els.namazAdhan.hidden = key !== 'adhan';
+
+  if (key === 'times') {
+    ensureMounted('prayer');
+    if (typeof moreViews.prayer?.refresh === 'function') moreViews.prayer.refresh();
+  }
+  if (key === 'qibla') ensureMounted('qibla');
+  else moreViews.qibla?.stop?.();
+}
+
+/** Show exactly one section, keep the bottom bar in step, and stop what is not on screen. */
+function setView(view, tab) {
+  let name = view;
+  let tabName = tab;
+
+  // The Hifz plan, the Hifz Test, Murajaa and the report all live in one
+  // Premium screen now; every way in (a card, a reminder, the home list) comes
+  // through here.
+  if (name === 'hifz' || name === 'hztest' || name === 'murajaa' || name === 'report') {
+    if (!isPremium()) {
+      toast(t('premium.locked'));
+      name = 'premium';
+      tabName = undefined;
+    } else {
+      tabName = name;
+      name = 'premium';
+    }
+  }
+  // Namaz: times, qibla and azaan are one screen with three tabs.
+  if (name === 'prayer') {
+    name = 'namaz';
+    tabName = tabName || 'times';
+  }
+  if (name === 'qibla') {
+    name = 'namaz';
+    tabName = 'qibla';
+  }
+
   const sections = {
     reader: els.viewReader,
     settings: els.viewSettings,
     home: els.viewHome,
+    more: els.viewMore,
     dua: els.viewDua,
     daily: els.viewDaily,
     tasbeeh: els.viewTasbeeh,
-    qibla: els.viewQibla,
+    namaz: els.viewNamaz,
     calendar: els.viewCalendar,
     khatam: els.viewKhatam,
-    hifz: els.viewHifz,
-    hztest: els.viewHztest,
-    report: els.viewReport,
-    prayer: els.viewPrayer,
     badges: els.viewBadges,
-    murajaa: els.viewMurajaa,
     premium: els.viewPremium,
   };
-  if (currentView === 'qibla' && name !== 'qibla') moreViews.qibla?.stop();
-  if (currentView === 'tasbeeh' && name !== 'tasbeeh') moreViews.tasbeeh?.stop();
+
+  if (currentView === 'namaz' && name !== 'namaz') moreViews.qibla?.stop?.();
   if (currentView === 'dua' && name !== 'dua') moreViews.duas?.stop();
-  if (currentView === 'hztest' && name !== 'hztest') moreViews.hztest?.stop();
-  if (currentView === 'reader' && name !== 'reader') stopAyaAudio();
-  if (currentView === 'report' && name !== 'report') stopAyaAudio();
-  if (currentView === 'murajaa' && name !== 'murajaa') stopAyaAudio();
+  if (currentView === 'tasbeeh' && name !== 'tasbeeh') moreViews.tasbeeh?.stop();
+  if (name !== 'reader') stopAyaAudio();
   if (name !== 'reader') document.body.classList.remove('is-mushaf-full');
   if (name === 'reader' && state.mode === 'page' && state.mushafFull !== false) {
     document.body.classList.add('is-mushaf-full');
@@ -2267,23 +2341,13 @@ function setView(name) {
   if (name === 'home') ensureMounted('homeNoor');
   if (name === 'daily') ensureMounted('daily');
   if (name === 'tasbeeh') ensureMounted('tasbeeh');
-  if (name === 'qibla') ensureMounted('qibla');
   if (name === 'calendar') ensureMounted('calendar');
   if (name === 'dua') ensureMounted('duas');
   if (name === 'khatam') ensureMounted('khatam');
-  if (name === 'hifz') ensureMounted('hifz');
-  if (name === 'hztest') ensureMounted('hztest');
-  if (name === 'report') ensureMounted('report');
-  if (name === 'prayer') ensureMounted('prayer');
   if (name === 'badges') ensureMounted('badges');
-  if (name === 'murajaa') ensureMounted('murajaa');
+  if (name === 'namaz') setNamazTab(tabName || namazTab);
   if (name === 'khatam') moreViews.khatam?.refresh();
-  if (name === 'hifz') moreViews.hifz?.refresh();
-  if (name === 'hztest') moreViews.hztest?.refresh();
-  if (name === 'report') moreViews.report?.refresh();
-  if (name === 'prayer') moreViews.prayer?.refresh();
   if (name === 'badges') moreViews.badges?.refresh();
-  if (name === 'murajaa') moreViews.murajaa?.refresh();
   if (name === 'home') {
     paintHomeTodo();
     paintMurajaaCount();
@@ -2292,13 +2356,30 @@ function setView(name) {
     renderPremiumCard();
     paintErrors();
   }
-  if (name === 'premium') renderPremium();
+  if (name === 'premium') {
+    renderPremium();
+    paintPremiumTabs();
+    loadQuranInBackground();
+  }
   if (name === 'daily') moreViews.daily?.refresh();
   if (name === 'tasbeeh') moreViews.tasbeeh?.refresh();
   if (name === 'calendar') moreViews.calendar?.refresh();
   if (name === 'reader') loadQuranInBackground();
 
-  const navKey = { reader: 'reader', settings: '', home: 'home', dua: 'dua', daily: 'daily', tasbeeh: 'tasbeeh' }[name];
+  const navKey = {
+    home: 'home',
+    reader: 'reader',
+    namaz: 'namaz',
+    more: 'more',
+    premium: 'more',
+    dua: 'more',
+    tasbeeh: 'more',
+    daily: 'home',
+    khatam: 'more',
+    calendar: 'more',
+    badges: 'more',
+    settings: '',
+  }[name];
   document.querySelectorAll('.bn-item').forEach((item) => {
     const on = item.dataset.nav === navKey;
     item.classList.toggle('is-on', on);
@@ -2411,6 +2492,7 @@ function renderPremium() {
             toast(t('premium.activated'));
             renderPremium();
             renderPremiumCard();
+            paintPremiumTabs();
           } else if (result.reason === 'unavailable') {
             toast(t('premium.notAvailable'));
           } else {
@@ -2423,6 +2505,7 @@ function renderPremium() {
           toast(t('premium.activated'));
           renderPremium();
           renderPremiumCard();
+          paintPremiumTabs();
           return;
         }
         toast(t('premium.notAvailable'));
@@ -2447,6 +2530,7 @@ function renderPremium() {
           toast(t('premium.restored'));
           renderPremium();
           renderPremiumCard();
+          paintPremiumTabs();
         } else {
           toast(t('premium.restoreNone'));
         }
@@ -2948,42 +3032,27 @@ function wireEvents() {
     });
   };
   go(els.homeMushaf, 'reader');
+  go(els.morePremium, 'premium');
   go(els.moreKhatam, 'khatam');
-  if (els.moreHifz) {
-    els.moreHifz.addEventListener('click', () => {
-      if (!isPremium()) {
-        setView('premium');
-        return;
-      }
-      setView('hifz');
-    });
-  }
-  go(els.moreHztest, 'hztest');
-  go(els.moreReport, 'report');
-  go(els.morePrayer, 'prayer');
   go(els.moreBadges, 'badges');
-  go(els.moreMurajaa, 'murajaa');
   go(els.homeOpenQuran, 'reader');
-  go(els.homeDua, 'dua');
+  go(els.moreDua, 'dua');
+  go(els.homeDailyAll, 'daily');
   go(els.moreDaily, 'daily');
   go(els.moreTasbeeh, 'tasbeeh');
-  go(els.moreQibla, 'qibla');
   go(els.moreCalendar, 'calendar');
-  for (const closer of [
-    els.closeTasbeeh,
-    els.closeQibla,
-    els.closeCalendar,
-    els.closeDaily,
-    els.closeDua,
-    els.closeKhatam,
-    els.closeHifz,
-    els.closeHztest,
-    els.closeReport,
-    els.closePrayer,
-    els.closeBadges,
-    els.closeMurajaa,
-    els.closePremium,
-  ]) {
+  if (els.moreSettings) els.moreSettings.addEventListener('click', openSettings);
+
+  if (els.namazTabs) {
+    for (const button of els.namazTabs.querySelectorAll('[data-namaz-tab]')) {
+      button.addEventListener('click', () => setNamazTab(button.dataset.namazTab));
+    }
+  }
+  for (const button of document.querySelectorAll('[data-premium-tab]')) {
+    button.addEventListener('click', () => setPremiumTab(button.dataset.premiumTab));
+  }
+
+  for (const closer of [els.closeTasbeeh, els.closeCalendar, els.closeDaily, els.closeDua, els.closeKhatam, els.closeBadges, els.closePremium]) {
     go(closer, 'home');
   }
   if (els.openReport) els.openReport.addEventListener('click', () => setView('report'));
