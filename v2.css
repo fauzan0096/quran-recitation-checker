@@ -727,7 +727,6 @@ body[data-theme='dark'] {
   border-radius: 26px;
   color: #fff6eb;
   background:
-    repeating-conic-gradient(from 0deg at 50% 42%, rgba(240, 193, 147, 0.07) 0 5deg, transparent 5deg 15deg),
     radial-gradient(420px 300px at 50% 18%, rgba(176, 122, 60, 0.24), transparent 70%),
     linear-gradient(170deg, #5a1b2a 0%, #3c1019 55%, #2a0b12 100%);
   border: 1px solid rgba(240, 193, 147, 0.45);
@@ -1998,34 +1997,9 @@ body[data-theme='dark'] .page-text .w.is-missing { color: #f0a6b8; }
   color: var(--ink);
 }
 
-/* ---------------------------------------- tasbeeh: whole page burgundy/gold */
-body:has(#view-tasbeeh:not([hidden])) {
-  background: radial-gradient(620px 440px at 50% 10%, #5a1b2a 0%, #3c1019 45%, #240a11 100%)
-    fixed;
-}
-
-body:has(#view-tasbeeh:not([hidden])) .app-bar,
-body:has(#view-tasbeeh:not([hidden])) .bottom-nav {
-  background: rgba(42, 11, 18, 0.94);
-  border-color: rgba(240, 193, 147, 0.35);
-  color: #fff6eb;
-}
-
-body:has(#view-tasbeeh:not([hidden])) .bottom-nav .bn-item {
-  color: rgba(255, 246, 235, 0.72);
-}
-
-body:has(#view-tasbeeh:not([hidden])) .brand-en,
-body:has(#view-tasbeeh:not([hidden])) .tagline {
-  color: rgba(255, 246, 235, 0.72);
-}
-
-body:has(#view-tasbeeh:not([hidden])) #view-tasbeeh .settings-head h2,
-body:has(#view-tasbeeh:not([hidden])) #view-tasbeeh .settings-head .btn {
-  color: #f6d4a8;
-  border-color: rgba(240, 193, 147, 0.5);
-}
-
+/* ---------------------------------------- tasbeeh: the app's own look */
+/* The dial keeps its burgundy card, but the page, the app bar and the bottom
+   bar stay exactly as they are on every other screen. */
 #view-tasbeeh .tsb {
   width: 100%;
   padding-bottom: max(24px, env(safe-area-inset-bottom));
