@@ -180,6 +180,25 @@ export default {
       return json({ ok: true });
     }
 
+    if (url.pathname === '/test') {
+      if (!data.endpoint) return json({ ok: false, error: 'no endpoint' }, 400);
+      const key = `sub:${base64url(encoder.encode(data.endpoint))}`;
+      const raw = await env.SUBS.get(key);
+      if (!raw) return json({ ok: false, error: 'not subscribed' }, 404);
+
+      const config = await settings(env);
+      if (!config.publicKey || privateKeyState(config.privateKey) !== 'ok') {
+        return json({ ok: false, error: 'vapid not configured' }, 500);
+      }
+      try {
+        const saved = JSON.parse(raw);
+        const status = await send(saved.subscription, config);
+        return json({ ok: status >= 200 && status < 300, status });
+      } catch (error) {
+        return json({ ok: false, error: String(error && error.message) }, 500);
+      }
+    }
+
     return json({ ok: false, error: 'unknown path' }, 404);
   },
 

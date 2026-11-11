@@ -13,7 +13,7 @@
 import { t } from './i18n.js';
 import { dueCount } from './murajaa.js';
 import { isPremium } from './premium.js';
-import { configured as pushConfigured, saveConfig, enable as pushEnable, disable as pushDisable } from './push.js';
+import { configured as pushConfigured, saveConfig, enable as pushEnable, disable as pushDisable, test as pushTest } from './push.js';
 
 const KEY = 'tc.reminder';
 const DEFAULT_TIME = '20:00';
@@ -202,6 +202,19 @@ export function mountCard(root) {
       }
     });
     row.appendChild(pushBtn);
+
+    if (s.push) {
+      const pushCheck = document.createElement('button');
+      pushCheck.type = 'button';
+      pushCheck.className = 'btn ghost small';
+      pushCheck.textContent = t('push.test');
+      pushCheck.addEventListener('click', async () => {
+        const note = document.getElementById('remind-note');
+        const result = await pushTest();
+        if (note) note.textContent = result.ok ? t('push.testSent') : t('push.testFailed');
+      });
+      row.appendChild(pushCheck);
+    }
 
     root.appendChild(row);
 

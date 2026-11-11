@@ -127,3 +127,18 @@ export async function isSubscribed() {
     return false;
   }
 }
+
+/** Ask the Worker to send one push right now, so the setup can be checked. */
+export async function test() {
+  if (!supported()) return { ok: false, reason: 'unsupported' };
+  if (!configured()) return { ok: false, reason: 'config' };
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) return { ok: false, reason: 'none' };
+    const result = await post('/test', { endpoint: subscription.endpoint });
+    return { ok: Boolean(result && result.ok), reason: result && result.error };
+  } catch (error) {
+    return { ok: false, reason: error && error.message ? error.message : 'error' };
+  }
+}
