@@ -13,6 +13,7 @@
 import { t } from './i18n.js';
 import { dueCount } from './murajaa.js';
 import { isPremium } from './premium.js';
+import { configured as pushConfigured, enable as pushEnable, disable as pushDisable } from './push.js';
 
 const KEY = 'tc.reminder';
 const DEFAULT_TIME = '20:00';
@@ -26,12 +27,12 @@ function load() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
     if (raw && typeof raw === 'object') {
-      return { on: false, time: DEFAULT_TIME, day: '', ...raw };
+      return { on: false, time: DEFAULT_TIME, day: '', push: false, ...raw };
     }
   } catch (error) {
     /* private mode */
   }
-  return { on: false, time: DEFAULT_TIME, day: '' };
+  return { on: false, time: DEFAULT_TIME, day: '', push: false };
 }
 
 function save(next) {
@@ -171,6 +172,34 @@ export function mountCard(root) {
     });
 
     row.append(toggle, time, test);
+
+    const pushBtn = document.createElement('button');
+    pushBtn.type = 'button';
+    pushBtn.className = `btn small ${s.push ? 'ghost' : 'primary'}`;
+    pushBtn.textContent = s.push ? t('push.on') : t('push.enable');
+    pushBtn.addEventListener('click', async () => {
+      const note = document.getElementById('remind-note');
+      if (s.push) {
+        await pushDisable();
+        save({ ...load(), push: false });
+        build();
+        return;
+      }
+      if (!pushConfigured()) {
+        if (note) note.textContent = t('push.notSet');
+        return;
+      }
+      const result = await pushEnable(s.time || DEFAULT_TIME, t('remind.body'));
+      if (result.ok) {
+        save({ ...load(), push: true });
+        build();
+      } else if (note) {
+        note.textContent =
+          result.reason === 'denied' ? t('remind.denied') : t('push.failed');
+      }
+    });
+    row.appendChild(pushBtn);
+
     root.appendChild(row);
 
     const note = document.createElement('p');

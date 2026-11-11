@@ -59,6 +59,7 @@ import {
   stop as stopQari,
 } from './qari.js';
 import { mountCard as mountReminderCard, start as startDailyReminder } from './reminder.js';
+import { playWord } from './word-audio.js';
 import { mountMurajaa, dueCount, updateFromCheck } from './murajaa.js';
 import { mountTasbeeh } from './tasbeeh-v2.js';
 import { mountReport, recordReport } from './premium-tools.js';
@@ -1197,6 +1198,11 @@ function explainLine(problems) {
 }
 
 function mistakeBlock(key, problems) {
+  const [surah, aya] = String(key || '')
+    .split(':')
+    .map(Number);
+  const verse = key ? verseOf(key) : null;
+  const offset = verse ? verse.prefixWords.length : 0;
   const block = document.createElement('div');
   block.className = 'page-mistake';
   const label = document.createElement('span');
@@ -1232,6 +1238,20 @@ function mistakeBlock(key, problems) {
     heard.textContent = r.heard || t('note.unread');
 
     li.append(tag, expected, arrow, heard);
+
+    if (surah && aya && Number.isInteger(r.index)) {
+      const wordHear = document.createElement('button');
+      wordHear.type = 'button';
+      wordHear.className = 'icon-btn small word-hear';
+      wordHear.textContent = '🔊';
+      wordHear.title = t('qari.word');
+      wordHear.addEventListener('click', async () => {
+        const ok = await playWord(surah, aya, r.index + offset);
+        if (!ok) toast(t('qari.wordNo'));
+      });
+      li.appendChild(wordHear);
+    }
+
     list.appendChild(li);
   }
   block.appendChild(list);

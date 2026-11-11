@@ -597,3 +597,26 @@ Ghalti ki wazahat ke saath ab sahi tilawat bhi suni ja sakti hai.
   "aaj ka hissa baqi hai".
 - Notification tab aati hai jab app khuli ho ya khulte hi (browser band page ko khud
   jagana allowed nahi; background push ke liye server chahiye jo is app me nahi).
+
+
+
+## Word-level qari audio — `word-audio.js`
+
+- Ghalti ki list me har lafz ke saath **🔊** — sirf wohi lafz qari ki awaz me sunai
+  deta hai (poora aya nahi).
+- Timing data **quran-align** (CC BY 4.0, Alafasy) se: `.github/workflows/qari-timings.yml`
+  ko GitHub par **ek dafa manually chalayein** (Actions → Qari word timings → Run
+  workflow). Wo `qari-timings.json` bana kar commit kar deta hai.
+- File na ho ya us lafz ki timing na ho to button "poora aya sun lein" keh deta hai —
+  app kuch nahi torta.
+
+## Push notifications (app band ho to bhi) — `push.js` + `worker/push-worker.js`
+
+- Settings → **Roz yaad dehani** → **"Push bhi (app band ho to bhi)"**.
+- Server: ek chhota **Cloudflare Worker** (`worker/push-worker.js`) — subscriptions
+  KV me, aur hourly cron us waqt push bhejta hai jo user ne chuna (timezone ke hisaab se).
+- Keys `push-setup.html` se banti hain (browser me hi); `push.js` me `ENDPOINT` aur
+  `PUBLIC_KEY` daalna hai. Poora tareeqa `worker/README.md` me.
+- iOS par web push sirf iOS 16.4+ aur Home Screen par install hone par chalta hai.
+- Background push ke bagair (browser band) local reminder nahi aa sakta — wahi purana
+  card us soorat me kaam karta hai jab app khuli ho ya khulte hi.

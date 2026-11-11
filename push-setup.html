@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Bayyin — push keys</title>
+    <style>
+      body { margin: 0; padding: 20px; background: #f7f1e6; color: #2a1a12; font: 15px/1.55 -apple-system, system-ui, sans-serif; }
+      h1 { font-size: 20px; margin: 0 0 6px; }
+      p { margin: 0 0 14px; }
+      button { font: inherit; padding: 10px 16px; border-radius: 12px; border: 0; background: #4b1b21; color: #fff6eb; font-weight: 700; }
+      textarea { width: 100%; box-sizing: border-box; font: 12px/1.5 ui-monospace, Menlo, monospace; padding: 10px; border-radius: 12px; border: 1px solid #d8c7ae; background: #fffdf8; min-height: 90px; }
+      h2 { font-size: 14px; margin: 18px 0 6px; text-transform: uppercase; letter-spacing: .04em; color: #6b2233; }
+      ol { padding-inline-start: 18px; }
+      code { background: #efe2cd; padding: 1px 5px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+    <h1>Bayyin — VAPID keys</h1>
+    <p>
+      Ye page aapke browser me hi ek key pair banata hai. Kuch bhi server par nahi jata.
+      Keys banayein, phir <strong>public</strong> ko <code>push.js</code> me aur dono ko
+      Cloudflare Worker ki settings me daal dein.
+    </p>
+
+    <button type="button" id="gen">Generate keys</button>
+
+    <h2>Public key (push.js me)</h2>
+    <textarea id="public" readonly placeholder="Generate dabayein…"></textarea>
+
+    <h2>Private key — JWK (sirf Worker me, kisi ke sath share na karein)</h2>
+    <textarea id="private" readonly placeholder="Generate dabayein…"></textarea>
+
+    <h2>Worker me kaise dalein</h2>
+    <ol>
+      <li>workers.cloudflare.com → Create → Worker → <code>worker/push-worker.js</code> ka code paste karein.</li>
+      <li>Settings → Variables: <code>VAPID_PUBLIC</code>, <code>VAPID_PRIVATE</code> (upar wala poora JSON), <code>VAPID_SUBJECT</code> = <code>mailto:aapka@email</code>.</li>
+      <li>KV namespace banayein aur usay <code>SUBS</code> ke naam se bind karein.</li>
+      <li>Triggers → Cron: <code>0 * * * *</code> (har ghante; Worker khud local waqt dekh kar bhejta hai).</li>
+      <li>Worker ka URL <code>push.js</code> ke <code>ENDPOINT</code> me aur public key <code>PUBLIC_KEY</code> me daal dein.</li>
+    </ol>
+
+    <script>
+      const publicBox = document.getElementById('public');
+      const privateBox = document.getElementById('private');
+
+      function b64url(bytes) {
+        let binary = '';
+        const view = new Uint8Array(bytes);
+        for (let i = 0; i < view.length; i += 1) binary += String.fromCharCode(view[i]);
+        return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+      }
+
+      document.getElementById('gen').addEventListener('click', async () => {
+        try {
+          const pair = await crypto.subtle.generateKey(
+            { name: 'ECDSA', namedCurve: 'P-256' },
+            true,
+            ['sign', 'verify']
+          );
+          const raw = await crypto.subtle.exportKey('raw', pair.publicKey);
+          publicBox.value = b64url(raw);
+
+          const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
+          const publicJwk = await crypto.subtle.exportKey('jwk', pair.publicKey);
+          privateBox.value = JSON.stringify({
+            kty: 'EC',
+            crv: 'P-256',
+            x: publicJwk.x,
+            y: publicJwk.y,
+            d: jwk.d,
+          });
+        } catch (error) {
+          publicBox.value = 'Is browser me WebCrypto nahi chala: ' + error.message;
+        }
+      });
+    </script>
+  </body>
+</html>

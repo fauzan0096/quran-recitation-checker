@@ -111,3 +111,14 @@ mushaf stays fully offline from the bundled Tanzil text. Their newer Content
 API needs a registered app and a server-side secret, which is why the app only
 uses the public endpoint for this optional script.
 
+
+
+
+## Word timings — quran-align (CC BY 4.0)
+
+Word-by-word timestamps used by the "sirf yeh lafz sunen" button come from
+**quran-align** by Collin Fair (<https://github.com/cpfair/quran-align>),
+licensed under Creative Commons Attribution 4.0 International
+(<https://creativecommons.org/licenses/by/4.0/>). The `qari-timings.json` file
+in this repo is extracted from their published archive (Alafasy set) and is
+used only to seek inside the EveryAyah recording of the same aya.

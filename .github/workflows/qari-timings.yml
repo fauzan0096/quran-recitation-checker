@@ -1,0 +1,58 @@
+name: Qari word timings
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - '.github/workflows/qari-timings.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download quran-align data
+        run: |
+          curl -L -o quran-align.zip \
+            https://github.com/cpfair/quran-align/releases/download/release-2016-11-24/quran-align-data-2016-11-24.zip
+          unzip -o -q quran-align.zip -d align
+          find align -type f -name '*.json' | head -40
+
+      - name: Keep the Alafasy word timings
+        run: |
+          python3 - <<'PY'
+          import glob, json
+
+          files = [f for f in glob.glob('align/**/*.json', recursive=True)
+                   if 'alafasy' in f.lower()]
+          if not files:
+              raise SystemExit('no Alafasy timing file in the archive')
+
+          entries = []
+          for path in files:
+              with open(path, encoding='utf-8') as fh:
+                  doc = json.load(fh)
+              if isinstance(doc, list):
+                  entries.extend(doc)
+              elif isinstance(doc, dict) and 'verse' in doc:
+                  entries.append(doc)
+
+          entries.sort(key=lambda row: (row.get('surah', 0), row.get('ayah', 0)))
+          with open('qari-timings.json', 'w', encoding='utf-8') as out:
+              json.dump(entries, out, separators=(',', ':'), ensure_ascii=False)
+
+          print('ayahs:', len(entries))
+          PY
+          ls -lh qari-timings.json
+
+      - name: Commit
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add qari-timings.json
+          git commit -m "Qari word timings for Alafasy (quran-align, CC BY 4.0)" || true
+          git push
