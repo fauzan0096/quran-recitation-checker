@@ -1417,9 +1417,11 @@ function renderAyaText(target, verse, alignment) {
     return;
   }
 
+  // The aya is never moved, shortened or rewritten: the words stay exactly as
+  // they are in the mushaf and only the ones that need attention are coloured
+  // and underlined. Everything else (heard word, extras) is in the box below.
   const tokens = source.split(/(\s+)/);
   let wordIndex = -1;
-  const notes = [];
 
   for (const token of tokens) {
     if (!token) continue;
@@ -1438,28 +1440,8 @@ function renderAyaText(target, verse, alignment) {
     const span = document.createElement('span');
     span.className = `w is-${result.status}`;
     span.textContent = token;
+    span.title = noteFor(result);
     target.appendChild(span);
-    notes.push(`${token} — ${noteFor(result)}`);
-  }
-
-  // Notes sit on their own line: putting Latin text inside the Arabic line
-  // breaks the right-to-left flow (and the joining) around that word.
-  if (notes.length) {
-    const line = document.createElement('div');
-    line.className = 'aya-notes';
-    line.textContent = notes.join(' · ');
-    target.appendChild(line);
-  }
-
-  if (alignment.extras && alignment.extras.length) {
-    const extra = document.createElement('div');
-    extra.className = 'extra-line';
-    extra.lang = 'ar';
-    extra.dir = 'rtl';
-    extra.textContent = t('extra.line', {
-      words: alignment.extras.map((e) => e.heard).join(' '),
-    });
-    target.appendChild(extra);
   }
 }
 

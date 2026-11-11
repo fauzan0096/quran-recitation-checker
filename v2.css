@@ -1819,3 +1819,37 @@ body[data-mode='page'].is-mushaf-full .mushaf-page {
   line-height: 1;
   backdrop-filter: blur(6px);
 }
+
+
+
+/* ------------------------------------------------- aya: colour, never moved */
+.aya-text .w,
+.page-text .w {
+  border-radius: 4px;
+  text-decoration-line: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+  text-decoration-skip-ink: none;
+}
+.aya-text .w.is-wrong,
+.page-text .w.is-wrong {
+  color: #b3261e;
+  text-decoration-color: rgba(179, 38, 30, 0.85);
+}
+.aya-text .w.is-close,
+.page-text .w.is-close {
+  color: #a15c00;
+  text-decoration-color: rgba(161, 92, 0, 0.85);
+}
+.aya-text .w.is-missing,
+.page-text .w.is-missing {
+  color: #7a2a3c;
+  text-decoration-style: dotted;
+  text-decoration-color: rgba(122, 42, 60, 0.9);
+}
+body[data-theme='dark'] .aya-text .w.is-wrong,
+body[data-theme='dark'] .page-text .w.is-wrong { color: #ff9a90; }
+body[data-theme='dark'] .aya-text .w.is-close,
+body[data-theme='dark'] .page-text .w.is-close { color: #ffc46b; }
+body[data-theme='dark'] .aya-text .w.is-missing,
+body[data-theme='dark'] .page-text .w.is-missing { color: #f0a6b8; }
