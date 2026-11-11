@@ -15,16 +15,30 @@ const ENDPOINT = 'https://bayyin-push.anbiyawarsatul.workers.dev';
 // Left empty on purpose: the app asks the Worker for the public key (/vapid).
 const PUBLIC_KEY = '';
 
+// The Worker this app talks to (fixed, so nobody has to type it).
+const ENDPOINT = 'https://bayyin-push.anbiyawarsatul.workers.dev';
+// The VAPID public key (safe to ship: it is meant to be public).
+const PUBLIC_KEY =
+  'BJ3rZgQbKYGrS8oDBO1axJxzFybPMNi2WN7otPnCVd8WMxigLyqmyfDGEBiODBh5b_zv-JjkOB5B3BvOsm0WTOw';
+
 export function config() {
+  let saved = null;
   try {
     const raw = JSON.parse(localStorage.getItem(STORE) || 'null');
-    if (raw && typeof raw === 'object' && raw.endpoint && raw.key) {
-      return { endpoint: String(raw.endpoint), key: String(raw.key) };
+    if (raw && typeof raw === 'object' && raw.endpoint) {
+      saved = {
+        endpoint: String(raw.endpoint).trim().replace(/\/+$/, ''),
+        key: String(raw.key || '').trim(),
+      };
     }
   } catch (error) {
     /* private mode */
   }
-  return { endpoint: ENDPOINT, key: PUBLIC_KEY };
+
+  return {
+    endpoint: ENDPOINT || (saved ? saved.endpoint : ''),
+    key: PUBLIC_KEY || (saved ? saved.key : ''),
+  };
 }
 
 export function saveConfig(endpoint, key) {
