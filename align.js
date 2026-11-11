@@ -20,6 +20,18 @@ export const WORD_STATUS = {
   MISSING: 'missing',
 };
 
+const CONFUSABLE_GROUPS = ['صسش', 'تط', 'ذزظ', 'حه', 'قك', 'بف', 'ثسص', 'ءأإآ'];
+
+/** Reduce letters the recogniser swaps around to one symbol, for comparison only. */
+function collapseConfusables(word) {
+  let out = '';
+  for (const char of String(word || '')) {
+    const group = CONFUSABLE_GROUPS.find((set) => set.includes(char));
+    out += group ? group[0] : char;
+  }
+  return out;
+}
+
 const COST = {
   correct: 0,
   close: 0.45,
@@ -171,14 +183,18 @@ export function alignWords(expectedWords, heardWords) {
     const a = expectedNorm[index];
     const b = heardNorm[heardIndex];
     const longest = Math.max(a.length, b.length) || 1;
+    // Whisper mixes up a few Arabic letters that sound close (ص/س/ش، ت/ط، ذ/ز/ظ…).
+    // If that is the only difference, the reciter was right — not wrong.
+    const confusedOnly = a !== b && collapseConfusables(a) === collapseConfusables(b);
     return {
       index,
       expected: item.word,
       expectedNormalized: a,
       heard: heard[heardIndex],
       heardIndex,
-      status:
-        statusCode === 0
+      status: confusedOnly
+        ? WORD_STATUS.CORRECT
+        : statusCode === 0
           ? WORD_STATUS.CORRECT
           : statusCode === 1
             ? WORD_STATUS.CLOSE
