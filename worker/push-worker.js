@@ -80,7 +80,10 @@ async function vapidHeaders(origin, env) {
   );
 
   const jwt = `${unsigned}.${base64url(signature)}`;
-  return { Authorization: `vapid t=${jwt}, k=${env.VAPID_PUBLIC}`, TTL: '86400' };
+  return {
+    Authorization: `vapid t=${jwt}, k=${String(env.VAPID_PUBLIC || '').trim()}`,
+    TTL: '86400',
+  };
 }
 
 async function send(subscription, env) {
@@ -111,12 +114,19 @@ export default {
     if (request.method === 'OPTIONS') return cors();
     if (request.method === 'GET') {
       // Health check: tells you which settings are actually wired up.
+      let privateKey = 'missing';
+      try {
+        const parsed = JSON.parse(String(env.VAPID_PRIVATE || '').trim());
+        privateKey = parsed && parsed.d ? 'ok' : 'invalid';
+      } catch (error) {
+        if (env.VAPID_PRIVATE) privateKey = 'invalid-json';
+      }
       return json({
         ok: true,
         service: 'bayyin-push',
         kv: Boolean(env.SUBS),
         vapidPublic: Boolean(env.VAPID_PUBLIC),
-        vapidPrivate: Boolean(env.VAPID_PRIVATE),
+        vapidPrivate: privateKey,
         vapidSubject: Boolean(env.VAPID_SUBJECT),
       });
     }
