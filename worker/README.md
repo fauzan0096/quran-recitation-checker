@@ -73,9 +73,9 @@ KV → `bayyin_subs` → **Add entry** (ya "Create entry") — teen dafa:
 `"invalid"` = `d` field nahi mila, `"missing"` = variable hi nahi laga.
 
 **E. Cron (roz bhejne ke liye)**
-10. **Settings → Triggers → Cron Triggers → Add Cron Trigger** → `*/10 * * * *` → **Save**.
-    (Har 10 minute chalta hai; Worker user ke timezone ka poora waqt `HH:MM` dekhta hai
-    aur us din ek hi dafa bhejta hai — is liye aadhe ghante wale timezone bhi sahi rehte hain.)
+10. **Settings → Triggers → Cron Triggers → Add Cron Trigger** → `* * * * *` → **Save**.
+    (Har minute chalta hai — is liye azaan/namaz ki notification usi minute aati hai.
+    pehle `*/10 * * * *` tha, jis se notification 7-8 minute late pahunchti thi.)
 
 **F. Check**
 11. Worker ka URL kholein (`https://bayyin-push.<aapka-subdomain>.workers.dev`) —
@@ -91,7 +91,8 @@ const ENDPOINT = 'https://bayyin-push.<aapka>.workers.dev';
 const PUBLIC_KEY = '<public key>';
 ```
 
-Phir app kholein → Settings → **Roz yaad dehani** → **"Push bhi (app band ho to bhi)"**.
+Phir app kholein → Settings → **Azaan** (ya **Roz yaad dehani**) on karein — push ki
+ijazat aur subscription khud ho jati hai, aur azaan ka waqt bhi wahin se jata hai.
 
 ## 4. Test
 

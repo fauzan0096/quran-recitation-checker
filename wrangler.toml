@@ -6,10 +6,10 @@ name = "bayyin-push"
 main = "worker/push-worker.js"
 compatibility_date = "2025-06-01"
 
-# Runs every 10 minutes; the Worker sends once a day as soon as the person's own
-# clock passes the time they chose (so half-hour time zones are exact too).
+# Runs every minute, so a notification goes out in the same minute as its time
+# (a 10-minute cron is what made them arrive 7-8 minutes late).
 [triggers]
-crons = ["*/10 * * * *"]
+crons = ["* * * * *"]
 
 # The KV namespace holds the push subscriptions and can also hold the three VAPID
 # values (so a Git deploy cannot wipe them — wrangler resets dashboard bindings).

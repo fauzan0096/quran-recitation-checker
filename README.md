@@ -595,8 +595,8 @@ Ghalti ki wazahat ke saath ab sahi tilawat bhi suni ja sakti hai.
 - Settings → **Roz yaad dehani**: on/off, waqt (default 20:00) aur **Test notification**.
 - Roz ek notification: Murajaa ayaat due hain to "{n} ayaat dohrani hain", warna
   "aaj ka hissa baqi hai".
-- Notification tab aati hai jab app khuli ho ya khulte hi (browser band page ko khud
-  jagana allowed nahi; background push ke liye server chahiye jo is app me nahi).
+- Notification tab aati hai jab app khuli ho ya khulte hi; app band ho to wahi
+  notification Cloudflare Worker ki push se aati hai (neeche "Push notifications").
 
 
 
@@ -612,11 +612,19 @@ Ghalti ki wazahat ke saath ab sahi tilawat bhi suni ja sakti hai.
 
 ## Push notifications (app band ho to bhi) — `push.js` + `worker/push-worker.js`
 
-- Settings → **Roz yaad dehani** → **"Push bhi (app band ho to bhi)"**.
+- Push apne aap on ho jata hai jab **Azaan** ya **Roz yaad dehani** on karein — dono ek
+  hi subscription use karte hain, aur wo tabhi hatti hai jab dono band hon.
 - Server: ek chhota **Cloudflare Worker** (`worker/push-worker.js`) — subscriptions
-  KV me, aur hourly cron us waqt push bhejta hai jo user ne chuna (timezone ke hisaab se).
+  KV me, aur **har minute** ka cron. Har push apna payload le kar jati hai (RFC 8291 /
+  aes128gcm) aur `Urgency: high` ke saath jati hai, is liye:
+  - namaz ke waqt: **"Azaan — Fajr"** usi minute (pehle `*/10` cron se 7-8 minute late
+    aati thi),
+  - chune hue waqt par roz ki yaad dehani,
+  - 08:00 par Roz ki Naiki (Jumma ko Jumma wali),
+  - azaan ki notification par tap karne se app khulta hai aur azaan chalti hai.
+- Phone ~7 din ka prayer schedule rakhta hai; app har 2 din me use dobara bhej deti hai.
 - Keys `push-setup.html` se banti hain (browser me hi); `push.js` me `ENDPOINT` aur
   `PUBLIC_KEY` daalna hai. Poora tareeqa `worker/README.md` me.
 - iOS par web push sirf iOS 16.4+ aur Home Screen par install hone par chalta hai.
-- Background push ke bagair (browser band) local reminder nahi aa sakta — wahi purana
-  card us soorat me kaam karta hai jab app khuli ho ya khulte hi.
+- App **band** hone par awaz khud nahi baj sakti (koi browser app closed page ko sound
+  nahi bajane deta) — us waqt notification aati hai, tap par azaan chalti hai.

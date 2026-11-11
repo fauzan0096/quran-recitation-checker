@@ -11,6 +11,9 @@
 import { upcomingPrayers } from './prayer.js';
 
 const STORE = 'tc.pushConfig';
+// When the Worker last received this phone's prayer schedule. The Worker keeps
+// about a week of prayer times, so the app sends them again every two days.
+const SYNC = 'tc.pushSync';
 
 // The Worker this app talks to (fixed, so nobody has to type it).
 const ENDPOINT = 'https://bayyin-push.anbiyawarsatul.workers.dev';
@@ -95,7 +98,7 @@ async function post(path, payload) {
 }
 
 /** Ask permission, subscribe, and tell the Worker the hour to send at. */
-export async function enable(hour, body) {
+export async function enable(hour, body, options = {}) {
   const settings = config();
   if (!settings.endpoint) return { ok: false, reason: 'config' };
   if (!supported()) return { ok: false, reason: 'unsupported' };
@@ -124,7 +127,55 @@ export async function enable(hour, body) {
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       body: body || '',
       prayers: upcomingPrayers(7),
+      // false when only the azaan is wanted: no daily reminder then.
+      daily: options.daily !== false,
     });
+    markSynced();
+    return { ok: true };
+  } catch (error) {
+    return { ok: false, reason: error && error.message ? error.message : 'error' };
+  }
+}
+
+function markSynced() {
+  try {
+    localStorage.setItem(SYNC, String(Date.now()));
+  } catch (error) {
+    /* private mode */
+  }
+}
+
+function lastSynced() {
+  try {
+    return Number(localStorage.getItem(SYNC) || 0) || 0;
+  } catch (error) {
+    return 0;
+  }
+}
+
+/**
+ * Send the prayer schedule again without asking for anything: the Worker's copy
+ * runs out after a week, and a phone that is never re-registered would stop
+ * getting prayer notifications on the eighth day.
+ */
+export async function refresh(hour, body, daily = true) {
+  if (!supported() || !configured()) return { ok: false, reason: 'config' };
+  if (Date.now() - lastSynced() < 2 * 86400000) return { ok: true, skipped: true };
+
+  try {
+    const registration = await navigator.serviceWorker.ready;
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) return { ok: false, reason: 'none' };
+
+    await post('/subscribe', {
+      subscription: subscription.toJSON(),
+      time: String(hour || '20:00').slice(0, 5),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+      body: body || '',
+      prayers: upcomingPrayers(7),
+      daily: daily !== false,
+    });
+    markSynced();
     return { ok: true };
   } catch (error) {
     return { ok: false, reason: error && error.message ? error.message : 'error' };

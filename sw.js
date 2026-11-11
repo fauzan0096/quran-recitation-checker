@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v59';
+const CACHE = 'bayyin-v60';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -73,7 +73,7 @@ const SHELL = [
   'quran-pages.xml',
 ];
 
-const IMMUTABLE = /\.(?:png|ico|woff2|ttf|xml|txt)$/i;
+const IMMUTABLE = /\.(?:png|ico|woff2|ttf|xml|txt|json)$/i;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -209,15 +209,20 @@ self.addEventListener('push', (event) => {
     data = { body: event.data ? event.data.text() : '' };
   }
   const title = data.title || 'بيّن — Bayyin';
+  const tag = data.tag || 'bayyin-reminder';
   const options = {
     body: data.body || dailyBody(),
     icon: 'icon-192.png',
     badge: 'icon-96.png',
-    tag: data.tag || 'bayyin-reminder',
+    tag,
+    // A prayer notification must not be silently replaced by the daily one.
+    renotify: Boolean(data.tag),
+    requireInteraction: Boolean(data.requireInteraction),
     lang: 'en',
     dir: 'auto',
     data: { url: data.url || './?go=daily' },
   };
+  if (Array.isArray(data.vibrate) && data.vibrate.length) options.vibrate = data.vibrate;
   event.waitUntil(self.registration.showNotification(title, options));
 });
 

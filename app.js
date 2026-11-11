@@ -58,7 +58,8 @@ import {
   isPlaying as isQariPlaying,
   stop as stopQari,
 } from './qari.js';
-import { mountCard as mountReminderCard, start as startDailyReminder } from './reminder.js';
+import { mountCard as mountReminderCard, start as startDailyReminder, state as reminderState } from './reminder.js';
+import { enable as pushEnable, disable as pushDisable } from './push.js';
 import { playWord } from './word-audio.js';
 import {
   ADHANS,
@@ -70,6 +71,10 @@ import {
   play as playAdhan,
   stop as stopAdhan,
   check as checkAdhan,
+  prime as primeAdhan,
+  unlock as unlockAdhan,
+  arm as armAdhan,
+  disarm as disarmAdhan,
 } from './adhan.js';
 import { location as prayerLocation } from './prayer.js';
 import { mountMurajaa, dueCount, updateFromCheck } from './murajaa.js';
@@ -126,6 +131,7 @@ const SIZE_MAX = 44;
 const state = {
   mode: 'surah', // surah | page | search
   mushaf: 'madani', // madani | indopak
+  mushafFull: true, // the mushaf tab opens as one full page, like a printed mus'haf
   surah: 1,
   page: 1,
   verses: [],
@@ -237,8 +243,31 @@ async function init() {
   // Show the home screen at once. The Quran text (1.3 MB) loads in the
   // background, so the app opens instantly instead of waiting for it.
   paintHomeDate();
-  const go = new URLSearchParams(window.location.search).get('go');
+  const params = new URLSearchParams(window.location.search);
+  const go = params.get('go');
   setView(['dua', 'tasbeeh', 'daily', 'reader', 'qibla', 'calendar', 'prayer'].includes(go) ? go : 'home');
+
+  // A prayer notification opens the app with ?adhan=fajr: the person tapped it,
+  // so the sound is allowed and the azaan starts straight away.
+  const wantAdhan = params.get('adhan');
+  if (wantAdhan) {
+    setView('prayer');
+    window.setTimeout(() => {
+      playAdhan().then((ok) => {
+        if (!ok) toast(t('adhan.failed'));
+      });
+    }, 500);
+  }
+
+  // Browsers only allow sound after one touch: open that door on the first one.
+  const unlockOnce = () => {
+    unlockAdhan();
+    window.removeEventListener('pointerdown', unlockOnce);
+    window.removeEventListener('keydown', unlockOnce);
+  };
+  window.addEventListener('pointerdown', unlockOnce, { passive: true });
+  window.addEventListener('keydown', unlockOnce);
+
   hideSplash();
   maybeWelcome();
   loadQuranInBackground();
@@ -540,30 +569,100 @@ function fillAdhans() {
   els.adhanSelect.addEventListener('change', () => {
     setAdhanId(els.adhanSelect.value);
     paintAdhan();
+    armAdhanNow();
   });
 
   if (els.adhanToggle) {
     els.adhanToggle.addEventListener('click', () => {
       setAdhanOn(!adhanState().on);
+      syncPushFromToggles();
       paintAdhan();
+      armAdhanNow();
+      const loc = prayerLocation();
+      if (adhanState().on && (!loc.lat || !loc.lon)) toast(t('prayer.needPlace'));
     });
   }
   if (els.adhanTest) {
-    els.adhanTest.addEventListener('click', () => {
-      const started = playAdhan();
+    els.adhanTest.addEventListener('click', async () => {
+      primeAdhan();
+      const ok = await playAdhan();
       if (els.adhanCredit) {
-        els.adhanCredit.textContent = started
-          ? currentAdhan().credit
-          : t('adhan.failed');
+        els.adhanCredit.textContent = ok ? currentAdhan().credit : t('adhan.failed');
       }
     });
   }
 
   paintAdhan();
-  window.setInterval(() => {
-    const loc = prayerLocation();
-    if (loc.lat && loc.lon) checkAdhan(loc.lat, loc.lon, loc.hanafi);
-  }, 60000);
+  primeAdhan();
+  armAdhanNow();
+
+  // Catch-up: if the phone slept through the exact second, the azaan still
+  // plays within the first quarter of an hour. The exact timing comes from the
+  // timer `armAdhan` sets, not from this poll.
+  window.setInterval(tickAdhan, 30000);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') tickAdhan();
+  });
+}
+
+/** The location + settings the azaan timer was last armed for. */
+let adhanArmKey = '';
+
+function tickAdhan() {
+  const loc = prayerLocation();
+  if (!loc.lat || !loc.lon) return;
+  checkAdhan(loc.lat, loc.lon, loc.hanafi);
+  armAdhanNow();
+}
+
+/** Arm the exact-second timer once per location/muazzin change. */
+function armAdhanNow() {
+  const loc = prayerLocation();
+  const settings = adhanState();
+  const key = `${loc.lat}|${loc.lon}|${loc.hanafi}|${settings.on}|${settings.id}`;
+  const before = adhanArmKey;
+  if (key === before) return;
+  adhanArmKey = key;
+
+  if (!loc.lat || !loc.lon || !settings.on) {
+    disarmAdhan();
+  } else {
+    armAdhan(loc.lat, loc.lon, loc.hanafi);
+  }
+
+  // A new place means new prayer times: tell the Worker without asking for
+  // anything, so the closed-app notifications follow the person.
+  if (
+    before &&
+    typeof Notification !== 'undefined' &&
+    (settings.on || reminderState().on) &&
+    Notification.permission === 'granted'
+  ) {
+    syncPushFromToggles(false);
+  }
+}
+
+/**
+ * One push subscription serves both the azaan and the daily reminder, so the
+ * azaan keeps arriving when the app is closed and the two switches do not undo
+ * each other. It is dropped only when both are off.
+ */
+async function syncPushFromToggles(requestPermission = true) {
+  const adhan = adhanState().on;
+  const reminder = reminderState();
+  if (!adhan && !reminder.on) {
+    pushDisable().catch(() => {});
+    return;
+  }
+  if (typeof Notification === 'undefined') return;
+
+  if (Notification.permission !== 'granted') {
+    if (!requestPermission) return;
+    const granted = await Notification.requestPermission().catch(() => 'denied');
+    if (granted !== 'granted') return;
+  }
+
+  pushEnable(reminder.time || '20:00', t('remind.body'), { daily: reminder.on }).catch(() => {});
 }
 
 function paintAdhan() {
@@ -733,7 +832,7 @@ function applyMode() {
   els.listFooter.hidden = isSearch || state.visible >= state.verses.length;
   document.body.dataset.mode = state.mode;
 
-  const immersive = isPage && currentView === 'reader';
+  const immersive = isPage && currentView === 'reader' && state.mushafFull !== false;
   document.body.classList.toggle('is-mushaf-full', immersive);
 }
 
@@ -991,57 +1090,90 @@ function renderResume() {
 
 // ------------------------------------------------------------- mushaf page
 
+/** The bar under the page for the selected aya (null when nothing is selected). */
+function mushafSelectionBar() {
+  if (!state.selectedKey) return null;
+  const selected = verseOf(state.selectedKey);
+  if (!selected) return null;
+
+  const bar = document.createElement('div');
+  bar.className = 'selection-bar';
+
+  const label = document.createElement('span');
+  label.className = 'selection-label';
+  label.textContent = t('selection.aya', { ref: state.selectedKey });
+
+  const share = document.createElement('button');
+  share.type = 'button';
+  share.className = 'btn ghost small';
+  share.textContent = t('share');
+  share.addEventListener('click', () => shareAya(selected));
+
+  const clear = document.createElement('button');
+  clear.type = 'button';
+  clear.className = 'btn ghost small';
+  clear.textContent = t('cancel');
+  clear.addEventListener('click', () => {
+    state.selectedKey = null;
+    renderList();
+  });
+
+  const record = document.createElement('button');
+  record.type = 'button';
+  record.className = 'btn primary small';
+  record.dataset.recId = `sel-${state.selectedKey}`;
+  record.dataset.label = t('record.aya');
+  record.textContent = t('record.aya');
+  const key = state.selectedKey;
+  record.addEventListener('click', () => toggleRecording(`sel-${key}`, [key]));
+
+  const status = document.createElement('span');
+  status.className = 'aya-status';
+  status.dataset.role = 'status';
+
+  bar.append(label, record, starButton(key), hearButton(key));
+  const mine = myAudioButton(key);
+  if (mine) bar.appendChild(mine);
+  bar.append(markChip(key), share, clear, status);
+  return bar;
+}
+
+/**
+ * A tap on an aya only repaints the selection — the whole page is not thrown
+ * away and re-fitted, which is what made tapping feel slow on a long page.
+ */
+function selectAya(page, key) {
+  state.selectedKey = state.selectedKey === key ? null : key;
+  if (state.selectedKey) setResume(state.selectedKey);
+
+  for (const seg of page.querySelectorAll('.aya-seg.is-selected')) {
+    seg.classList.remove('is-selected');
+  }
+  if (state.selectedKey) {
+    const segs = page.querySelectorAll('.aya-seg');
+    for (const seg of segs) {
+      if (seg.dataset.key === state.selectedKey) seg.classList.add('is-selected');
+    }
+  }
+
+  const old = page.querySelector('.selection-bar');
+  const next = mushafSelectionBar();
+  if (old && next) old.replaceWith(next);
+  else if (old) old.remove();
+  else if (next) page.insertBefore(next, page.firstChild);
+
+  window.requestAnimationFrame(() => fitMushafPage(page));
+}
+
+
 function renderMushafPage() {
   const page = document.createElement('div');
   page.className = 'mushaf-page';
   page.id = 'mushaf-page';
   page.dir = 'rtl';
 
-  if (state.selectedKey) {
-    const selected = verseOf(state.selectedKey);
-    if (selected) {
-      const bar = document.createElement('div');
-      bar.className = 'selection-bar';
-
-      const label = document.createElement('span');
-      label.className = 'selection-label';
-      label.textContent = t('selection.aya', { ref: state.selectedKey });
-
-      const share = document.createElement('button');
-      share.type = 'button';
-      share.className = 'btn ghost small';
-      share.textContent = t('share');
-      share.addEventListener('click', () => shareAya(selected));
-
-      const clear = document.createElement('button');
-      clear.type = 'button';
-      clear.className = 'btn ghost small';
-      clear.textContent = t('cancel');
-      clear.addEventListener('click', () => {
-        state.selectedKey = null;
-        renderList();
-      });
-
-      const record = document.createElement('button');
-      record.type = 'button';
-      record.className = 'btn primary small';
-      record.dataset.recId = `sel-${state.selectedKey}`;
-      record.dataset.label = t('record.aya');
-      record.textContent = t('record.aya');
-      const key = state.selectedKey;
-      record.addEventListener('click', () => toggleRecording(`sel-${key}`, [key]));
-
-      const status = document.createElement('span');
-      status.className = 'aya-status';
-      status.dataset.role = 'status';
-
-      bar.append(label, record, starButton(key), hearButton(key));
-      const mine = myAudioButton(key);
-      if (mine) bar.appendChild(mine);
-      bar.append(markChip(key), share, clear, status);
-      page.appendChild(bar);
-    }
-  }
+  const bar = mushafSelectionBar();
+  if (bar) page.appendChild(bar);
 
   const text = document.createElement('div');
   text.className = 'page-text';
@@ -1066,11 +1198,7 @@ function renderMushafPage() {
     seg.appendChild(marker);
     seg.appendChild(document.createTextNode(' '));
 
-    seg.addEventListener('click', () => {
-      state.selectedKey = state.selectedKey === key ? null : key;
-      if (state.selectedKey) setResume(state.selectedKey);
-      renderList();
-    });
+    seg.addEventListener('click', () => selectAya(page, key));
 
     text.appendChild(seg);
   });
@@ -1126,19 +1254,15 @@ function renderMushafPage() {
 
   page.appendChild(actions);
 
-  // A tiny button and a tap on the page bring the tools back.
+  // One small floating button: ☰ brings the app's bars back, ✕ returns to the
+  // full page. Tapping the text itself only selects an aya.
   const toggle = document.createElement('button');
   toggle.type = 'button';
   toggle.className = 'mushaf-toggle';
-  toggle.textContent = '☰';
   toggle.setAttribute('aria-label', t('tab.mushaf'));
   toggle.addEventListener('click', () => toggleMushafFull(page));
   page.appendChild(toggle);
-
-  page.addEventListener('click', (event) => {
-    if (event.target.closest('.aya-seg, button, input, .selection-bar, .page-actions')) return;
-    toggleMushafFull(page);
-  });
+  paintMushafToggle(toggle);
 
   els.ayaList.appendChild(page);
 
@@ -1146,28 +1270,61 @@ function renderMushafPage() {
   attachPageSwipe(page);
 }
 
-function toggleMushafFull(page) {
-  const full = document.body.classList.toggle('is-mushaf-full');
-  if (page) window.requestAnimationFrame(() => fitMushafPage(page));
-  return full;
+/** The floating button shows what it will do on the next tap. */
+function paintMushafToggle(button) {
+  if (!button) return;
+  button.textContent = state.mushafFull !== false ? '✕' : '☰';
+  button.setAttribute('aria-label', t('tab.mushaf'));
 }
 
-/** Shrink the mushaf text until one page fits the frame, like a real page. */
+function toggleMushafFull(page) {
+  state.mushafFull = state.mushafFull === false;
+  document.body.classList.toggle('is-mushaf-full', state.mushafFull && state.mode === 'page');
+  const button = page ? page.querySelector('.mushaf-toggle') : null;
+  paintMushafToggle(button);
+  if (page) window.requestAnimationFrame(() => fitMushafPage(page));
+  return state.mushafFull;
+}
+
+/**
+ * Fit one page of the mus'haf into the frame, like a printed page.
+ * A binary search over the font size instead of a 0.5px walk: the old loop could
+ * touch the layout ninety times per page, which is what made the mushaf stutter
+ * on a slow phone.
+ */
 function fitMushafPage(page) {
   const text = page.querySelector('.page-text');
   if (!text) return;
   text.style.fontSize = '';
 
-  const room = page.clientHeight - 12;
+  const room = text.clientHeight;
   if (!room || room < 120) return;
 
-  let size = parseFloat(window.getComputedStyle(text).fontSize) || 26;
-  let guard = 0;
-  while (text.scrollHeight > room && size > 13 && guard < 90) {
-    size = Math.round((size - 0.5) * 10) / 10;
+  const fits = (size) => {
     text.style.fontSize = `${size}px`;
-    guard += 1;
+    return text.scrollHeight <= room;
+  };
+
+  const base = parseFloat(window.getComputedStyle(text).fontSize) || 26;
+
+  // A short page (Fatihah, a page of few ayas) grows a little so the frame is
+  // not half empty, but never so much that pages look different from each other.
+  if (fits(base)) {
+    const cap = Math.min(52, Math.round(base * 1.4));
+    let size = base;
+    while (size + 2 <= cap && fits(size + 2)) size += 2;
+    text.style.fontSize = `${size}px`;
+    return;
   }
+
+  let low = 12;
+  let high = base;
+  while (high - low > 0.5) {
+    const mid = (low + high) / 2;
+    if (fits(mid)) low = mid;
+    else high = mid;
+  }
+  text.style.fontSize = `${Math.max(12, Math.floor(low * 10) / 10)}px`;
 }
 
 /** Swipe left/right on the mushaf page to move to the next/previous page. */
@@ -2098,7 +2255,9 @@ function setView(name) {
   if (currentView === 'report' && name !== 'report') stopAyaAudio();
   if (currentView === 'murajaa' && name !== 'murajaa') stopAyaAudio();
   if (name !== 'reader') document.body.classList.remove('is-mushaf-full');
-  if (name === 'reader' && state.mode === 'page') document.body.classList.add('is-mushaf-full');
+  if (name === 'reader' && state.mode === 'page' && state.mushafFull !== false) {
+    document.body.classList.add('is-mushaf-full');
+  }
   currentView = name;
 
   for (const [key, element] of Object.entries(sections)) {
@@ -2608,6 +2767,9 @@ async function runMicCheck() {
 // ----------------------------------------------------------------- events
 
 function setMode(mode) {
+  // Entering the Mushaf tab always starts on the full page; leaving it forgets
+  // the choice so the next visit is a full page again.
+  if (mode === 'page' && state.mode !== 'page') state.mushafFull = true;
   state.mode = mode;
   applyMode();
   if (mode === 'search') {
@@ -2705,8 +2867,13 @@ function wireEvents() {
   els.searchGo.addEventListener('click', runSearch);
   if (els.qariAll) els.qariAll.addEventListener('click', playAll);
   window.addEventListener('resize', () => {
-    const page = els.ayaList.querySelector('.mushaf-page');
-    if (page) fitMushafPage(page);
+    if (state.mode !== 'page') return;
+    if (state.fitFrame) window.cancelAnimationFrame(state.fitFrame);
+    state.fitFrame = window.requestAnimationFrame(() => {
+      state.fitFrame = 0;
+      const page = els.ayaList.querySelector('.mushaf-page');
+      if (page) fitMushafPage(page);
+    });
   });
   els.searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {

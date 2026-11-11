@@ -1776,32 +1776,92 @@ body[data-mode='page'] #view-reader .page-text {
 
 
 
-/* ------------------------------------ mushaf: pure page, tap for the tools */
+/* ------------------------------------ mushaf: the whole page, edge to edge */
+/* Like a printed mus'haf: one page fills the screen and nothing else is on it.
+   The page is a fixed overlay, so no parent padding, safe area or bottom nav can
+   squeeze it into half a screen. ✕ in the corner brings the app's bars back.
+   `#view-reader` is in every selector on purpose: the older "page mode" rules
+   use an id too, and without it they would win and cut the page down again. */
+body.is-mushaf-full { overflow: hidden; }
+
 body[data-mode='page'].is-mushaf-full .app-bar,
 body[data-mode='page'].is-mushaf-full #bottom-nav,
 body[data-mode='page'].is-mushaf-full #view-reader > .tabs,
 body[data-mode='page'].is-mushaf-full #view-reader > .picker,
 body[data-mode='page'].is-mushaf-full #view-reader > .toolbar,
 body[data-mode='page'].is-mushaf-full #view-reader > .reader-controls,
-body[data-mode='page'].is-mushaf-full #view-reader > .search-box {
+body[data-mode='page'].is-mushaf-full #view-reader > .search-box,
+body[data-mode='page'].is-mushaf-full #view-reader > .global-status,
+body[data-mode='page'].is-mushaf-full #view-reader > .error {
   display: none !important;
 }
 
-body[data-mode='page'].is-mushaf-full main,
-body[data-mode='page'].is-mushaf-full #view-reader,
-body[data-mode='page'].is-mushaf-full #aya-list {
-  padding: 0 !important;
-  margin: 0 !important;
-  height: 100dvh;
-  overflow: hidden;
-}
-
-body[data-mode='page'].is-mushaf-full .mushaf-page {
-  height: 100dvh;
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  margin: 0;
+  padding: max(10px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom));
   border: 0;
   border-radius: 0;
-  padding: max(12px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+  box-shadow: none;
+  overflow: hidden;
+  background: var(--card);
+}
+
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .page-text {
+  flex: 1 1 auto;
+  min-height: 0;
+  max-height: none;
+  overflow: hidden;
+  /* keeps the last line clear of the floating Record pill */
+  padding-bottom: 54px;
+}
+
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .page-mistakes,
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .aya-score {
+  display: none;
+}
+
+/* The page's own Record button stays reachable as a small floating pill. */
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .page-actions {
+  position: absolute;
+  inset-inline: 0;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  pointer-events: none;
+}
+
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .page-actions > * {
+  pointer-events: auto;
+}
+
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .page-actions .aya-status:empty {
+  display: none;
+}
+
+/* The tools for the chosen aya float over the page instead of pushing it down. */
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .selection-bar {
+  position: absolute;
+  inset-inline: 10px;
+  bottom: calc(max(10px, env(safe-area-inset-bottom)) + 56px);
+  margin: 0;
+  background: rgba(250, 244, 234, 0.95);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 6px 22px rgba(0, 0, 0, 0.18);
+}
+
+body[data-theme='dark'][data-mode='page'].is-mushaf-full #view-reader .mushaf-page .selection-bar {
+  background: rgba(38, 22, 26, 0.95);
 }
 
 .mushaf-toggle {

@@ -13,7 +13,8 @@
 import { t } from './i18n.js';
 import { dueCount } from './murajaa.js';
 import { isPremium } from './premium.js';
-import { enable as pushEnable, disable as pushDisable } from './push.js';
+import { enable as pushEnable, disable as pushDisable, refresh as pushRefresh } from './push.js';
+import { state as adhanState } from './adhan.js';
 
 const KEY = 'tc.reminder';
 const DEFAULT_TIME = '20:00';
@@ -107,11 +108,26 @@ export async function check() {
   if (await notify(t('remind.title'), bodyText())) save({ ...s, day: today });
 }
 
+/**
+ * The Worker only holds about a week of prayer times, so the phone re-sends its
+ * schedule every couple of days. Without this, prayer notifications simply stop
+ * on the eighth day.
+ */
+function syncSchedule() {
+  const s = load();
+  if (!s.on && !adhanState().on) return;
+  pushRefresh(s.time || DEFAULT_TIME, t('remind.body'), s.on).catch(() => {});
+}
+
 export function start() {
   check();
+  syncSchedule();
   window.setInterval(check, 60000);
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') check();
+    if (document.visibilityState === 'visible') {
+      check();
+      syncSchedule();
+    }
   });
 }
 
@@ -136,7 +152,13 @@ export function mountCard(root) {
       if (load().on) {
         setOn(false);
         save({ ...load(), push: false });
-        pushDisable().catch(() => {});
+        // The azaan shares this one subscription: turning the daily reminder
+        // off must not silence the prayer notifications with it.
+        if (adhanState().on) {
+          pushEnable(load().time || DEFAULT_TIME, t('remind.body'), { daily: false }).catch(() => {});
+        } else {
+          pushDisable().catch(() => {});
+        }
         build();
         return;
       }
@@ -148,9 +170,9 @@ export function mountCard(root) {
       }
 
       setOn(true);
-      const result = await pushEnable(load().time || DEFAULT_TIME, t('remind.body')).catch(() => ({
-        ok: false,
-      }));
+      const result = await pushEnable(load().time || DEFAULT_TIME, t('remind.body'), {
+        daily: true,
+      }).catch(() => ({ ok: false }));
       save({ ...load(), push: Boolean(result && result.ok) });
       build();
     });
