@@ -13,7 +13,7 @@
 import { t } from './i18n.js';
 import { dueCount } from './murajaa.js';
 import { isPremium } from './premium.js';
-import { configured as pushConfigured, saveConfig, enable as pushEnable, disable as pushDisable, test as pushTest } from './push.js';
+import { configured as pushConfigured, saveConfig, enable as pushEnable, disable as pushDisable, test as pushTest, isSubscribed } from './push.js';
 
 const KEY = 'tc.reminder';
 const DEFAULT_TIME = '20:00';
@@ -217,6 +217,16 @@ export function mountCard(root) {
     }
 
     root.appendChild(row);
+
+    if (s.push) {
+      const stateLine = document.createElement('p');
+      stateLine.className = 'hint';
+      stateLine.textContent = t('push.checking');
+      root.appendChild(stateLine);
+      isSubscribed().then((yes) => {
+        stateLine.textContent = yes ? t('push.subscribed') : t('push.noSub');
+      });
+    }
 
     const note = document.createElement('p');
     note.className = 'hint';
