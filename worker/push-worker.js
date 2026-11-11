@@ -137,7 +137,9 @@ export default {
     if (request.method === 'OPTIONS') return cors();
 
     if (request.method === 'GET') {
+      const url = new URL(request.url);
       const config = await settings(env);
+      if (url.pathname === '/vapid') return json({ key: config.publicKey || '' });
       return json({
         ok: true,
         service: 'bayyin-push',

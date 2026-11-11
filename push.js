@@ -10,8 +10,9 @@
 
 const STORE = 'tc.pushConfig';
 
-// Optional defaults, if you would rather ship them with the app.
-const ENDPOINT = '';
+// The Worker this app talks to (fixed, so nobody has to type it).
+const ENDPOINT = 'https://bayyin-push.anbiyawarsatul.workers.dev';
+// Left empty on purpose: the app asks the Worker for the public key (/vapid).
 const PUBLIC_KEY = '';
 
 export function config() {
@@ -40,8 +41,23 @@ export function saveConfig(endpoint, key) {
 }
 
 export function configured() {
-  const { endpoint, key } = config();
-  return Boolean(endpoint && key);
+  return Boolean(config().endpoint);
+}
+
+/** The VAPID public key: saved one, then the hard-coded one, then the Worker's. */
+async function publicKey() {
+  const settings = config();
+  if (settings.key) return settings.key;
+
+  try {
+    const response = await fetch(`${settings.endpoint}/vapid`);
+    const data = await response.json();
+    const key = data && data.key ? String(data.key) : '';
+    if (key) saveConfig(settings.endpoint, key);
+    return key;
+  } catch (error) {
+    return '';
+  }
 }
 
 function toBytes(base64url) {
@@ -70,8 +86,11 @@ async function post(path, payload) {
 /** Ask permission, subscribe, and tell the Worker the hour to send at. */
 export async function enable(hour, body) {
   const settings = config();
-  if (!settings.endpoint || !settings.key) return { ok: false, reason: 'config' };
+  if (!settings.endpoint) return { ok: false, reason: 'config' };
   if (!supported()) return { ok: false, reason: 'unsupported' };
+
+  const key = await publicKey();
+  if (!key) return { ok: false, reason: 'config' };
 
   if (Notification.permission !== 'granted') {
     const permission = await Notification.requestPermission();
@@ -84,7 +103,7 @@ export async function enable(hour, body) {
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: toBytes(settings.key),
+        applicationServerKey: toBytes(key),
       });
     }
 
