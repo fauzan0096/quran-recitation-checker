@@ -178,10 +178,13 @@ export function mountPrayer(root) {
 
     if (!state.lat || !state.lon) {
       root.appendChild(el('p', 'hint', t('prayer.needPlace')));
+      const status = el('p', 'hint');
+      status.id = 'prayer-status';
       const locate = el('button', 'btn primary', t('prayer.locate'));
       locate.type = 'button';
-      locate.addEventListener('click', () => locateMe(build));
+      locate.addEventListener('click', () => locateMe(build, status));
       root.appendChild(locate);
+      root.appendChild(status);
       root.appendChild(manualForm(state, build));
       return;
     }
@@ -223,10 +226,13 @@ export function mountPrayer(root) {
 
     const refresh = el('button', 'btn ghost small', t('prayer.locateAgain'));
     refresh.type = 'button';
-    refresh.addEventListener('click', () => locateMe(build));
+    const status = el('p', 'hint');
+    status.id = 'prayer-status';
+    refresh.addEventListener('click', () => locateMe(build, status));
     tools.appendChild(refresh);
 
     root.appendChild(tools);
+    root.appendChild(status);
     root.appendChild(manualForm(state, build));
   }
 
@@ -270,19 +276,38 @@ function manualForm(state, after) {
   return box;
 }
 
-function locateMe(after) {
-  if (!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(
-    (position) => {
-      const state = read();
-      state.lat = position.coords.latitude;
-      state.lon = position.coords.longitude;
-      write(state);
-      after();
-    },
-    () => {
-      /* person declined: the manual form stays */
-    },
-    { enableHighAccuracy: false, timeout: 12000, maximumAge: 600000 }
-  );
+function locateMe(after, status) {
+  const say = (text) => {
+    if (status) status.textContent = text;
+  };
+
+  if (!navigator.geolocation) {
+    say(t('prayer.noGeo'));
+    return;
+  }
+
+  say(t('prayer.locating'));
+
+  const done = (position) => {
+    const state = read();
+    state.lat = position.coords.latitude;
+    state.lon = position.coords.longitude;
+    write(state);
+    after();
+  };
+
+  const failed = (error) => {
+    const messages = {
+      1: 'prayer.geoDenied',
+      2: 'prayer.geoUnavailable',
+      3: 'prayer.geoTimeout',
+    };
+    say(t(messages[error && error.code] || 'prayer.geoFailed'));
+  };
+
+  navigator.geolocation.getCurrentPosition(done, failed, {
+    enableHighAccuracy: true,
+    timeout: 15000,
+    maximumAge: 300000,
+  });
 }

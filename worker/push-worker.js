@@ -294,6 +294,24 @@ export default {
             }
           }
 
+          // 3. Roz ki Naiki at 08:00 local for everyone who has push on
+          //    (the service worker turns it into Surah Kahf on Friday).
+          if (
+            saved.lastNaiki !== local.date &&
+            local.time >= '08:00' &&
+            local.time <= '08:20'
+          ) {
+            const sent = await deliver(saved.subscription, config);
+            if (sent === 'gone') {
+              await env.SUBS.delete(item.name);
+              continue;
+            }
+            if (sent === 'ok') {
+              saved.lastNaiki = local.date;
+              changed = true;
+            }
+          }
+
           if (changed) await env.SUBS.put(item.name, JSON.stringify(saved));
         }
       })()

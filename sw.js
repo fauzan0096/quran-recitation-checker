@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v54';
+const CACHE = 'bayyin-v55';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -193,6 +193,14 @@ self.addEventListener('message', (event) => {
 // ------------------------------------------------------------------- push
 // The app has no server of its own; this lets a push (or a locally triggered
 // notification) show up with the right text and open the right screen.
+/** The text of a push: Jumu'ah on Friday, Roz ki Naiki otherwise. */
+function dailyBody() {
+  const day = new Date().getDay();
+  return day === 5
+    ? 'Jumu’ah mubarak — aaj Surah Kahf parhein.'
+    : 'Roz ki Naiki — aaj ki aya, hadith aur sunnah parhein.';
+}
+
 self.addEventListener('push', (event) => {
   let data = {};
   try {
@@ -202,7 +210,7 @@ self.addEventListener('push', (event) => {
   }
   const title = data.title || 'بيّن — Bayyin';
   const options = {
-    body: data.body || 'Aaj ki tilawat aur duaon ka waqt.',
+    body: data.body || dailyBody(),
     icon: 'icon-192.png',
     badge: 'icon-96.png',
     tag: data.tag || 'bayyin-reminder',
