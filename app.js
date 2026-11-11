@@ -732,6 +732,9 @@ function applyMode() {
   els.searchResults.hidden = !isSearch;
   els.listFooter.hidden = isSearch || state.visible >= state.verses.length;
   document.body.dataset.mode = state.mode;
+
+  const immersive = isPage && currentView === 'reader';
+  document.body.classList.toggle('is-mushaf-full', immersive);
 }
 
 function updatePageTotal() {
@@ -1122,10 +1125,31 @@ function renderMushafPage() {
   actions.appendChild(status);
 
   page.appendChild(actions);
+
+  // A tiny button and a tap on the page bring the tools back.
+  const toggle = document.createElement('button');
+  toggle.type = 'button';
+  toggle.className = 'mushaf-toggle';
+  toggle.textContent = '☰';
+  toggle.setAttribute('aria-label', t('tab.mushaf'));
+  toggle.addEventListener('click', () => toggleMushafFull(page));
+  page.appendChild(toggle);
+
+  page.addEventListener('click', (event) => {
+    if (event.target.closest('.aya-seg, button, input, .selection-bar, .page-actions')) return;
+    toggleMushafFull(page);
+  });
+
   els.ayaList.appendChild(page);
 
   fitMushafPage(page);
   attachPageSwipe(page);
+}
+
+function toggleMushafFull(page) {
+  const full = document.body.classList.toggle('is-mushaf-full');
+  if (page) window.requestAnimationFrame(() => fitMushafPage(page));
+  return full;
 }
 
 /** Shrink the mushaf text until one page fits the frame, like a real page. */
@@ -2088,6 +2112,8 @@ function setView(name) {
   if (currentView === 'reader' && name !== 'reader') stopAyaAudio();
   if (currentView === 'report' && name !== 'report') stopAyaAudio();
   if (currentView === 'murajaa' && name !== 'murajaa') stopAyaAudio();
+  if (name !== 'reader') document.body.classList.remove('is-mushaf-full');
+  if (name === 'reader' && state.mode === 'page') document.body.classList.add('is-mushaf-full');
   currentView = name;
 
   for (const [key, element] of Object.entries(sections)) {
@@ -2693,6 +2719,10 @@ function wireEvents() {
 
   els.searchGo.addEventListener('click', runSearch);
   if (els.qariAll) els.qariAll.addEventListener('click', playAll);
+  window.addEventListener('resize', () => {
+    const page = els.ayaList.querySelector('.mushaf-page');
+    if (page) fitMushafPage(page);
+  });
   els.searchInput.addEventListener('keydown', (event) => {
     if (event.key === 'Enter') {
       event.preventDefault();

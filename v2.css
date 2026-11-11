@@ -1773,3 +1773,49 @@ body[data-mode='page'] #view-reader .page-text {
 .dua-actions {
   flex-wrap: wrap;
 }
+
+
+
+/* ------------------------------------ mushaf: pure page, tap for the tools */
+body[data-mode='page'].is-mushaf-full .app-bar,
+body[data-mode='page'].is-mushaf-full #bottom-nav,
+body[data-mode='page'].is-mushaf-full #view-reader > .tabs,
+body[data-mode='page'].is-mushaf-full #view-reader > .picker,
+body[data-mode='page'].is-mushaf-full #view-reader > .toolbar,
+body[data-mode='page'].is-mushaf-full #view-reader > .reader-controls,
+body[data-mode='page'].is-mushaf-full #view-reader > .search-box {
+  display: none !important;
+}
+
+body[data-mode='page'].is-mushaf-full main,
+body[data-mode='page'].is-mushaf-full #view-reader,
+body[data-mode='page'].is-mushaf-full #aya-list {
+  padding: 0 !important;
+  margin: 0 !important;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+body[data-mode='page'].is-mushaf-full .mushaf-page {
+  height: 100dvh;
+  width: 100%;
+  border: 0;
+  border-radius: 0;
+  padding: max(12px, env(safe-area-inset-top)) 14px max(14px, env(safe-area-inset-bottom));
+}
+
+.mushaf-toggle {
+  position: fixed;
+  top: max(10px, env(safe-area-inset-top));
+  inset-inline-end: 10px;
+  z-index: 40;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(240, 193, 147, 0.6);
+  background: rgba(74, 22, 34, 0.55);
+  color: #fff3df;
+  font-size: 16px;
+  line-height: 1;
+  backdrop-filter: blur(6px);
+}
