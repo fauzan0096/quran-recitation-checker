@@ -5,44 +5,75 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Bayyin — push keys</title>
     <style>
-      body { margin: 0; padding: 20px; background: #f7f1e6; color: #2a1a12; font: 15px/1.55 -apple-system, system-ui, sans-serif; }
+      body { margin: 0; padding: 18px; background: #f7f1e6; color: #2a1a12; font: 15px/1.55 -apple-system, system-ui, sans-serif; }
       h1 { font-size: 20px; margin: 0 0 6px; }
-      p { margin: 0 0 14px; }
-      button { font: inherit; padding: 10px 16px; border-radius: 12px; border: 0; background: #4b1b21; color: #fff6eb; font-weight: 700; }
-      textarea { width: 100%; box-sizing: border-box; font: 12px/1.5 ui-monospace, Menlo, monospace; padding: 10px; border-radius: 12px; border: 1px solid #d8c7ae; background: #fffdf8; min-height: 90px; }
-      h2 { font-size: 14px; margin: 18px 0 6px; text-transform: uppercase; letter-spacing: .04em; color: #6b2233; }
-      ol { padding-inline-start: 18px; }
+      h2 { font-size: 13px; margin: 22px 0 8px; text-transform: uppercase; letter-spacing: .05em; color: #6b2233; }
+      p { margin: 0 0 12px; }
+      .btn { font: inherit; padding: 12px 18px; border-radius: 12px; border: 0; background: #4b1b21; color: #fff6eb; font-weight: 700; }
+      .btn.small { padding: 8px 12px; font-size: 13px; background: #6b2233; }
+      .box { border: 1px solid #d8c7ae; background: #fffdf8; border-radius: 14px; padding: 12px; margin: 0 0 12px; }
+      .name { font: 13px ui-monospace, Menlo, monospace; font-weight: 700; color: #6b2233; word-break: break-all; }
+      .val { font: 12px/1.5 ui-monospace, Menlo, monospace; background: #f3e8d4; border-radius: 8px; padding: 8px; margin: 6px 0; word-break: break-all; white-space: pre-wrap; max-height: 130px; overflow: auto; }
+      .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .ok { color: #2f6b3a; font-weight: 700; font-size: 13px; }
+      ol { padding-inline-start: 20px; }
+      li { margin-bottom: 6px; }
       code { background: #efe2cd; padding: 1px 5px; border-radius: 6px; }
+      input { font: inherit; padding: 8px; border-radius: 10px; border: 1px solid #d8c7ae; width: 100%; box-sizing: border-box; }
+      .hide { display: none; }
     </style>
   </head>
   <body>
-    <h1>Bayyin — VAPID keys</h1>
+    <h1>Bayyin — push keys</h1>
     <p>
-      Ye page aapke browser me hi ek key pair banata hai. Kuch bhi server par nahi jata.
-      Keys banayein, phir <strong>public</strong> ko <code>push.js</code> me aur dono ko
-      Cloudflare Worker ki settings me daal dein.
+      Ye page aapke browser me hi 3 cheezein banata hai. Kuch bhi server par nahi jata.
+      Neeche har cheez ke saath <strong>Copy</strong> button hai — Cloudflare me wahi paste karna hai.
     </p>
 
-    <button type="button" id="gen">Generate keys</button>
+    <button type="button" class="btn" id="gen">1. Generate keys</button>
 
-    <h2>Public key (push.js me)</h2>
-    <textarea id="public" readonly placeholder="Generate dabayein…"></textarea>
+    <div id="out" class="hide">
+      <h2>Cloudflare me 3 variables</h2>
+      <p>Worker → Settings → Runtime variables → <strong>Add variable</strong> → Name aur Value me ye paste karein:</p>
 
-    <h2>Private key — JWK (sirf Worker me, kisi ke sath share na karein)</h2>
-    <textarea id="private" readonly placeholder="Generate dabayein…"></textarea>
+      <div class="box">
+        <div class="name">VAPID_PUBLIC</div>
+        <div class="val" id="public">…</div>
+        <button type="button" class="btn small" data-copy="public">Copy public key</button>
+      </div>
 
-    <h2>Worker me kaise dalein</h2>
-    <ol>
-      <li>workers.cloudflare.com → Create → Worker → <code>worker/push-worker.js</code> ka code paste karein.</li>
-      <li>Settings → Variables: <code>VAPID_PUBLIC</code>, <code>VAPID_PRIVATE</code> (upar wala poora JSON), <code>VAPID_SUBJECT</code> = <code>mailto:aapka@email</code>.</li>
-      <li>KV namespace banayein aur usay <code>SUBS</code> ke naam se bind karein.</li>
-      <li>Triggers → Cron: <code>0 * * * *</code> (har ghante; Worker khud local waqt dekh kar bhejta hai).</li>
-      <li>Worker ka URL <code>push.js</code> ke <code>ENDPOINT</code> me aur public key <code>PUBLIC_KEY</code> me daal dein.</li>
-    </ol>
+      <div class="box">
+        <div class="name">VAPID_PRIVATE</div>
+        <div class="val" id="private">…</div>
+        <button type="button" class="btn small" data-copy="private">Copy private key</button>
+      </div>
+
+      <div class="box">
+        <div class="name">VAPID_SUBJECT</div>
+        <input id="subject" value="mailto:gormefauzan@gmail.com" />
+        <p style="margin:8px 0 0;font-size:12.5px">Apna email badalna ho to yahan likhein (mailto: hata kar dekh lein — aage <code>mailto:</code> rehna chahiye).</p>
+        <button type="button" class="btn small" data-copy="subject">Copy subject</button>
+      </div>
+
+      <p class="ok" id="copied"></p>
+
+      <h2>Cloudflare me steps</h2>
+      <ol>
+        <li>Worker → <strong>Settings</strong> → <strong>Runtime variables</strong> → <strong>Add variable</strong>.</li>
+        <li>Pehli entry: Name <code>VAPID_PUBLIC</code>, Value = upar wala public key → <strong>Save</strong>.</li>
+        <li>Dobara <strong>Add variable</strong>: Name <code>VAPID_PRIVATE</code>, Value = upar wala private key → <strong>Save</strong>.</li>
+        <li>Teesri: Name <code>VAPID_SUBJECT</code>, Value = upar wala subject → <strong>Save</strong>.</li>
+        <li>Upar <strong>Deploy</strong> dabayein. Phir worker ka URL khol kar check karein:
+          <code>{"ok":true,"vapidPrivate":"ok"}</code></li>
+      </ol>
+    </div>
 
     <script>
+      const out = document.getElementById('out');
       const publicBox = document.getElementById('public');
       const privateBox = document.getElementById('private');
+      const subjectInput = document.getElementById('subject');
+      const copied = document.getElementById('copied');
 
       function b64url(bytes) {
         let binary = '';
@@ -59,20 +90,51 @@
             ['sign', 'verify']
           );
           const raw = await crypto.subtle.exportKey('raw', pair.publicKey);
-          publicBox.value = b64url(raw);
+          publicBox.textContent = b64url(raw);
 
           const jwk = await crypto.subtle.exportKey('jwk', pair.privateKey);
           const publicJwk = await crypto.subtle.exportKey('jwk', pair.publicKey);
-          privateBox.value = JSON.stringify({
+          privateBox.textContent = JSON.stringify({
             kty: 'EC',
             crv: 'P-256',
             x: publicJwk.x,
             y: publicJwk.y,
             d: jwk.d,
           });
+
+          out.classList.remove('hide');
+          out.scrollIntoView({ behavior: 'smooth', block: 'start' });
         } catch (error) {
-          publicBox.value = 'Is browser me WebCrypto nahi chala: ' + error.message;
+          publicBox.textContent = 'Is browser me WebCrypto nahi chala: ' + error.message;
+          out.classList.remove('hide');
         }
+      });
+
+      document.querySelectorAll('[data-copy]').forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-copy');
+          const source = document.getElementById(id);
+          const text = source.tagName === 'INPUT' ? source.value : source.textContent;
+
+          try {
+            await navigator.clipboard.writeText(text);
+            copied.textContent = 'Copy ho gaya ✓';
+          } catch (error) {
+            if (source.tagName === 'INPUT') {
+              source.select();
+            } else {
+              const range = document.createRange();
+              range.selectNodeContents(source);
+              const selection = window.getSelection();
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
+            copied.textContent = 'Select ho gaya — Copy dabayein.';
+          }
+          window.setTimeout(() => {
+            copied.textContent = '';
+          }, 2500);
+        });
       });
     </script>
   </body>
