@@ -183,24 +183,23 @@ export function alignWords(expectedWords, heardWords) {
     const a = expectedNorm[index];
     const b = heardNorm[heardIndex];
     const longest = Math.max(a.length, b.length) || 1;
-    // Whisper mixes up a few Arabic letters that sound close (ص/س/ش، ت/ط، ذ/ز/ظ…).
-    // If that is the only difference, the reciter was right — not wrong.
-    const confusedOnly = a !== b && collapseConfusables(a) === collapseConfusables(b);
+    // A wrong word must look wrong: judge by similarity after the phonetic
+    // folding, not by a single edit the recogniser might have mis-heard.
+    const sim = a === b ? 1 : 1 - compareDistance(a, b) / longest;
     return {
       index,
       expected: item.word,
       expectedNormalized: a,
       heard: heard[heardIndex],
       heardIndex,
-      status: confusedOnly
-        ? WORD_STATUS.CORRECT
-        : statusCode === 0
+      status:
+        sim >= 0.85
           ? WORD_STATUS.CORRECT
-          : statusCode === 1
+          : sim >= 0.55
             ? WORD_STATUS.CLOSE
             : WORD_STATUS.WRONG,
       distance,
-      similarity: 1 - distance / longest,
+      similarity: sim,
       optional: item.optional,
     };
   });

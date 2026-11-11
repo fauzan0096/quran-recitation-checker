@@ -27,6 +27,11 @@ const LETTER_MAP = [
   [/\u0629/g, HEH], // ة
   [/\u06A9/g, '\u0643'], // Persian kaf
   [/[\u06BE\u06C1\u06D5]/g, HEH], // heh variants
+  // Letters a recogniser swaps because they sound close: a correct recitation
+  // must not be marked wrong because of them (ص/س/ش/ث, ت/ط, ذ/ز/ظ).
+  [/[\u0635\u0634\u062B]/g, '\u0633'],
+  [/\u0637/g, '\u062A'],
+  [/[\u0630\u0638]/g, '\u0632'],
 ];
 
 // صلوة زكوة حيوة مشكوة نجوة غدوة (after ة -> ه), with optional prefixes. Only these
