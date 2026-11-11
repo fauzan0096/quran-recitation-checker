@@ -109,7 +109,17 @@ function localHour(timezone) {
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return cors();
-    if (request.method === 'GET') return json({ ok: true, service: 'bayyin-push' });
+    if (request.method === 'GET') {
+      // Health check: tells you which settings are actually wired up.
+      return json({
+        ok: true,
+        service: 'bayyin-push',
+        kv: Boolean(env.SUBS),
+        vapidPublic: Boolean(env.VAPID_PUBLIC),
+        vapidPrivate: Boolean(env.VAPID_PRIVATE),
+        vapidSubject: Boolean(env.VAPID_SUBJECT),
+      });
+    }
     if (request.method !== 'POST') return json({ ok: false, error: 'POST only' }, 405);
 
     const url = new URL(request.url);
