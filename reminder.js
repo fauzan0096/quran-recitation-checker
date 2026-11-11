@@ -13,7 +13,7 @@
 import { t } from './i18n.js';
 import { dueCount } from './murajaa.js';
 import { isPremium } from './premium.js';
-import { configured as pushConfigured, saveConfig, enable as pushEnable, disable as pushDisable, test as pushTest, isSubscribed } from './push.js';
+import { enable as pushEnable, disable as pushDisable } from './push.js';
 
 const KEY = 'tc.reminder';
 const DEFAULT_TIME = '20:00';
@@ -131,18 +131,27 @@ export function mountCard(root) {
     toggle.className = `btn small ${s.on ? 'ghost' : 'primary'}`;
     toggle.textContent = s.on ? t('remind.on') : t('remind.off');
     toggle.addEventListener('click', async () => {
-      const next = !load().on;
-      if (next) {
-        const permission = await ask();
-        if (permission !== 'granted') {
-          setOn(false);
-          build();
-          const note = document.getElementById('remind-note');
-          if (note) note.textContent = t('remind.denied');
-          return;
-        }
+      const note = document.getElementById('remind-note');
+
+      if (load().on) {
+        setOn(false);
+        save({ ...load(), push: false });
+        pushDisable().catch(() => {});
+        build();
+        return;
       }
-      setOn(next);
+
+      const permission = await ask();
+      if (permission !== 'granted') {
+        if (note) note.textContent = t('remind.denied');
+        return;
+      }
+
+      setOn(true);
+      const result = await pushEnable(load().time || DEFAULT_TIME, t('remind.body')).catch(() => ({
+        ok: false,
+      }));
+      save({ ...load(), push: Boolean(result && result.ok) });
       build();
     });
 
@@ -153,84 +162,14 @@ export function mountCard(root) {
     time.setAttribute('aria-label', t('remind.time'));
     time.addEventListener('change', () => {
       setTime(time.value);
-      if (load().push) {
+      if (load().on) {
         pushEnable(time.value || DEFAULT_TIME, t('remind.body')).catch(() => {});
       }
       build();
     });
 
-    const test = document.createElement('button');
-    test.type = 'button';
-    test.className = 'btn ghost small';
-    test.textContent = t('remind.test');
-    test.addEventListener('click', async () => {
-      const permission = await ask();
-      const note = document.getElementById('remind-note');
-      if (permission !== 'granted') {
-        if (note) note.textContent = t('remind.denied');
-        return;
-      }
-      const sent = await notify(t('remind.title'), bodyText());
-      if (note) note.textContent = sent ? t('remind.sent') : t('remind.denied');
-    });
-
-    row.append(toggle, time, test);
-
-    const pushBtn = document.createElement('button');
-    pushBtn.type = 'button';
-    pushBtn.className = `btn small ${s.push ? 'ghost' : 'primary'}`;
-    pushBtn.textContent = s.push ? t('push.on') : t('push.enable');
-    pushBtn.addEventListener('click', async () => {
-      const note = document.getElementById('remind-note');
-      if (s.push) {
-        await pushDisable();
-        save({ ...load(), push: false });
-        build();
-        return;
-      }
-      if (!pushConfigured()) {
-        const endpoint = window.prompt(t('push.askEndpoint'));
-        if (!endpoint) return;
-        const key = window.prompt(t('push.askKey'));
-        if (!key) return;
-        saveConfig(endpoint, key);
-      }
-      const result = await pushEnable(s.time || DEFAULT_TIME, t('remind.body'));
-      if (result.ok) {
-        save({ ...load(), push: true });
-        build();
-      } else if (note) {
-        const detail = result && result.reason ? ` (${result.reason})` : '';
-        note.textContent =
-          result.reason === 'denied' ? t('remind.denied') : t('push.failed') + detail;
-      }
-    });
-    row.appendChild(pushBtn);
-
-    if (s.push) {
-      const pushCheck = document.createElement('button');
-      pushCheck.type = 'button';
-      pushCheck.className = 'btn ghost small';
-      pushCheck.textContent = t('push.test');
-      pushCheck.addEventListener('click', async () => {
-        const note = document.getElementById('remind-note');
-        const result = await pushTest();
-        if (note) note.textContent = result.ok ? t('push.testSent') : t('push.testFailed');
-      });
-      row.appendChild(pushCheck);
-    }
-
+    row.append(toggle, time);
     root.appendChild(row);
-
-    if (s.push) {
-      const stateLine = document.createElement('p');
-      stateLine.className = 'hint';
-      stateLine.textContent = t('push.checking');
-      root.appendChild(stateLine);
-      isSubscribed().then((yes) => {
-        stateLine.textContent = yes ? t('push.subscribed') : t('push.noSub');
-      });
-    }
 
     const note = document.createElement('p');
     note.className = 'hint';
