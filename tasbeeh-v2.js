@@ -183,7 +183,7 @@ export function mountTasbeeh(root) {
       const a = (-90 - (360 / BEADS) * i) * (Math.PI / 180);
       const cx = (100 + RING_R * Math.cos(a)).toFixed(1);
       const cy = (100 + RING_R * Math.sin(a)).toFixed(1);
-      beads += `<circle class="tsb-bead" cx="${cx}" cy="${cy}" r="8.6"></circle>`;
+      beads += `<circle class="tsb-bead" cx="${cx}" cy="${cy}" r="7.4"></circle>`;
     }
     // Round gold beads: a highlight up and left makes each one look like a
     // little sphere, and the dim gold of the empty ones turns bright when lit.

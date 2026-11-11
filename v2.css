@@ -1950,3 +1950,109 @@ body[data-theme='dark'] .page-text .w.is-missing { color: #f0a6b8; }
   display: block;
   margin: 14px auto 4px;
 }
+
+
+
+/* ------------------------------------------- prayer: own times, first waqt */
+.prayer-manual {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--line);
+}
+
+.prayer-manual > summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--green);
+}
+
+.prayer-time.is-custom {
+  color: var(--gold);
+}
+
+.prayer-custom {
+  display: grid;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.custom-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.custom-label {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.custom-row input {
+  font: inherit;
+  font-size: 15px;
+  padding: 8px 10px;
+  border-radius: 12px;
+  border: 1.5px solid var(--line);
+  background: var(--paper);
+  color: var(--ink);
+}
+
+/* ---------------------------------------- tasbeeh: whole page burgundy/gold */
+body:has(#view-tasbeeh:not([hidden])) {
+  background: radial-gradient(620px 440px at 50% 10%, #5a1b2a 0%, #3c1019 45%, #240a11 100%)
+    fixed;
+}
+
+body:has(#view-tasbeeh:not([hidden])) .app-bar,
+body:has(#view-tasbeeh:not([hidden])) .bottom-nav {
+  background: rgba(42, 11, 18, 0.94);
+  border-color: rgba(240, 193, 147, 0.35);
+  color: #fff6eb;
+}
+
+body:has(#view-tasbeeh:not([hidden])) .bottom-nav .bn-item {
+  color: rgba(255, 246, 235, 0.72);
+}
+
+body:has(#view-tasbeeh:not([hidden])) .brand-en,
+body:has(#view-tasbeeh:not([hidden])) .tagline {
+  color: rgba(255, 246, 235, 0.72);
+}
+
+body:has(#view-tasbeeh:not([hidden])) #view-tasbeeh .settings-head h2,
+body:has(#view-tasbeeh:not([hidden])) #view-tasbeeh .settings-head .btn {
+  color: #f6d4a8;
+  border-color: rgba(240, 193, 147, 0.5);
+}
+
+#view-tasbeeh .tsb {
+  width: 100%;
+  padding-bottom: max(24px, env(safe-area-inset-bottom));
+}
+
+/* Nothing on the dial may be clipped on a short screen. */
+.tsb-wrap {
+  width: min(100%, 330px);
+  padding-block: 4px;
+}
+
+.tsb-dial {
+  overflow: visible;
+}
+
+/* ------------------------------- mushaf on iPhone: no hazy band at the top */
+.mushaf-toggle {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  background: rgba(74, 22, 34, 0.92);
+}
+
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page {
+  isolation: isolate;
+}
+
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .selection-bar {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}

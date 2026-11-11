@@ -12,9 +12,19 @@
 import { t, getLanguage } from './i18n.js';
 import { surahName } from './surahs.js';
 import { reportAyat } from './premium-tools.js';
+import { markOf, isStarred } from './progress.js';
 
 const KEY = 'tc.murajaa';
 const INTERVALS = [1, 3, 7, 14, 30];
+
+/**
+ * Only what was memorised goes on the Murajaa list. Checking (just reciting)
+ * an aya is not enough: the person marks it ✓ Yaad hai / ↺ Dobara, or ★, and
+ * that is what puts it here. Reading it once must never queue it.
+ */
+export function isHifz(key) {
+  return markOf(key) !== 'none' || isStarred(key);
+}
 
 export function dayKey(date) {
   const d = date || new Date();
@@ -72,6 +82,7 @@ export function dueList(limit = 60) {
   const out = [];
 
   for (const [key, item] of Object.entries(ayat)) {
+    if (!isHifz(key)) continue;
     const planned = schedule[key];
     if (planned && planned.due && planned.due > today) continue;
 
@@ -99,6 +110,7 @@ export function dueList(limit = 60) {
   // Ayaat that were scheduled earlier but have no report row any more.
   for (const [key, planned] of Object.entries(schedule)) {
     if (ayat[key]) continue;
+    if (!isHifz(key)) continue;
     if (planned && planned.due && planned.due <= today) {
       out.push({
         key,
@@ -143,7 +155,7 @@ export function markDone(key) {
 
 /** After a check: good scores move forward, weak ones come back tomorrow. */
 export function updateFromCheck(entries) {
-  const list = (entries || []).filter((entry) => entry && entry.key);
+  const list = (entries || []).filter((entry) => entry && entry.key && isHifz(entry.key));
   if (!list.length) return;
 
   const schedule = read();
@@ -203,7 +215,7 @@ export function mountMurajaa(root, options = {}) {
     const rows = dueList();
     const head = el('div', 'murajaa-head');
     head.appendChild(el('strong', 'murajaa-count', String(rows.length)));
-    head.appendChild(el('span', 'murajaa-sub', t('murajaa.hint')));
+    head.appendChild(el('span', 'murajaa-sub', t('murajaa.hint2')));
     root.appendChild(head);
 
     if (!rows.length) {

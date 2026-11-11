@@ -75,6 +75,9 @@ import {
   unlock as unlockAdhan,
   arm as armAdhan,
   disarm as disarmAdhan,
+  saveLocalFile as saveAdhanFile,
+  clearLocalFile as clearAdhanFile,
+  hasLocalFile as hasAdhanFile,
 } from './adhan.js';
 import { location as prayerLocation } from './prayer.js';
 import { mountMurajaa, dueCount, updateFromCheck } from './murajaa.js';
@@ -268,6 +271,7 @@ async function init() {
 
   hideSplash();
   maybeWelcome();
+  watchBackSwipe();
   loadQuranInBackground();
   startReminderLoop();
   startDailyReminder();
@@ -489,6 +493,7 @@ function cacheElements() {
     'list-title', 'global-status', 'range-error', 'aya-list', 'qari-all',
     'list-footer', 'load-more', 'share-app', 'model-select', 'load-model',
     'remind-root', 'qari-select', 'qari-repeat', 'adhan-select', 'adhan-toggle', 'adhan-test', 'adhan-credit',
+    'adhan-file', 'adhan-file-clear', 'adhan-local-status',
     'model-progress', 'model-progress-bar', 'model-status', 'audio-file',
     'accurate-mode',
     'mic-check', 'mic-check-output', 'player', 'tajweed',
@@ -622,6 +627,27 @@ function fillAdhans() {
     });
   }
 
+  if (els.adhanFile) {
+    els.adhanFile.addEventListener('change', async () => {
+      const file = els.adhanFile.files && els.adhanFile.files[0];
+      els.adhanFile.value = '';
+      if (!file) return;
+      try {
+        await saveAdhanFile(file);
+        toast(t('adhan.localSet'));
+      } catch (error) {
+        toast(t('adhan.failed'));
+      }
+      paintAdhan();
+    });
+  }
+  if (els.adhanFileClear) {
+    els.adhanFileClear.addEventListener('click', async () => {
+      await clearAdhanFile().catch(() => {});
+      paintAdhan();
+    });
+  }
+
   paintAdhan();
   primeAdhan();
   armAdhanNow();
@@ -702,6 +728,13 @@ function paintAdhan() {
     els.adhanToggle.className = `btn small ${on ? 'ghost' : 'primary'}`;
   }
   if (els.adhanCredit) els.adhanCredit.textContent = currentAdhan().credit;
+
+  hasAdhanFile()
+    .then((has) => {
+      if (els.adhanLocalStatus) els.adhanLocalStatus.textContent = has ? t('adhan.localSet') : '';
+      if (els.adhanFileClear) els.adhanFileClear.hidden = !has;
+    })
+    .catch(() => {});
 }
 
 /** One qari button at the top of the reader plays the whole list, aya by aya. */
@@ -2307,6 +2340,75 @@ function setNamazTab(tab) {
   else moreViews.qibla?.stop?.();
 }
 
+// ------------------------------------------------------------- back button
+// Screens are kept in a small trail, so the phone's back button (and the
+// left-edge swipe on a new iPhone) goes back one screen — never straight to the
+// first page.
+const navStack = [];
+let navSkipPush = false;
+
+function rememberNav(name) {
+  if (navSkipPush) return;
+  if (navStack[navStack.length - 1] === name) return;
+  navStack.push(name);
+  if (navStack.length > 30) navStack.shift();
+  try {
+    history.pushState({ nav: navStack.length }, '');
+  } catch (error) {
+    /* some in-app browsers refuse */
+  }
+}
+
+/** One step back; at the first screen it goes home instead of doing nothing. */
+function navigateBack() {
+  navSkipPush = true;
+  if (navStack.length > 1) navStack.pop();
+  const target = navStack[navStack.length - 1] || 'home';
+  setView(target);
+  navSkipPush = false;
+}
+
+window.addEventListener('popstate', () => {
+  navSkipPush = true;
+  if (navStack.length > 1) navStack.pop();
+  setView(navStack[navStack.length - 1] || 'home');
+  navSkipPush = false;
+});
+
+function watchBackSwipe() {
+  let start = null;
+  document.addEventListener(
+    'touchstart',
+    (event) => {
+      if (event.touches.length !== 1) {
+        start = null;
+        return;
+      }
+      const touch = event.touches[0];
+      start = { x: touch.clientX, y: touch.clientY, at: Date.now() };
+    },
+    { passive: true }
+  );
+  document.addEventListener(
+    'touchend',
+    (event) => {
+      if (!start) return;
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      const edge = start.x < 26;
+      const quick = Date.now() - start.at < 800;
+      start = null;
+      if (!edge || !quick) return;
+      if (dx < 70 || Math.abs(dy) > 70) return;
+      // Never while the welcome screen or the splash is in front.
+      if (document.querySelector('#welcome:not([hidden]), #splash:not(.is-gone)')) return;
+      navigateBack();
+    },
+    { passive: true }
+  );
+}
+
 /** Show exactly one section, keep the bottom bar in step, and stop what is not on screen. */
 function setView(view, tab) {
   let name = view;
@@ -2413,6 +2515,7 @@ function setView(view, tab) {
     else item.removeAttribute('aria-current');
   });
   window.scrollTo(0, 0);
+  rememberNav(name);
 }
 
 function openSettings() {
@@ -2943,7 +3046,6 @@ window.addEventListener('bayyin:open', async (event) => {
 
 function wireEvents() {
   els.openSettings.addEventListener('click', openSettings);
-  els.closeSettings.addEventListener('click', closeSettings);
 
   els.tabSurah.addEventListener('click', () => setMode('surah'));
   els.tabPage.addEventListener('click', () => setMode('page'));
@@ -3078,8 +3180,9 @@ function wireEvents() {
     button.addEventListener('click', () => setPremiumTab(button.dataset.premiumTab));
   }
 
-  for (const closer of [els.closeTasbeeh, els.closeCalendar, els.closeDaily, els.closeDua, els.closeKhatam, els.closeBadges, els.closePremium]) {
-    go(closer, 'home');
+  // Every "◀ Wapas" is a real step back, not a jump to the first page.
+  for (const closer of [els.closeTasbeeh, els.closeCalendar, els.closeDaily, els.closeDua, els.closeKhatam, els.closeBadges, els.closePremium, els.closeSettings]) {
+    if (closer) closer.addEventListener('click', () => navigateBack());
   }
   if (els.openReport) els.openReport.addEventListener('click', () => setView('report'));
 

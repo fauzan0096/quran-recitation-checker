@@ -108,6 +108,90 @@ export function current() {
   return ADHANS[s.id] || ADHANS[DEFAULT];
 }
 
+// ------------------------------------------- a recording of your own
+// Kept in IndexedDB (a Blob survives restarts), so a person can use their own
+// muazzin's mp3 or mp4 even when the Wikimedia links do not play for them.
+const DB_NAME = 'bayyin-adhan';
+const STORE_NAME = 'files';
+const FILE_KEY = 'mine';
+
+let localUrl = '';
+let localReady = null;
+
+function openDb() {
+  return new Promise((resolve, reject) => {
+    try {
+      const request = indexedDB.open(DB_NAME, 1);
+      request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
+      request.onsuccess = () => resolve(request.result);
+      request.onerror = () => reject(request.error);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+async function readLocalFile() {
+  if (localUrl) return localUrl;
+  if (!localReady) {
+    localReady = (async () => {
+      try {
+        const db = await openDb();
+        const blob = await new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, 'readonly');
+          const request = tx.objectStore(STORE_NAME).get(FILE_KEY);
+          request.onsuccess = () => resolve(request.result || null);
+          request.onerror = () => reject(request.error);
+        });
+        if (blob instanceof Blob) localUrl = URL.createObjectURL(blob);
+      } catch (error) {
+        localUrl = '';
+      }
+      return localUrl;
+    })();
+  }
+  return localReady;
+}
+
+/** Keep the person's own file; it is used before any internet recording. */
+export async function saveLocalFile(file) {
+  const db = await openDb();
+  await new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_NAME, 'readwrite');
+    tx.objectStore(STORE_NAME).put(file, FILE_KEY);
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
+  if (localUrl) URL.revokeObjectURL(localUrl);
+  localUrl = '';
+  localReady = null;
+  audioSrc = '';
+  await readLocalFile();
+  prime();
+}
+
+export async function clearLocalFile() {
+  try {
+    const db = await openDb();
+    await new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      tx.objectStore(STORE_NAME).delete(FILE_KEY);
+      tx.oncomplete = () => resolve();
+      tx.onerror = () => reject(tx.error);
+    });
+  } catch (error) {
+    /* nothing stored */
+  }
+  if (localUrl) URL.revokeObjectURL(localUrl);
+  localUrl = '';
+  localReady = null;
+  audioSrc = '';
+}
+
+export async function hasLocalFile() {
+  return Boolean(await readLocalFile());
+}
+
 // ------------------------------------------------------------------ sound
 // One element for the whole session: on iOS a new Audio() object has to earn
 // its own "user touched the page" permission, a reused one does not.
@@ -204,16 +288,21 @@ export function unlock() {
 export function prime() {
   const s = load();
   if (!s.on) return;
-  const item = ADHANS[s.id] || ADHANS[DEFAULT];
   const el = element();
-  if (!el || audioSrc === item.url) return;
-  audioSrc = item.url;
-  try {
-    el.src = item.url;
-    el.load();
-  } catch (error) {
-    audioSrc = '';
-  }
+  if (!el) return;
+  readLocalFile()
+    .then((local) => {
+      const url = local || current().url;
+      if (!url || audioSrc === url) return;
+      audioSrc = url;
+      try {
+        el.src = url;
+        el.load();
+      } catch (error) {
+        audioSrc = '';
+      }
+    })
+    .catch(() => {});
 }
 
 export function stop() {
@@ -228,29 +317,51 @@ export function stop() {
 
 /** Play the chosen azaan; resolves false when the browser refuses the sound. */
 export async function play() {
-  const item = current();
   const el = element();
   if (!el) return false;
   unlocking = false;
 
-  if (audioSrc !== item.url) {
-    audioSrc = item.url;
-    el.src = item.url;
-  }
-  try {
-    el.currentTime = 0;
-  } catch (error) {
-    /* not loaded yet: it starts from the beginning anyway */
-  }
-  el.muted = false;
-  el.volume = 1;
+  // Your own file first; otherwise the chosen muazzin, then the others in case
+  // a host does not answer on this phone.
+  const local = await readLocalFile();
+  const first = current().url;
+  const urls = local ? [local] : [first, ...fallbackUrls(first)];
 
-  try {
-    await el.play();
-    return true;
-  } catch (error) {
-    return false;
+  for (const url of urls) {
+    if (!url) continue;
+    audioSrc = url;
+    try {
+      el.src = url;
+    } catch (error) {
+      /* the next one may work */
+    }
+    try {
+      el.currentTime = 0;
+    } catch (error) {
+      /* not loaded yet: it starts from the beginning anyway */
+    }
+    el.muted = false;
+    el.volume = 1;
+
+    try {
+      await el.play();
+      return true;
+    } catch (error) {
+      // "Not allowed" is the browser blocking sound (no tap yet), not a bad
+      // file: another recording will not help.
+      if (error && (error.name === 'NotAllowedError' || error.name === 'AbortError')) return false;
+    }
   }
+  return false;
+}
+
+/** The other recordings, mp3/wav first (ogg does not play on iPhone). */
+function fallbackUrls(first) {
+  const order = { mp3: 0, wav: 1, ogg: 2, oga: 3 };
+  return Object.values(ADHANS)
+    .filter((item) => item.url && item.url !== first)
+    .sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9))
+    .map((item) => item.url);
 }
 
 export function playing() {

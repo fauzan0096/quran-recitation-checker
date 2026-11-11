@@ -1,8 +1,11 @@
 // © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 
-// Prayer times, calculated on the phone (no server, no API). Standard NOAA
-// solar equations; Fajr 18°, Isha 17°, Asr Hanafi (2 shadows) or Shafi (1).
+// Prayer times, calculated on the phone (no server, no API). Standard solar
+// equations with the earliest (first) time of each prayer: Fajr 18°, Isha 17°,
+// and Asr at one shadow, so the screen shows "awwal waqt" and nothing about
+// schools. A person can also set their own time for any prayer; that time is
+// then used everywhere — the screen, the azaan and the notifications.
 // Location comes from the browser's geolocation and is stored only on device.
 
 import { t } from './i18n.js';
@@ -22,24 +25,56 @@ function read() {
   try {
     const raw = JSON.parse(localStorage.getItem(STORE) || 'null');
     if (raw && typeof raw === 'object') {
+      const custom = {};
+      if (raw.custom && typeof raw.custom === 'object') {
+        for (const [key] of PRAYERS) {
+          const minutes = clockMinutes(raw.custom[key]);
+          if (minutes !== null) custom[key] = minutes;
+        }
+      }
       return {
         lat: Number(raw.lat) || null,
         lon: Number(raw.lon) || null,
-        hanafi: raw.hanafi !== false,
+        hanafi: false,
+        custom,
       };
     }
   } catch (error) {
     /* ignore */
   }
-  return { lat: null, lon: null, hanafi: true };
+  return { lat: null, lon: null, hanafi: false, custom: {} };
 }
 
 function write(data) {
+  // Custom times are kept as "HH:MM" in storage and as minutes in memory, so
+  // every caller can save whatever it has.
+  const next = { ...data };
+  const custom = {};
+  if (next.custom && typeof next.custom === 'object') {
+    for (const [key] of PRAYERS) {
+      const value = next.custom[key];
+      if (typeof value === 'number') custom[key] = formatTime(value);
+      else if (clockMinutes(value) !== null) custom[key] = String(value).slice(0, 5);
+    }
+  }
+  next.custom = custom;
+  next.hanafi = false;
+
   try {
-    localStorage.setItem(STORE, JSON.stringify(data));
+    localStorage.setItem(STORE, JSON.stringify(next));
   } catch (error) {
     /* private mode */
   }
+}
+
+/** "HH:MM" → minutes after midnight, or null when it is not a real time. */
+function clockMinutes(text) {
+  const match = /^(\d{1,2}):(\d{2})$/.exec(String(text || '').trim());
+  if (!match) return null;
+  const h = Number(match[1]);
+  const m = Number(match[2]);
+  if (!Number.isFinite(h) || !Number.isFinite(m) || h > 23 || m > 59) return null;
+  return h * 60 + m;
 }
 
 /** The saved location (shared with the azaan player). */
@@ -112,27 +147,30 @@ function wrap(minutes) {
 }
 
 /**
- * Times for today at the given place, in minutes after local midnight.
+ * Times for the day, in minutes after local midnight: the earliest (first) time
+ * of each prayer. Any time the person set themselves wins over the calculation.
+ * The second argument is kept only so older callers keep working.
  * @returns {{fajr:number|null, dhuhr:number, asr:number|null,
- *   maghrib:number|null, isha:number|null, sunrise:number|null}}
+ *   maghrib:number|null, isha:number|null, sun:number|null}}
  */
-export function prayerTimes(lat, lon, hanafi = true, when = new Date()) {
-  const tz = -when.getTimezoneOffset();
-  const gamma = ((2 * Math.PI) / 365) * (dayOfYear(when) - 1 + 0.5);
+export function prayerTimes(lat, lon, _hanafi, when) {
+  const at = when instanceof Date ? when : new Date();
+  const latN = Number(lat);
+  const lonN = Number(lon);
+  const tz = -at.getTimezoneOffset();
+  const gamma = ((2 * Math.PI) / 365) * (dayOfYear(at) - 1 + 0.5);
   const { eq, dec } = sun(gamma);
 
-  const noon = 720 - 4 * lon - eq + tz;
-  const haSun = hourAngle(lat, dec, -0.833);
-  const haFajr = hourAngle(lat, dec, -18);
-  const haIsha = hourAngle(lat, dec, -17);
+  const noon = 720 - 4 * lonN - eq + tz;
+  const haSun = hourAngle(latN, dec, -0.833);
+  const haFajr = hourAngle(latN, dec, -18);
+  const haIsha = hourAngle(latN, dec, -17);
 
-  // Asr: shadow length equals factor × object height + noon shadow.
-  const shadow = hanafi ? 2 : 1;
-  const asrAltitude =
-    Math.atan(1 / (shadow + Math.tan(Math.abs(lat * DEG - dec)))) / DEG;
-  const haAsr = hourAngle(lat, dec, asrAltitude);
+  // Earliest asr: the shadow is one object-length again (plus the noon shadow).
+  const asrAltitude = Math.atan(1 / (1 + Math.tan(Math.abs(latN * DEG - dec)))) / DEG;
+  const haAsr = hourAngle(latN, dec, asrAltitude);
 
-  return {
+  const times = {
     fajr: haFajr === null ? null : wrap(noon - 4 * haFajr),
     sunrise: haSun === null ? null : wrap(noon - 4 * haSun),
     dhuhr: wrap(noon + 1),
@@ -140,6 +178,15 @@ export function prayerTimes(lat, lon, hanafi = true, when = new Date()) {
     maghrib: haSun === null ? null : wrap(noon + 4 * haSun + 1),
     isha: haIsha === null ? null : wrap(noon + 4 * haIsha),
   };
+
+  // A time the person set themselves wins over the calculation — here and
+  // everywhere else, because the azaan and the notifications use this function.
+  const custom = read().custom || {};
+  for (const [key] of PRAYERS) {
+    if (typeof custom[key] === 'number') times[key] = custom[key];
+  }
+
+  return times;
 }
 
 export function formatTime(minutes) {
@@ -204,25 +251,20 @@ export function mountPrayer(root) {
     const list = el('div', 'prayer-list');
     for (const [id, label] of PRAYERS) {
       const row = el('div', `prayer-row${next && next.id === id ? ' is-next' : ''}`);
-      row.append(el('span', 'prayer-name', t(label)), el('strong', 'prayer-time', formatTime(times[id])));
+      const value = el('strong', 'prayer-time', formatTime(times[id]));
+      if (state.custom && typeof state.custom[id] === 'number') value.classList.add('is-custom');
+      row.append(el('span', 'prayer-name', t(label)), value);
       list.appendChild(row);
     }
     root.appendChild(list);
 
     root.appendChild(
-      el('p', 'hint', t('prayer.note', { school: state.hanafi ? t('prayer.hanafi') : t('prayer.shafi') }))
+      el('p', 'hint', t('prayer.awwal'))
     );
 
-    const tools = el('div', 'prayer-tools');
+    root.appendChild(customForm(state, build));
 
-    const method = el('button', 'btn ghost small', state.hanafi ? t('prayer.useShafi') : t('prayer.useHanafi'));
-    method.type = 'button';
-    method.addEventListener('click', () => {
-      state.hanafi = !state.hanafi;
-      write(state);
-      build();
-    });
-    tools.appendChild(method);
+    const tools = el('div', 'prayer-tools');
 
     const refresh = el('button', 'btn ghost small', t('prayer.locateAgain'));
     refresh.type = 'button';
@@ -240,6 +282,56 @@ export function mountPrayer(root) {
   return { refresh: build };
 }
 
+/** Set your own time for any prayer (a masjid's timetable, or a few minutes off). */
+function customForm(state, after) {
+  const box = el('details', 'prayer-manual');
+  if (state.custom && Object.keys(state.custom).length) box.open = true;
+  box.appendChild(el('summary', '', t('prayer.custom')));
+
+  const grid = el('div', 'prayer-custom');
+  const inputs = {};
+  for (const [key, label] of PRAYERS) {
+    const row = el('label', 'custom-row');
+    row.appendChild(el('span', 'custom-label', t(label)));
+    const input = document.createElement('input');
+    input.type = 'time';
+    input.value = typeof state.custom?.[key] === 'number' ? formatTime(state.custom[key]) : '';
+    input.setAttribute('aria-label', t(label));
+    inputs[key] = input;
+    row.appendChild(input);
+    grid.appendChild(row);
+  }
+
+  const actions = el('div', 'row-actions');
+
+  const save = el('button', 'btn primary small', t('prayer.saveTimes'));
+  save.type = 'button';
+  save.addEventListener('click', () => {
+    const custom = {};
+    for (const [key] of PRAYERS) {
+      const minutes = clockMinutes(inputs[key].value);
+      if (minutes !== null) custom[key] = minutes;
+    }
+    state.custom = custom;
+    write({ lat: state.lat, lon: state.lon, custom });
+    after();
+  });
+
+  const reset = el('button', 'btn ghost small', t('prayer.resetTimes'));
+  reset.type = 'button';
+  reset.addEventListener('click', () => {
+    state.custom = {};
+    write({ lat: state.lat, lon: state.lon, custom: {} });
+    after();
+  });
+
+  actions.append(save, reset);
+  grid.appendChild(actions);
+  box.appendChild(grid);
+  return box;
+}
+
+/** The place's own latitude/longitude, for a phone whose location cannot be read. */
 function manualForm(state, after) {
   const box = el('details', 'prayer-manual');
   box.appendChild(el('summary', '', t('prayer.manual')));

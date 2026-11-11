@@ -169,33 +169,8 @@ export function mountDaily(root, options = {}) {
     });
     sheet.appendChild(shareAll);
 
+    // Roz bas ek sunnah — the whole 60-sunnah list is not opened here.
     if (compact) return;
-
-    const details = document.createElement('details');
-    details.className = 'card daily-list';
-    const summary = document.createElement('summary');
-    summary.textContent = `${t('daily.sunnahs')} (${SUNNAHS.length})`;
-    details.appendChild(summary);
-
-    for (let index = 0; index < SUNNAHS.length; index += 1) {
-      const item = SUNNAHS[index];
-      const row = document.createElement('div');
-      row.className = 'daily-row';
-      const number = document.createElement('span');
-      number.className = 'daily-row-num';
-      number.textContent = String(index + 1);
-      const body = document.createElement('div');
-      body.className = 'daily-row-body';
-      const line = document.createElement('p');
-      line.textContent = meaning(item);
-      const ref = document.createElement('span');
-      ref.className = 'daily-ref';
-      ref.textContent = item.ref;
-      body.append(line, ref);
-      row.append(number, body);
-      details.appendChild(row);
-    }
-    root.appendChild(details);
 
     const note = document.createElement('p');
     note.className = 'hint';
