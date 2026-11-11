@@ -668,6 +668,7 @@ function applyMode() {
   els.ayaList.hidden = isSearch;
   els.searchResults.hidden = !isSearch;
   els.listFooter.hidden = isSearch || state.visible >= state.verses.length;
+  document.body.dataset.mode = state.mode;
 }
 
 function updatePageTotal() {
@@ -1059,6 +1060,67 @@ function renderMushafPage() {
 
   page.appendChild(actions);
   els.ayaList.appendChild(page);
+
+  fitMushafPage(page);
+  attachPageSwipe(page);
+}
+
+/** Shrink the mushaf text until one page fits the frame, like a real page. */
+function fitMushafPage(page) {
+  const text = page.querySelector('.page-text');
+  if (!text) return;
+  text.style.fontSize = '';
+
+  const room = page.clientHeight - 12;
+  if (!room || room < 120) return;
+
+  let size = parseFloat(window.getComputedStyle(text).fontSize) || 26;
+  let guard = 0;
+  while (text.scrollHeight > room && size > 13 && guard < 90) {
+    size = Math.round((size - 0.5) * 10) / 10;
+    text.style.fontSize = `${size}px`;
+    guard += 1;
+  }
+}
+
+/** Swipe left/right on the mushaf page to move to the next/previous page. */
+function attachPageSwipe(page) {
+  let x0 = 0;
+  let y0 = 0;
+  let started = 0;
+
+  page.addEventListener(
+    'touchstart',
+    (event) => {
+      const touch = event.changedTouches[0];
+      x0 = touch.clientX;
+      y0 = touch.clientY;
+      started = Date.now();
+    },
+    { passive: true }
+  );
+
+  page.addEventListener(
+    'touchend',
+    (event) => {
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - x0;
+      const dy = touch.clientY - y0;
+      if (Date.now() - started > 900) return;
+      if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
+      // RTL mushaf: a left swipe moves forward, like the mus'haf apps.
+      goPage(dx < 0 ? 1 : -1);
+    },
+    { passive: true }
+  );
+}
+
+function goPage(delta) {
+  const next = clamp(state.page + delta, 1, pageMax());
+  if (next === state.page) return;
+  state.page = next;
+  els.pageNumber.value = String(next);
+  showList();
 }
 
 /** The little 🔊 button — listen to this aya's qari before or after recording. */

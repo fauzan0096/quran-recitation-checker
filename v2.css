@@ -1729,3 +1729,47 @@ ul.credits {
   color: var(--ink);
 }
 ul.credits a { color: #8a5a28; text-decoration: underline; }
+
+
+
+/* ------------------------------------------- mushaf: one page, one screen */
+body[data-mode='page'] #view-reader .reader-controls { display: none; }
+
+body[data-mode='page'] #view-reader .mushaf-page {
+  height: max(300px, calc(100svh - 285px));
+  overflow: hidden;
+}
+
+body[data-mode='page'] #view-reader .page-text {
+  max-height: 100%;
+  overflow: hidden;
+}
+
+/* ------------------------------------------------ duain: never off-screen */
+.duas,
+.dua-list,
+.dua-card,
+.dua-arabic,
+.dua-meaning,
+.dua-note,
+.dua-title {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dua-arabic,
+.dua-meaning,
+.dua-note,
+.dua-title {
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.dua-card,
+.dua-card * {
+  box-sizing: border-box;
+}
+
+.dua-actions {
+  flex-wrap: wrap;
+}
