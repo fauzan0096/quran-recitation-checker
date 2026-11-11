@@ -34,22 +34,33 @@ Do cheezein milengi:
 7. Wapas **Workers & Pages → bayyin-push → Settings → Bindings** → **Add binding** →
    **KV Namespace** → Variable name **`SUBS`** → namespace `bayyin_subs` → **Save**.
 
-**D. Variables (VAPID)**
+**D. VAPID keys — KV me daalna sab se aasan (recommended)**
 
-Jagah: **Worker → Settings → Variables and Secrets** (purane UI me sirf "Variables").
-**Add** / **Add variable** dabayein aur teen entries banayein — naam **bilkul** aise
-(capital letters, koi space nahi):
+> Kyun KV? GitHub se deploy hone par Cloudflare dashboard ke "runtime variables"
+> `wrangler` overwrite kar deta hai (is liye `vapidPublic:false` aata hai). **KV
+> deploy se nahi mit-ti**, aur Worker khud wahan se keys padh leta hai.
 
-| Variable name | Type | Value |
-| --- | --- | --- |
-| `VAPID_PUBLIC` | Text (plain) | public key — ek hi line, ~87 characters, `B` se shuru |
-| `VAPID_PRIVATE` | **Secret** (Encrypt) | private JWK — poora JSON `{ "kty":"EC", … "d":"…" }` |
-| `VAPID_SUBJECT` | Text | `mailto:aapka@email.com` |
+KV → `bayyin_subs` → **Add entry** (ya "Create entry") — teen dafa:
 
-- Private JWK me line breaks ho to koi masla nahi — JSON waise bhi parse ho jata hai.
-  Bas naam/values me extra space na ho.
-- `VAPID_PRIVATE` ko **Secret** rakhein: dashboard me dobara padha nahi ja sakega.
-- Add karne ke baad **Deploy** (ya "Save and Deploy") dabayein, warna values live nahi hotin.
+| Key | Value |
+| --- | --- |
+| `VAPID_PUBLIC` | public key (ek line) |
+| `VAPID_PRIVATE` | poora private JSON `{"kty":"EC",…,"d":"…"}` |
+| `VAPID_SUBJECT` | `mailto:aapka@email.com` |
+
+- Entries **turant** live hoti hain, koi deploy nahi chahiye.
+- Chahein to wahi teen **Settings → Runtime variables** me bhi daal dein — Worker
+  pehle environment dekhta hai, phir KV. (Dono jagah ek hi set rakhein.)
+
+**Check (GET par health JSON)**:
+
+```json
+{"ok":true,"service":"bayyin-push","kv":true,
+ "vapidPublic":true,"vapidPrivate":"ok","vapidSubject":true}
+```
+
+`vapidPrivate` me `"ok"` aana chahiye. `"invalid-json"` = JSON toota hua,
+`"invalid"` = `d` field nahi mila, `"missing"` = KV/variable me mila hi nahi.
 
 **Check (GET par health JSON)**:
 

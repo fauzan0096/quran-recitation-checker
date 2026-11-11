@@ -8,14 +8,14 @@
 //                          hour matches, so the phone shows the notification even
 //                          when the app is closed.
 //
-// You need three values set in the Worker (Settings → Variables):
-//   VAPID_PUBLIC   base64url public key   (from push-setup.html)
-//   VAPID_PRIVATE  the private JWK, as a JSON string  (from push-setup.html)
+// Settings are read from the environment first and then from KV (KV survives every
+// deploy, while dashboard "variables" are replaced by wrangler on a Git deploy):
+//   VAPID_PUBLIC   base64url public key      (from push-setup.html)
+//   VAPID_PRIVATE  the private JWK, as JSON  (from push-setup.html)
 //   VAPID_SUBJECT  mailto:you@example.com
-// and a KV namespace bound as SUBS.
 //
-// Deploy: workers.cloudflare.com → Create → Worker → paste this file → add the
-// KV binding and variables → add a Cron Trigger "0 * * * *".
+// So the easiest path is: a KV namespace bound as SUBS, and in that namespace three
+// entries with the keys above. KV is also where the subscriptions live.
 
 const encoder = new TextEncoder();
 
@@ -44,15 +44,44 @@ function base64url(bytes) {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function decodeBase64url(text) {
-  const padded = text.replace(/-/g, '+').replace(/_/g, '/');
-  const raw = atob(padded + '='.repeat((4 - (padded.length % 4)) % 4));
-  const bytes = new Uint8Array(raw.length);
-  for (let i = 0; i < raw.length; i += 1) bytes[i] = raw.charCodeAt(i);
-  return bytes;
+/** Environment variables first, then the KV entries (which deploys cannot wipe). */
+async function settings(env) {
+  const found = {
+    publicKey: String(env.VAPID_PUBLIC || '').trim(),
+    privateKey: String(env.VAPID_PRIVATE || '').trim(),
+    subject: String(env.VAPID_SUBJECT || '').trim(),
+  };
+
+  if (found.publicKey && found.privateKey && found.subject) return found;
+  if (!env.SUBS) return found;
+
+  try {
+    const [pub, priv, sub] = await Promise.all([
+      env.SUBS.get('VAPID_PUBLIC'),
+      env.SUBS.get('VAPID_PRIVATE'),
+      env.SUBS.get('VAPID_SUBJECT'),
+    ]);
+    return {
+      publicKey: found.publicKey || String(pub || '').trim(),
+      privateKey: found.privateKey || String(priv || '').trim(),
+      subject: found.subject || String(sub || '').trim(),
+    };
+  } catch (error) {
+    return found;
+  }
 }
 
-async function vapidHeaders(origin, env) {
+function privateKeyState(text) {
+  if (!text) return 'missing';
+  try {
+    const parsed = JSON.parse(String(text).trim());
+    return parsed && parsed.d ? 'ok' : 'invalid';
+  } catch (error) {
+    return 'invalid-json';
+  }
+}
+
+async function vapidHeaders(origin, config) {
   const header = base64url(encoder.encode(JSON.stringify({ typ: 'JWT', alg: 'ES256' })));
   const now = Math.floor(Date.now() / 1000);
   const payload = base64url(
@@ -60,7 +89,7 @@ async function vapidHeaders(origin, env) {
       JSON.stringify({
         aud: origin,
         exp: now + 12 * 60 * 60,
-        sub: env.VAPID_SUBJECT || 'mailto:bayyin@example.com',
+        sub: config.subject || 'mailto:bayyin@example.com',
       })
     )
   );
@@ -68,7 +97,7 @@ async function vapidHeaders(origin, env) {
 
   const privateKey = await crypto.subtle.importKey(
     'jwk',
-    JSON.parse(env.VAPID_PRIVATE),
+    JSON.parse(String(config.privateKey).trim()),
     { name: 'ECDSA', namedCurve: 'P-256' },
     false,
     ['sign']
@@ -80,19 +109,13 @@ async function vapidHeaders(origin, env) {
   );
 
   const jwt = `${unsigned}.${base64url(signature)}`;
-  return {
-    Authorization: `vapid t=${jwt}, k=${String(env.VAPID_PUBLIC || '').trim()}`,
-    TTL: '86400',
-  };
+  return { Authorization: `vapid t=${jwt}, k=${config.publicKey}`, TTL: '86400' };
 }
 
-async function send(subscription, env) {
+async function send(subscription, config) {
   const endpoint = new URL(subscription.endpoint);
-  const headers = await vapidHeaders(`${endpoint.protocol}//${endpoint.host}`, env);
-  const response = await fetch(subscription.endpoint, {
-    method: 'POST',
-    headers,
-  });
+  const headers = await vapidHeaders(`${endpoint.protocol}//${endpoint.host}`, config);
+  const response = await fetch(subscription.endpoint, { method: 'POST', headers });
   return response.status;
 }
 
@@ -112,24 +135,19 @@ function localHour(timezone) {
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return cors();
+
     if (request.method === 'GET') {
-      // Health check: tells you which settings are actually wired up.
-      let privateKey = 'missing';
-      try {
-        const parsed = JSON.parse(String(env.VAPID_PRIVATE || '').trim());
-        privateKey = parsed && parsed.d ? 'ok' : 'invalid';
-      } catch (error) {
-        if (env.VAPID_PRIVATE) privateKey = 'invalid-json';
-      }
+      const config = await settings(env);
       return json({
         ok: true,
         service: 'bayyin-push',
         kv: Boolean(env.SUBS),
-        vapidPublic: Boolean(env.VAPID_PUBLIC),
-        vapidPrivate: privateKey,
-        vapidSubject: Boolean(env.VAPID_SUBJECT),
+        vapidPublic: Boolean(config.publicKey),
+        vapidPrivate: privateKeyState(config.privateKey),
+        vapidSubject: Boolean(config.subject),
       });
     }
+
     if (request.method !== 'POST') return json({ ok: false, error: 'POST only' }, 405);
 
     const url = new URL(request.url);
@@ -168,6 +186,9 @@ export default {
   async scheduled(event, env, ctx) {
     ctx.waitUntil(
       (async () => {
+        const config = await settings(env);
+        if (!config.publicKey || privateKeyState(config.privateKey) !== 'ok') return;
+
         const list = await env.SUBS.list({ prefix: 'sub:' });
         for (const item of list.keys) {
           const raw = await env.SUBS.get(item.name);
@@ -182,7 +203,7 @@ export default {
           if (localHour(saved.timezone) !== saved.hour) continue;
 
           try {
-            const status = await send(saved.subscription, env);
+            const status = await send(saved.subscription, config);
             if (status === 404 || status === 410) await env.SUBS.delete(item.name);
           } catch (error) {
             /* transient: try again next hour */
