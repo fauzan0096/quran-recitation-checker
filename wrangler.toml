@@ -1,0 +1,18 @@
+# Cloudflare Worker for Bayyin's daily push notifications.
+# The dashboard can build this straight from GitHub (Workers → Create application →
+# Connect to Git → pick this repository); it reads this file.
+
+name = "bayyin-push"
+main = "worker/push-worker.js"
+compatibility_date = "2025-06-01"
+
+# One notification a day: the cron runs hourly and the Worker sends only when the
+# person's own local hour matches (see worker/push-worker.js).
+[triggers]
+crons = ["0 * * * *"]
+
+# Bind the KV namespace in the dashboard after the first deploy:
+#   Worker → Settings → Bindings → Add → KV Namespace
+#   Variable name: SUBS
+# and the three secrets:
+#   VAPID_PUBLIC, VAPID_PRIVATE, VAPID_SUBJECT
