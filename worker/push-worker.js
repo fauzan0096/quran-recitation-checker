@@ -119,16 +119,28 @@ async function send(subscription, config) {
   return response.status;
 }
 
-function localHour(timezone) {
+/** Local date and HH:MM in the subscriber's time zone. */
+function localNow(timezone) {
   try {
-    const text = new Intl.DateTimeFormat('en-GB', {
+    const parts = new Intl.DateTimeFormat('en-CA', {
       timeZone: timezone || 'UTC',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
       hour: '2-digit',
-      hour12: false,
-    }).format(new Date());
-    return String(Number(text)).padStart(2, '0');
+      minute: '2-digit',
+      hourCycle: 'h23',
+    }).formatToParts(new Date());
+    const get = (type) => (parts.find((part) => part.type === type) || {}).value || '';
+    const hour = String(get('hour')).padStart(2, '0');
+    const minute = String(get('minute')).padStart(2, '0');
+    return { date: `${get('year')}-${get('month')}-${get('day')}`, time: `${hour}:${minute}` };
   } catch (error) {
-    return String(new Date().getUTCHours()).padStart(2, '0');
+    const now = new Date();
+    return {
+      date: now.toISOString().slice(0, 10),
+      time: `${String(now.getUTCHours()).padStart(2, '0')}:${String(now.getUTCMinutes()).padStart(2, '0')}`,
+    };
   }
 }
 
@@ -168,9 +180,10 @@ export default {
         key,
         JSON.stringify({
           subscription: sub,
-          hour: String(data.hour || '20').padStart(2, '0'),
+          time: String(data.time || data.hour || '20:00').slice(0, 5),
           timezone: data.timezone || 'UTC',
           body: String(data.body || '').slice(0, 160),
+          lastDay: '',
         })
       );
       return json({ ok: true });
@@ -221,13 +234,25 @@ export default {
             continue;
           }
           if (!saved || !saved.subscription) continue;
-          if (localHour(saved.timezone) !== saved.hour) continue;
+
+          // Send once a day, as soon as the person's own clock passes their time.
+          const local = localNow(saved.timezone);
+          const target = saved.time || `${saved.hour || '20'}:00`;
+          if (saved.lastDay === local.date) continue;
+          if (local.time < target) continue;
 
           try {
             const status = await send(saved.subscription, config);
-            if (status === 404 || status === 410) await env.SUBS.delete(item.name);
+            if (status === 404 || status === 410) {
+              await env.SUBS.delete(item.name);
+              continue;
+            }
+            if (status >= 200 && status < 300) {
+              saved.lastDay = local.date;
+              await env.SUBS.put(item.name, JSON.stringify(saved));
+            }
           } catch (error) {
-            /* transient: try again next hour */
+            /* transient: try again on the next run */
           }
         }
       })()

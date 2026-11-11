@@ -153,6 +153,9 @@ export function mountCard(root) {
     time.setAttribute('aria-label', t('remind.time'));
     time.addEventListener('change', () => {
       setTime(time.value);
+      if (load().push) {
+        pushEnable(time.value || DEFAULT_TIME, t('remind.body')).catch(() => {});
+      }
       build();
     });
 

@@ -118,7 +118,7 @@ export async function enable(hour, body) {
 
     await post('/subscribe', {
       subscription: subscription.toJSON(),
-      hour: String(hour || '20:00').slice(0, 2),
+      time: String(hour || '20:00').slice(0, 5),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
       body: body || '',
     });

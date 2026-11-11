@@ -73,8 +73,9 @@ KV → `bayyin_subs` → **Add entry** (ya "Create entry") — teen dafa:
 `"invalid"` = `d` field nahi mila, `"missing"` = variable hi nahi laga.
 
 **E. Cron (roz bhejne ke liye)**
-10. **Settings → Triggers → Cron Triggers → Add Cron Trigger** → `0 * * * *` → **Save**.
-    (Har ghanta chalta hai; Worker khud user ke timezone ka ghanta dekh kar bhejta hai.)
+10. **Settings → Triggers → Cron Triggers → Add Cron Trigger** → `*/10 * * * *` → **Save**.
+    (Har 10 minute chalta hai; Worker user ke timezone ka poora waqt `HH:MM` dekhta hai
+    aur us din ek hi dafa bhejta hai — is liye aadhe ghante wale timezone bhi sahi rehte hain.)
 
 **F. Check**
 11. Worker ka URL kholein (`https://bayyin-push.<aapka-subdomain>.workers.dev`) —
