@@ -1201,8 +1201,6 @@ function mistakeBlock(key, problems) {
   const [surah, aya] = String(key || '')
     .split(':')
     .map(Number);
-  const verse = key ? verseOf(key) : null;
-  const offset = verse ? verse.prefixWords.length : 0;
   const block = document.createElement('div');
   block.className = 'page-mistake';
   const label = document.createElement('span');
@@ -1246,7 +1244,7 @@ function mistakeBlock(key, problems) {
       wordHear.textContent = '🔊';
       wordHear.title = t('qari.word');
       wordHear.addEventListener('click', async () => {
-        const ok = await playWord(surah, aya, r.index + offset);
+        const ok = await playWord(surah, aya, r.index);
         if (!ok) toast(t('qari.wordNo'));
       });
       li.appendChild(wordHear);
