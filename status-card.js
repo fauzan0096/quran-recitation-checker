@@ -200,3 +200,168 @@ export async function shareStatus({ title, arabic, text, reference, message }) {
     return 'failed';
   }
 }
+
+
+
+/**
+ * The whole Roz ki Naiki page as a status image — the app's own burgundy-and-gold
+ * page with its three cards, not a plain text card.
+ */
+export async function shareDailyPage({ date, hijri, items, message }) {
+  try {
+    const canvas = document.createElement('canvas');
+    canvas.width = WIDTH;
+    canvas.height = HEIGHT;
+    paintDailyPage(canvas.getContext('2d'), { date, hijri, items: items || [] });
+    const blob = await toBlob(canvas);
+    if (!blob) return 'failed';
+    const filename = 'bayyin-naiki.png';
+    const file = new File([blob], filename, { type: 'image/png' });
+
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], text: message || '' });
+      return 'shared';
+    }
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 4000);
+    return 'downloaded';
+  } catch (error) {
+    if (error && error.name === 'AbortError') return 'shared';
+    return 'failed';
+  }
+}
+
+function paintDailyPage(ctx, { date, hijri, items }) {
+  const mid = WIDTH / 2;
+
+  const bg = ctx.createLinearGradient(0, 0, 0, HEIGHT);
+  bg.addColorStop(0, '#5a1b2a');
+  bg.addColorStop(0.55, '#3c1019');
+  bg.addColorStop(1, '#240a11');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  const glow = ctx.createRadialGradient(mid, 240, 40, mid, 240, 640);
+  glow.addColorStop(0, 'rgba(240, 193, 147, 0.22)');
+  glow.addColorStop(1, 'rgba(240, 193, 147, 0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, WIDTH, HEIGHT);
+
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.direction = 'ltr';
+
+  ctx.fillStyle = '#f6d4a8';
+  ctx.font = `500 58px ${ARABIC_FONT}`;
+  ctx.fillText('بيّن', mid, 98);
+  ctx.font = `700 30px ${LATIN_FONT}`;
+  ctx.fillStyle = 'rgba(255, 246, 235, 0.85)';
+  ctx.fillText('BAYYIN', mid, 154);
+
+  if (date) {
+    ctx.font = `500 28px ${LATIN_FONT}`;
+    ctx.fillStyle = 'rgba(255, 246, 235, 0.72)';
+    ctx.fillText(String(date), mid, 204);
+  }
+  if (hijri) {
+    ctx.font = `500 36px ${ARABIC_FONT}`;
+    ctx.fillStyle = 'rgba(240, 193, 147, 0.92)';
+    ctx.fillText(String(hijri), mid, 250);
+  }
+
+  const pad = 56;
+  const gap = 22;
+  const top = 300;
+  const bottom = HEIGHT - 120;
+  const height = Math.floor((bottom - top - 44) / 3);
+  let y = top;
+
+  for (const item of items.slice(0, 3)) {
+    ctx.fillStyle = 'rgba(255, 246, 235, 0.055)';
+    roundRect(ctx, pad, y, WIDTH - pad * 2, height, 34);
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(240, 193, 147, 0.45)';
+    ctx.lineWidth = 2;
+    roundRect(ctx, pad, y, WIDTH - pad * 2, height, 34);
+    ctx.stroke();
+
+    let cy = y + 48;
+    ctx.font = `700 26px ${LATIN_FONT}`;
+    ctx.fillStyle = '#f0c193';
+    ctx.fillText(String(item.title || '').toUpperCase(), mid, cy);
+    cy += 56;
+
+    if (item.arabic) {
+      const box = fit(ctx, item.arabic, {
+        max: 54,
+        min: 28,
+        width: WIDTH - pad * 2 - 84,
+        height: height * 0.44,
+        lineHeight: 1.9,
+        font: ARABIC_FONT,
+      });
+      ctx.direction = 'rtl';
+      ctx.fillStyle = '#fdf6ea';
+      ctx.font = `500 ${box.size}px ${ARABIC_FONT}`;
+      const lineHeight = box.size * 1.9;
+      let ay = cy + 10;
+      for (const line of box.lines) {
+        ctx.fillText(line, mid, ay + lineHeight / 2);
+        ay += lineHeight;
+      }
+      cy = ay + 8;
+      ctx.direction = 'ltr';
+    }
+
+    if (item.text) {
+      const box = fit(ctx, item.text, {
+        max: 34,
+        min: 22,
+        width: WIDTH - pad * 2 - 84,
+        height: height * 0.28,
+        lineHeight: 1.5,
+        font: LATIN_FONT,
+      });
+      ctx.fillStyle = 'rgba(255, 246, 235, 0.84)';
+      ctx.font = `500 ${box.size}px ${LATIN_FONT}`;
+      const lineHeight = box.size * 1.5;
+      let ty = cy + 6;
+      for (const line of box.lines) {
+        ctx.fillText(line, mid, ty + lineHeight / 2);
+        ty += lineHeight;
+      }
+      cy = ty + 4;
+    }
+
+    if (item.reference) {
+      ctx.font = `600 24px ${LATIN_FONT}`;
+      const label = String(item.reference);
+      const chipWidth = ctx.measureText(label).width + 52;
+      const chipY = Math.min(y + height - 62, cy + 4);
+      ctx.fillStyle = 'rgba(240, 193, 147, 0.14)';
+      roundRect(ctx, mid - chipWidth / 2, chipY, chipWidth, 50, 25);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(240, 193, 147, 0.5)';
+      roundRect(ctx, mid - chipWidth / 2, chipY, chipWidth, 50, 25);
+      ctx.stroke();
+      ctx.fillStyle = '#f0c193';
+      ctx.fillText(label, mid, chipY + 26);
+    }
+
+    y += height + gap;
+  }
+
+  ctx.font = `500 28px ${ARABIC_FONT}`;
+  ctx.fillStyle = 'rgba(255, 246, 235, 0.8)';
+  ctx.fillText('بيّن', mid, HEIGHT - 72);
+  ctx.font = `400 20px ${LATIN_FONT}`;
+  ctx.fillStyle = 'rgba(240, 193, 147, 0.7)';
+  ctx.fillText('© 2026 Fauzan Gorme', mid, HEIGHT - 36);
+}

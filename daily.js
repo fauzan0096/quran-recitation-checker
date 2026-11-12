@@ -7,7 +7,7 @@ import { getLanguage, t } from './i18n.js';
 import { AYAT, AHADITH, AYAT_MEANING, SUNNAHS } from './daily-content.js';
 import { getVerses, isLoaded } from './quran.js';
 import { surahName } from './surahs.js';
-import { shareStatus } from './status-card.js';
+import { shareStatus, shareDailyPage } from './status-card.js';
 import { hijriArabic, todayHijri } from './hijri.js';
 
 const english = () => getLanguage() === 'en';
@@ -159,12 +159,54 @@ export function mountDaily(root, options = {}) {
     shareAll.className = 'btn small noor-share';
     shareAll.textContent = '↗ ' + t('daily.shareAll');
     shareAll.addEventListener('click', async () => {
-      const text = parts.join('\n\n') + '\n\n— Bayyin (بيّن)';
-      try {
-        if (navigator.share) await navigator.share({ text });
-        else await navigator.clipboard.writeText(text);
-      } catch (error) {
-        /* cancelled */
+      // The whole page as it looks in the app (burgundy, gold, the three cards),
+      // not a plain text message.
+      const label = shareAll.textContent;
+      shareAll.disabled = true;
+      shareAll.textContent = t('daily.working');
+      const tarjuma = AYAT_MEANING[`${ayah[0]}:${ayah[1]}`];
+      const result = await shareDailyPage({
+        date: now.toLocaleDateString('en-GB', {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        }),
+        hijri: hijriArabic(hijri),
+        items: [
+          {
+            title: t('daily.ayah'),
+            arabic: verse ? verse.ayaText || verse.text : '',
+            text: tarjuma ? meaning(tarjuma) : '',
+            reference,
+          },
+          {
+            title: t('daily.hadith'),
+            arabic: hadith.ar,
+            text: meaning(hadith),
+            reference: hadith.ref,
+          },
+          {
+            title: t('daily.sunnah'),
+            arabic: '',
+            text: meaning(sunnah),
+            reference: sunnah.ref,
+          },
+        ],
+        message: parts.join('\n\n') + '\n\n— Bayyin (بيّن)',
+      });
+      shareAll.disabled = false;
+      shareAll.textContent = result === 'failed' ? t('daily.failed') : label;
+      if (result === 'failed') {
+        try {
+          if (navigator.share) await navigator.share({ text: parts.join('\n\n') });
+          else await navigator.clipboard.writeText(parts.join('\n\n'));
+        } catch (error) {
+          /* cancelled */
+        }
+        window.setTimeout(() => {
+          shareAll.textContent = label;
+        }, 1800);
       }
     });
     sheet.appendChild(shareAll);

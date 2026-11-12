@@ -245,12 +245,14 @@ async function init() {
     logError(String(event.reason || 'unhandled rejection'));
   });
 
-  // Show the home screen at once. The Quran text (1.3 MB) loads in the
-  // background, so the app opens instantly instead of waiting for it.
+  // Quran is the app's first page. Roz ki Naiki opens over it on every launch,
+  // so Back simply closes it and the reader is waiting behind.
   paintHomeDate();
   const params = new URLSearchParams(window.location.search);
   const go = params.get('go');
-  setView(['dua', 'tasbeeh', 'daily', 'reader', 'qibla', 'calendar', 'prayer'].includes(go) ? go : 'home');
+  setView('reader');
+  if (go) setView(go);
+  else if (!params.get('adhan')) setView('daily');
 
   // A prayer notification opens the app with ?adhan=fajr: the person tapped it,
   // so the sound is allowed and the azaan starts straight away.
@@ -2752,6 +2754,8 @@ function setView(view, tab) {
     name = 'namaz';
     tabName = 'qibla';
   }
+  // The reader is the first screen; the old "home" is the same page.
+  if (name === 'home') name = 'reader';
 
   const sections = {
     reader: els.viewReader,
@@ -2813,14 +2817,14 @@ function setView(view, tab) {
   if (name === 'reader') loadQuranInBackground();
 
   const navKey = {
-    home: 'home',
+    home: 'reader',
     reader: 'reader',
     namaz: 'namaz',
     more: 'more',
     premium: 'more',
     dua: 'more',
     tasbeeh: 'more',
-    daily: 'home',
+    daily: '',
     khatam: 'more',
     calendar: 'more',
     badges: 'more',
@@ -3519,10 +3523,8 @@ function wireEvents() {
   go(els.moreKhatam, 'khatam');
   go(els.moreBadges, 'badges');
   go(els.homeOpenQuran, 'reader');
-  go(els.moreDua, 'dua');
   go(els.homeDailyAll, 'daily');
   go(els.moreDaily, 'daily');
-  go(els.moreTasbeeh, 'tasbeeh');
   go(els.moreCalendar, 'calendar');
   if (els.moreSettings) els.moreSettings.addEventListener('click', openSettings);
 
