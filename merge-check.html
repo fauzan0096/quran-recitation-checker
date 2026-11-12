@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>merge check</title>
+  </head>
+  <body>
+    <pre id="out">working…</pre>
+    <script>
+      const ZIP = 'quran-update.txt';
+      const TEXT = /\.(html|js|css|md|json|webmanifest|txt|xml|svg)$/i;
+      const out = document.getElementById('out');
+      const lines = (text) => text.replace(/\r/g, '').split('\n');
+
+      function u16(v, at) { return v.getUint16(at, true); }
+      function u32(v, at) { return v.getUint32(at, true); }
+
+      function parseZip(buffer) {
+        const view = new DataView(buffer);
+        const bytes = new Uint8Array(buffer);
+        let eocd = -1;
+        for (let i = bytes.length - 22; i >= 0 && i > bytes.length - 70000; i -= 1) {
+          if (u32(view, i) === 0x06054b50) { eocd = i; break; }
+        }
+        if (eocd < 0) throw new Error('no zip end');
+        const count = u16(view, eocd + 10);
+        let at = u32(view, eocd + 16);
+        const entries = [];
+        for (let n = 0; n < count; n += 1) {
+          if (u32(view, at) !== 0x02014b50) break;
+          const method = u16(view, at + 10);
+          const csize = u32(view, at + 20);
+          const nameLen = u16(view, at + 28);
+          const extraLen = u16(view, at + 30);
+          const commentLen = u16(view, at + 32);
+          const localAt = u32(view, at + 42);
+          const name = new TextDecoder().decode(bytes.subarray(at + 46, at + 46 + nameLen));
+          if (name.endsWith('/') || name.startsWith('__MACOSX')) { at += 46 + nameLen + extraLen + commentLen; continue; }
+          entries.push({ name, method, csize, localAt });
+          at += 46 + nameLen + extraLen + commentLen;
+        }
+        return { view, bytes, entries };
+      }
+
+      async function entryText(zip, entry) {
+        const { view, bytes } = zip;
+        const at = entry.localAt;
+        const nameLen = u16(view, at + 26);
+        const extraLen = u16(view, at + 28);
+        const start = at + 30 + nameLen + extraLen;
+        const raw = bytes.subarray(start, start + entry.csize);
+        if (entry.method === 0) return new TextDecoder().decode(raw);
+        const stream = new DecompressionStream('deflate-raw');
+        const buffer = await new Response(new Blob([raw]).stream().pipeThrough(stream)).arrayBuffer();
+        return new TextDecoder().decode(new Uint8Array(buffer));
+      }
+
+      function changeSets(oldText, newText) {
+        const a = lines(oldText).map((l) => l.trim()).filter(Boolean);
+        const b = lines(newText).map((l) => l.trim()).filter(Boolean);
+        const aSet = new Set(a);
+        const bSet = new Set(b);
+        const removed = a.filter((l) => !bSet.has(l));
+        const added = b.filter((l) => !aSet.has(l));
+        return { removed, added };
+      }
+
+      async function run() {
+        const report = [];
+        const keep = new Map();
+        const response = await fetch(ZIP, { cache: 'no-store' });
+        if (!response.ok) throw new Error('zip ' + response.status);
+        const zip = parseZip(await response.arrayBuffer());
+        const files = zip.entries.filter((e) => TEXT.test(e.name));
+
+        for (const entry of files) {
+          let fresh;
+          try {
+            fresh = await entryText(zip, entry);
+          } catch (error) {
+            report.push({ name: entry.name, status: 'UNREADABLE ' + error.message });
+            continue;
+          }
+          const flat = entry.name.replace(/^[^/]+\//, '');
+          keep.set(flat, fresh);
+          report.push({ name: flat, size: fresh.length });
+        }
+
+        window.MERGE = report;
+        document.title = report.length + ' files';
+        out.textContent = '';
+        out.style.display = 'none';
+
+        const wrap = document.createElement('div');
+        wrap.style.font = '13px system-ui, sans-serif';
+        wrap.innerHTML = '<h2>' + report.length + ' files in the update — tap one to save it</h2>';
+
+        for (const item of report) {
+          const link = document.createElement('a');
+          link.href = URL.createObjectURL(new Blob([keep.get(item.name)], { type: 'text/plain' }));
+          link.download = item.name.split('/').pop();
+          link.textContent = item.name + '  (' + item.size + ' bytes)';
+          link.style.display = 'block';
+          link.style.padding = '10px 4px';
+          link.style.borderBottom = '1px solid #ddd';
+          link.style.color = '#4a1622';
+          link.style.fontWeight = '600';
+          wrap.appendChild(link);
+        }
+        document.body.appendChild(wrap);
+      }
+
+      run().catch((error) => {
+        out.textContent = 'failed: ' + error.message;
+        document.title = 'failed';
+      });
+    </script>
+  </body>
+</html>
