@@ -39,6 +39,31 @@ export function download() {
   return { ok: true, count: data.count };
 }
 
+/**
+ * Send the same backup through the phone's share sheet (WhatsApp, Drive, AirDrop
+ * …), so moving to a new phone does not depend on finding the Downloads folder.
+ */
+export async function share() {
+  const data = collect();
+  if (!data.ok) return data;
+  const name = `bayyin-backup-${new Date().toISOString().slice(0, 10)}.json`;
+  const text = JSON.stringify(data.payload, null, 2);
+  try {
+    const file = new File([text], name, { type: 'application/json' });
+    if (navigator.canShare && navigator.canShare({ files: [file] }) && navigator.share) {
+      await navigator.share({ files: [file], title: 'Bayyin backup' });
+      return { ok: true, count: data.count };
+    }
+    if (navigator.share) {
+      await navigator.share({ title: 'Bayyin backup', text });
+      return { ok: true, count: data.count };
+    }
+  } catch (error) {
+    return { ok: false, reason: 'share' };
+  }
+  return { ok: false, reason: 'share' };
+}
+
 export async function restore(file) {
   if (!file) return { ok: false, reason: 'empty' };
   let parsed = null;

@@ -24,6 +24,7 @@ const SHELL = [
   'i18n.js',
   'strings-v2.js',
   'progress.js',
+  'accuracy.js',
   'hijri.js',
   'daily-content.js',
   'daily.js',
