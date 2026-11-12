@@ -5,11 +5,11 @@
 
 const WIDTH = 1080;
 const HEIGHT = 1920;
-// Where a viewer of the status can get the app.
-export const APP_URL = 'play.google.com/store/apps/details?id=app.bayyin';
-const PLAY_URL = `https://${APP_URL}`;
-/** "Play Store: app.bayyin" — short enough to read on a phone status. */
-const PLAY_LINE = 'Play Store: app.bayyin';
+// Where a viewer of the status can get the app (GitHub Pages until Play is live).
+export const APP_URL = 'fauzan0096.github.io/quran-recitation-checker/';
+export const PLAY_URL = `https://${APP_URL}`;
+/** Printed on the status image — short enough to read on a phone. */
+const PLAY_LINE = 'App: fauzan0096.github.io/quran-recitation-checker';
 const ARABIC_FONT = '"SF Arabic", "Geeza Pro", "Noto Naskh Arabic", "Amiri Quran", serif';
 const LATIN_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 
@@ -161,10 +161,13 @@ function paint(canvas, { title, arabic, text, reference }) {
 
   ctx.fillStyle = 'rgba(247, 241, 230, 0.85)';
   ctx.font = `500 26px ${ARABIC_FONT}`;
-  ctx.fillText('بيّن', mid - 26, HEIGHT - 78);
+  ctx.fillText('بيّن', mid - 26, HEIGHT - 108);
+  ctx.font = `600 20px ${LATIN_FONT}`;
+  ctx.fillStyle = '#8a5a28';
+  ctx.fillText(PLAY_LINE, mid, HEIGHT - 72);
   ctx.fillStyle = 'rgba(231, 201, 168, 0.8)';
   ctx.font = `400 22px ${LATIN_FONT}`;
-  ctx.fillText('·  © 2026 Fauzan Gorme', mid + 118, HEIGHT - 78);
+  ctx.fillText('·  © 2026 Fauzan Gorme', mid + 118, HEIGHT - 36);
 }
 
 function toBlob(canvas) {
@@ -187,7 +190,7 @@ export async function shareStatus({ title, arabic, text, reference, message }) {
     const file = new File([blob], filename, { type: 'image/png' });
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], text: message || '' });
+      await navigator.share({ files: [file], text: message ? `${message}\n${PLAY_URL}` : PLAY_URL });
       return 'shared';
     }
 
@@ -240,7 +243,7 @@ export async function shareDailyPage(payload) {
     const file = new File([blob], 'bayyin-naiki.png', { type: 'image/png' });
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], text: `https://${PLAY_URL}` });
+      await navigator.share({ files: [file], text: PLAY_URL });
       return 'shared';
     }
     saveBlob(blob, 'bayyin-naiki.png');

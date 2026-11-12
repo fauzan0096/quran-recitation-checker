@@ -7,7 +7,7 @@ import { getLanguage, t } from './i18n.js';
 import { AYAT, AHADITH, AYAT_MEANING, SUNNAHS } from './daily-content.js';
 import { getVerses, isLoaded } from './quran.js';
 import { surahName } from './surahs.js';
-import { shareStatus, shareDailyPage } from './status-card.js';
+import { shareStatus, shareDailyPage, PLAY_URL } from './status-card.js';
 import { hijriArabic, todayHijri } from './hijri.js';
 
 const english = () => getLanguage() === 'en';
@@ -207,7 +207,7 @@ export function mountDaily(root, options = {}) {
     appLink.textContent = '📲 ' + t('daily.appLink');
     appLink.addEventListener('click', async () => {
       const label = appLink.textContent;
-      const link = location.origin + location.pathname;
+      const link = PLAY_URL;
       try {
         if (navigator.share) {
           await navigator.share({ title: 'Bayyin (بيّن)', text: `${t('share.text')} ${link}` });

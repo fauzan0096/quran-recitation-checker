@@ -3201,11 +3201,13 @@ function showError(message) {
 
 // ------------------------------------------------------------------- share
 
+import { PLAY_URL } from './status-card.js';
+
 async function shareApp() {
   await shareOrCopy({
     title: 'Bayyin (بيّن)',
     text: t('share.text'),
-    url: location.href,
+    url: PLAY_URL,
   });
 }
 
