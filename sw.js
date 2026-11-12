@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v80';
+const CACHE = 'bayyin-v81';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -57,8 +57,8 @@ const SHELL = [
   'surahs.js',
   'tajweed.js',
   'quran-pages.js',
-  'madani-layout.js',
   'indopak.js',
+  'madani-layout.js',
   'install.js',
   'manifest.webmanifest',
   'widgets/noor-template.json',
@@ -161,25 +161,29 @@ self.addEventListener('fetch', (event) => {
       // One entry per path: "?go=dua" and "?demo=1" must not make copies.
       const cacheKey = new Request(`${url.origin}${url.pathname}`);
 
-      // Code (html / js / css / manifest) always asks the network first: a stale
-      // app.js is a broken app, and it was exactly that which kept an old build
-      // on the phone. The cache is the fallback, so offline still works.
+      // Code: serve from the cache at once (that is what makes the app open
+      // fast and work offline) and refresh it quietly in the background. A new
+      // deploy still reaches the phone: the page itself is network-first, and a
+      // new worker reloads it (see install.js / watchForUpdate).
       if (!IMMUTABLE.test(url.pathname)) {
-        try {
-          const fresh = await fetch(request);
-          if (fresh && fresh.ok && fresh.type === 'basic') {
-            cache.put(cacheKey, fresh.clone()).catch(() => {});
-          }
-          return fresh;
-        } catch (error) {
-          const hit = await cache.match(cacheKey);
-          if (hit) return hit;
-          if (request.mode === 'navigate') {
-            const shell = await cache.match('index.html');
-            if (shell) return shell;
-          }
-          return Response.error();
+        const hit2 = await cache.match(cacheKey);
+        const refresh = fetch(request)
+          .then((fresh) => {
+            if (fresh && fresh.ok && fresh.type === 'basic') {
+              cache.put(cacheKey, fresh.clone()).catch(() => {});
+            }
+            return fresh;
+          })
+          .catch(() => null);
+
+        if (hit2) {
+          event.waitUntil(refresh);
+          return hit2;
         }
+
+        const fresh = await refresh;
+        if (fresh) return fresh;
+        return Response.error();
       }
 
       // Big, never-changing files (Quran text, pages, images, font): cache only.

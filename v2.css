@@ -257,9 +257,7 @@ body[data-theme='dark'] .more-mark {
   display: flex;
   justify-content: center;
   padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
-  background: color-mix(in srgb, var(--card) 94%, transparent);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
+  background: var(--card);
   border-top: 1px solid var(--line);
   box-shadow: 0 -8px 24px rgba(74, 22, 34, 0.1);
 }

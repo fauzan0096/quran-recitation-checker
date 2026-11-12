@@ -1600,24 +1600,26 @@ function fitMadaniLines(text) {
   }
 
   text.classList.add('is-measuring');
+  const range = document.createRange();
   const widest = () => {
     let max = 0;
     for (const line of lines) {
-      const range = document.createRange();
       range.selectNodeContents(line);
       max = Math.max(max, range.getBoundingClientRect().width);
     }
     return max;
   };
 
+  // Two measurements instead of up to nine: the width of a line is linear in
+  // the font size, so one scale gets very close and one more corrects it.
   text.style.fontSize = '40px';
   let natural = widest() || 1;
   let size = (40 * (width - 2)) / natural;
-  for (let guard = 0; guard < 8; guard += 1) {
-    text.style.fontSize = `${size}px`;
-    natural = widest();
-    if (natural <= width - 1) break;
-    size *= 0.97;
+  text.style.fontSize = `${Math.floor(size * 10) / 10}px`;
+  if (widest() > width - 1) {
+    natural = widest() || 1;
+    size *= (width - 2) / natural;
+    text.style.fontSize = `${Math.floor(size * 10) / 10}px`;
   }
   // Never taller than its row: the harakat need about 1.9 lines of height.
   const rowCap = room / Math.max(1, text.children.length) / 1.9;
