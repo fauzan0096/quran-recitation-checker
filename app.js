@@ -280,7 +280,9 @@ async function init() {
     navigator.serviceWorker.addEventListener('message', (event) => {
       const data = event.data || {};
       if (data.type !== 'ADHAN') return;
-      setView('namaz');
+      // When the app is open (even in the background) the push itself starts
+      // the azaan — no tap. The screen is only switched when it is visible.
+      if (!document.hidden) setView('namaz');
       playAdhan().then((ok) => {
         if (!ok) toast(t('adhan.failed'));
       });

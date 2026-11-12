@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v71';
+const CACHE = 'bayyin-v72';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -262,7 +262,24 @@ self.addEventListener('push', (event) => {
     data: { url: data.url || './?go=daily', adhan: data.adhan || '' },
   };
   if (Array.isArray(data.vibrate) && data.vibrate.length) options.vibrate = data.vibrate;
-  event.waitUntil(self.registration.showNotification(title, options));
+  event.waitUntil(
+    (async () => {
+      await self.registration.showNotification(title, options);
+      // A prayer push also asks every open page to play the azaan at once, so
+      // nothing has to be tapped. A page that is merely in the background can
+      // still play audio; only a fully closed app cannot (a web app has no
+      // way to start sound on its own then — the notification is the way in).
+      if (!data.adhan) return;
+      try {
+        const list = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+        for (const client of list) {
+          if (client.postMessage) client.postMessage({ type: 'ADHAN', name: data.adhan });
+        }
+      } catch (error) {
+        /* no open window */
+      }
+    })()
+  );
 });
 
 self.addEventListener('pushsubscriptionchange', (event) => {

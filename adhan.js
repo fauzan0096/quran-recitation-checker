@@ -343,6 +343,19 @@ export async function play() {
     el.muted = false;
     el.volume = 1;
 
+    // Make it a real media session, so the phone keeps the azaan going when the
+    // screen locks or the app is in the background.
+    try {
+      if ('mediaSession' in navigator && typeof MediaMetadata !== 'undefined') {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: 'Azaan',
+          artist: 'Bayyin (بيّن)',
+        });
+      }
+    } catch (error) {
+      /* not supported */
+    }
+
     try {
       await el.play();
       return true;
