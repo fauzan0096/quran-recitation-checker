@@ -16,24 +16,59 @@ nahi ja sakta**.
 
 ## 1. Dashboard → "Set up your app" (neeche se upar)
 
-### 1.1 App access
-- **All functionality is available without special access** — chunein (app me koi login nahi).
+### 1.1 App access (sign-in details)
+
+Screen poochhta hai: *"Is all or some functionality restricted?"*
+
+- **All functionality is available without special access** ← yahi chunein.
+- App me koi login, account, password ya invite code nahi hai — sab kuch pehli screen se
+  khul jata hai.
+- Is option ke saath **instructions ka box nahi aata**; seedha **Save** karein.
+- Agar Play phir bhi instructions maange (kuch consoles me aata hai), likh dein:
+  `No login or account is needed. Every feature opens from the home screen.`
 
 ### 1.2 Ads
-- **No, my app does not contain ads.**
 
-### 1.3 Content rating
-- Category: **Reference, News or Educational** (ya "Utility, Productivity, Communication,
-  or Other").
-- Har sawal ka jawab **No**, siwaye:
-  - *"Does the app allow users to purchase digital goods?"* → **Yes** (subscription hai).
-  - *"Does the app share the user's location?"* → **No** (location sirf phone par namaz ke
-    auqaat/qibla ke liye, kahin bhejti nahi).
-- Aakhir me rating aa jayegi (usually **Everyone / 3+**), usay **Save** karein.
+- *"Does your app contain ads?"* → **No**.
+- App me koi ad SDK nahi hai, koi banner/interstitial nahi, koi ad network nahi.
+- **Save**.
+
+### 1.3 Content rating (IARC questionnaire)
+
+1. **Start questionnaire** → apna email → **Category: Reference, News or Educational**
+   (Quran app ke liye sab se theek).
+2. Phir jo sawal aayein, un ke jawab:
+
+| Sawal (aisa hi aata hai) | Jawab |
+| --- | --- |
+| Violence (realistic / fantasy / cartoon) | **No** |
+| Blood, gore, injury | **No** |
+| Sexual content, nudity | **No** |
+| Profanity / crude humour | **No** |
+| Drugs, alcohol, tobacco | **No** |
+| Gambling (real or simulated) | **No** |
+| Horror / fear / disturbing themes | **No** |
+| Users can interact or share content with others | **No** |
+| Users can share their personal information | **No** |
+| App shares the user's location | **No** (location sirf phone par namaz/qibla ke liye) |
+| **In-app purchases / digital goods** | **Yes** (subscription hai) |
+| Contains ads | **No** |
+| App accesses the internet | **Yes** (sirf downloads: model, mushaf safhe, qari audio) |
+| Miscellaneous (camera, contacts, etc.) | **No** |
+
+3. Submit karein — rating aayegi (usually **Everyone / 3+ / PEGI 3**). **Save**.
+
+> Note: "digital purchases = Yes" ka matlab yeh nahi ke app me ads hain — Play sirf yeh
+> jaanna chahta hai ke paise liye jate hain ya nahi.
 
 ### 1.4 Target audience and content
-- Age: **13+** (religious content, no ads, no user chat).
+
+- **Age groups** → **13-15, 16-17, 18 and over** tick karein (18+ bhi chalega, magar 13+ se
+  app zyada logon tak pahunchti hai).
 - *"Does your app appeal to children?"* → **No**.
+- Agli screen par jo confirmation aaye ("Your app will not be available to children") →
+  **Next / Save**.
+- Isi section me kabhi *"Designed for families"* ka option aaye → **No**.
 
 ### 1.5 Data safety (line by line)
 
