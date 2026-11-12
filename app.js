@@ -99,6 +99,7 @@ import {
   activate as activatePlan,
   canCheck,
   cancel as cancelPlan,
+  isPlayBuild,
   isPremium,
   premiumState,
   recordCheck,
@@ -229,6 +230,13 @@ const moreViews = {
 async function init() {
   cacheElements();
   initLanguage();
+
+  // A Play build has no in-app trial any more (there the trial is Play's own
+  // free-trial offer), so the comparison chart must not promise one.
+  if (isPlayBuild()) {
+    const trialNote = document.getElementById('chart-trial');
+    if (trialNote) trialNote.hidden = true;
+  }
   fillLanguages();
   fillSurahs();
   fillModels();
@@ -298,7 +306,8 @@ async function init() {
   loadQuranInBackground();
   startReminderLoop();
   startDailyReminder();
-  handleLaunch();  autoLoadModel();
+  handleLaunch();
+  autoLoadModel();
   syncSubscription();
   watchForUpdate();
 }
@@ -3139,6 +3148,14 @@ function renderPremium() {
     hint.className = 'hint';
     hint.textContent = t('premium.buyHint');
     root.appendChild(hint);
+
+    // Play asks that the renewal terms are on screen before anyone subscribes.
+    if (billingAvailable()) {
+      const terms = document.createElement('p');
+      terms.className = 'hint';
+      terms.textContent = t('premium.renewNote');
+      root.appendChild(terms);
+    }
 
     if (billingAvailable()) {
       const restore = document.createElement('button');

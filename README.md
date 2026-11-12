@@ -382,8 +382,10 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
 - Faster service worker (cache-first for heavy files). Amiri Quran font bundled (OFL, see OFL-AmiriQuran.txt).
 - Quran ka text poore Amiri Quran (`amiri-quran.ttf`) me: joined letters sahi, "hide text" option hata diya, aur motai slider bhi hata diya (synthetic bold Arabic ki joining tod deta tha).
 - Old Fahm-ul-Quran files (dua.js, tools.js, sounds.js ...) deleted - they were never loaded.
-- Premium: Hifz plan + be-paana checks paid, 3 din trial, roz 3 free checks, mulk ke
-  hisaab se price (neeche "Premium (subscription)" dekhein).
+- Premium: Hifz plan + be-paana checks paid, 3 din trial, roz 3 free checks, aur
+  **har mulk ki apni currency** me price (`premium.js` ka country → currency table;
+  dollar sirf un mulkon me jahan dollar hi chalta hai). Play build par trial band —
+  trial wahan Play ke free-trial offer se aata hai.
 - Settings me "Free ya Premium" ka chart (kaun si cheez free, kaun si paid) aur
   Premium me **Meri report** (`premium-tools.js`): murajaa ki list, sab se zyada
   ghalat hone wale lafz, aur roz ka tareekh. Engine self-test ka card hata diya gaya.

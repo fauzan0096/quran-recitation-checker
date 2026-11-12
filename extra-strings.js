@@ -15,6 +15,8 @@ addStrings('roman', {
   'premium.restoreNone': 'Is account par koi purchase nahi mili.',
   'premium.managePlay': 'Play Store me manage karein',
   'premium.buyHint': 'Payment Play Store apne payment sheet me lega — is app me kuch save nahi hota.',
+  'premium.renewNote':
+    'Subscription apne aap renew hota hai (mahina ya saal). Kabhi bhi Play Store → Payments & subscriptions → Subscriptions se band kar sakte hain. Price Play Store khud dikhata hai.',
 
   'more.prayer': 'Namaz ke auqaat',
   'more.prayerHint': 'Fajr se Isha tak, aap ki jagah ke hisaab se',
@@ -206,6 +208,8 @@ addStrings('ur', {
   'premium.restoreNone': 'اس اکاؤنٹ پر کوئی خریداری نہیں ملی۔',
   'premium.managePlay': 'پلے اسٹور میں مینیج کریں',
   'premium.buyHint': 'ادائیگی پلے اسٹور اپنے پیمنٹ شیٹ میں لے گا — اس ایپ میں کچھ محفوظ نہیں ہوتا۔',
+  'premium.renewNote':
+    'سبسکرپشن خود بخود تجدید ہوتی ہے (ماہ یا سال)۔ کسی بھی وقت Play Store → Payments & subscriptions → Subscriptions سے بند کر سکتے ہیں۔ قیمت پلے اسٹور خود دکھاتا ہے۔',
 
   'more.prayer': 'نماز کے اوقات',
   'more.prayerHint': 'فجر سے عشاء تک، آپ کی جگہ کے حساب سے',
@@ -397,6 +401,8 @@ addStrings('en', {
   'premium.restoreNone': 'No purchase found on this account.',
   'premium.managePlay': 'Manage in Play Store',
   'premium.buyHint': 'Play Store takes the payment on its own sheet — nothing is stored in this app.',
+  'premium.renewNote':
+    'The subscription renews automatically (monthly or yearly). Cancel any time in Play Store → Payments & subscriptions → Subscriptions. Play Store shows the exact price.',
 
   'more.prayer': 'Prayer times',
   'more.prayerHint': 'Fajr to Isha, worked out for your place',

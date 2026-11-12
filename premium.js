@@ -18,11 +18,25 @@ export const PAYWALL_ON = true;
 // Chrome gives the page the Digital Goods API and an `android-app://` referrer
 // instead, which is how billing.js spots it too. The in-app trial must stay off on
 // both, because on Play the trial is Play's own free-trial offer.
+//
+// Once the app has seen itself in a Play build, that is remembered: inside a TWA a
+// later page (…/?demo=1, say) loads with an ordinary referrer, and the demo switches
+// must not come back for that reason.
+const PLAY_FLAG = 'tc.playBuild';
+
 export function isPlayBuild() {
   try {
-    if (window.BayyinBilling) return true;
-    if (typeof window.getDigitalGoodsService !== 'function') return false;
-    return /^android-app:\/\//i.test(document.referrer || '');
+    if (read(PLAY_FLAG, '0') === '1') return true;
+    let play = false;
+    if (window.BayyinBilling) play = true;
+    else if (
+      typeof window.getDigitalGoodsService === 'function' &&
+      /^android-app:\/\//i.test(document.referrer || '')
+    ) {
+      play = true;
+    }
+    if (play) write(PLAY_FLAG, '1');
+    return play;
   } catch (error) {
     return false;
   }
@@ -55,17 +69,88 @@ export const PLANS = {
   yearly: { id: 'yearly', sku: 'bayyin_pro_yearly', days: 365 },
 };
 
-// Two price points: the ₹99 tier (India, Pakistan, Bangladesh, Nepal and Sri
-// Lanka in their own currency, about the same as ₹99) and $3.33 everywhere else.
-// The amounts below are the ₹99 (and ₹799) tier written in local currency; Play
-// itself shows the exact price on its own payment sheet.
-const PRICES = {
-  IN: { currency: 'INR', locale: 'en-IN', monthly: 99, yearly: 799 },
-  PK: { currency: 'PKR', locale: 'en-PK', monthly: 330, yearly: 2640 },
-  BD: { currency: 'BDT', locale: 'en-BD', monthly: 140, yearly: 1120 },
-  NP: { currency: 'NPR', locale: 'en-NP', monthly: 160, yearly: 1280 },
-  LK: { currency: 'LKR', locale: 'en-LK', monthly: 340, yearly: 2720 },
-  US: { currency: 'USD', locale: 'en-US', monthly: 3.33, yearly: 29.99 },
+// Two price points. The South Asian row is the ₹99 tier, set by hand in Play
+// Console. Everywhere else the $3.33 / $29.99 tier is converted into the money of
+// the country the phone is in, so nobody is shown dollars in a country that does
+// not use them. Play's own payment sheet always shows the exact price it charges.
+const SOUTH_ASIA = {
+  IN: { currency: 'INR', monthly: 99, yearly: 799 },
+  PK: { currency: 'PKR', monthly: 330, yearly: 2640 },
+  BD: { currency: 'BDT', monthly: 140, yearly: 1120 },
+  NP: { currency: 'NPR', monthly: 160, yearly: 1280 },
+  LK: { currency: 'LKR', monthly: 340, yearly: 2720 },
+};
+
+const BASE = { currency: 'USD', monthly: 3.33, yearly: 29.99 };
+
+// Country → currency (ISO 4217), so the paywall speaks the money of the place.
+const COUNTRY_CURRENCY = {
+  AE: 'AED', AF: 'AFN', AG: 'XCD', AI: 'XCD', AL: 'ALL', AM: 'AMD', AO: 'AOA', AR: 'ARS',
+  AS: 'USD', AT: 'EUR', AU: 'AUD', AW: 'AWG', AZ: 'AZN',
+  BA: 'BAM', BB: 'BBD', BD: 'BDT', BE: 'EUR', BF: 'XOF', BG: 'BGN', BH: 'BHD', BI: 'BIF',
+  BJ: 'XOF', BM: 'BMD', BN: 'BND', BO: 'BOB', BQ: 'USD', BR: 'BRL', BS: 'BSD', BT: 'BTN',
+  BW: 'BWP', BY: 'BYN', BZ: 'BZD',
+  CA: 'CAD', CC: 'AUD', CD: 'CDF', CF: 'XAF', CG: 'XAF', CH: 'CHF', CI: 'XOF', CK: 'NZD',
+  CL: 'CLP', CM: 'XAF', CN: 'CNY', CO: 'COP', CR: 'CRC', CU: 'CUP', CV: 'CVE', CW: 'ANG',
+  CX: 'AUD', CY: 'EUR', CZ: 'CZK',
+  DE: 'EUR', DJ: 'DJF', DK: 'DKK', DM: 'XCD', DO: 'DOP', DZ: 'DZD',
+  EC: 'USD', EE: 'EUR', EG: 'EGP', ER: 'ERN', ES: 'EUR', ET: 'ETB',
+  FI: 'EUR', FJ: 'FJD', FK: 'FKP', FM: 'USD', FO: 'DKK', FR: 'EUR',
+  GA: 'XAF', GB: 'GBP', GD: 'XCD', GE: 'GEL', GG: 'GBP', GH: 'GHS', GI: 'GBP', GL: 'DKK',
+  GM: 'GMD', GN: 'GNF', GQ: 'XAF', GR: 'EUR', GT: 'GTQ', GU: 'USD', GW: 'XOF', GY: 'GYD',
+  HK: 'HKD', HN: 'HNL', HR: 'EUR', HT: 'HTG', HU: 'HUF',
+  ID: 'IDR', IE: 'EUR', IL: 'ILS', IM: 'GBP', IN: 'INR', IQ: 'IQD', IR: 'IRR', IS: 'ISK',
+  IT: 'EUR',
+  JE: 'GBP', JM: 'JMD', JO: 'JOD', JP: 'JPY',
+  KE: 'KES', KG: 'KGS', KH: 'KHR', KI: 'AUD', KM: 'KMF', KN: 'XCD', KP: 'KPW', KR: 'KRW',
+  KW: 'KWD', KY: 'KYD', KZ: 'KZT',
+  LA: 'LAK', LB: 'LBP', LC: 'XCD', LI: 'CHF', LK: 'LKR', LR: 'LRD', LS: 'LSL', LT: 'EUR',
+  LU: 'EUR', LV: 'EUR', LY: 'LYD',
+  MA: 'MAD', MC: 'EUR', MD: 'MDL', ME: 'EUR', MG: 'MGA', MH: 'USD', MK: 'MKD', ML: 'XOF',
+  MM: 'MMK', MN: 'MNT', MO: 'MOP', MP: 'USD', MR: 'MRU', MS: 'XCD', MT: 'EUR', MU: 'MUR',
+  MV: 'MVR', MW: 'MWK', MX: 'MXN', MY: 'MYR', MZ: 'MZN',
+  NA: 'NAD', NC: 'XPF', NE: 'XOF', NF: 'AUD', NG: 'NGN', NI: 'NIO', NL: 'EUR', NO: 'NOK',
+  NP: 'NPR', NR: 'AUD', NU: 'NZD', NZ: 'NZD',
+  OM: 'OMR',
+  PA: 'PAB', PE: 'PEN', PF: 'XPF', PG: 'PGK', PH: 'PHP', PK: 'PKR', PL: 'PLN', PN: 'NZD',
+  PR: 'USD', PS: 'ILS', PT: 'EUR', PW: 'USD', PY: 'PYG',
+  QA: 'QAR',
+  RO: 'RON', RS: 'RSD', RU: 'RUB', RW: 'RWF',
+  SA: 'SAR', SB: 'SBD', SD: 'SDG', SE: 'SEK', SG: 'SGD', SH: 'SHP', SI: 'EUR', SK: 'EUR',
+  SL: 'SLE', SM: 'EUR', SN: 'XOF', SO: 'SOS', SR: 'SRD', SS: 'SSP', ST: 'STN', SV: 'USD',
+  SY: 'SYP', SZ: 'SZL',
+  TC: 'USD', TD: 'XAF', TG: 'XOF', TH: 'THB', TJ: 'TJS', TK: 'NZD', TL: 'USD', TM: 'TMT',
+  TN: 'TND', TO: 'TOP', TR: 'TRY', TT: 'TTD', TV: 'AUD', TW: 'TWD', TZ: 'TZS',
+  UA: 'UAH', UG: 'UGX', US: 'USD', UY: 'UYU', UZ: 'UZS',
+  VA: 'EUR', VC: 'XCD', VE: 'VES', VG: 'USD', VI: 'USD', VN: 'VND', VU: 'VUV',
+  WF: 'XPF', WS: 'WST',
+  XK: 'EUR',
+  YE: 'YER',
+  ZA: 'ZAR', ZM: 'ZMW', ZW: 'USD',
+};
+
+// About how many units one US dollar buys — only used to write the amount in the
+// local money. Rounded on purpose: the real price is the one Play charges.
+const RATES = {
+  AED: 3.67, AFN: 70, ALL: 92, AMD: 390, ANG: 1.79, AOA: 900, ARS: 950, AUD: 1.52,
+  AWG: 1.79, AZN: 1.7, BAM: 1.8, BBD: 2, BDT: 120, BGN: 1.8, BHD: 0.376, BIF: 2900,
+  BMD: 1, BND: 1.34, BOB: 6.9, BRL: 5.5, BSD: 1, BTN: 84, BWP: 13.6, BYN: 3.3, BZD: 2,
+  CAD: 1.37, CDF: 2850, CHF: 0.88, CLP: 950, CNY: 7.2, COP: 4100, CRC: 520, CUP: 24,
+  CVE: 101, CZK: 23, DJF: 178, DKK: 6.8, DOP: 60, DZD: 134, EGP: 48, ERN: 15, ETB: 125,
+  EUR: 0.92, FJD: 2.25, FKP: 0.79, GBP: 0.79, GEL: 2.7, GHS: 15, GMD: 70, GNF: 8600,
+  GTQ: 7.7, GYD: 209, HKD: 7.8, HNL: 25, HTG: 132, HUF: 360, IDR: 15800, ILS: 3.7,
+  INR: 88, IQD: 1310, IRR: 42000, ISK: 138, JMD: 157, JOD: 0.709, JPY: 150, KES: 130,
+  KGS: 86, KHR: 4100, KMF: 450, KPW: 900, KRW: 1340, KWD: 0.307, KYD: 0.83, KZT: 480,
+  LAK: 21500, LBP: 89500, LKR: 340, LRD: 195, LSL: 18, LYD: 4.8, MAD: 10, MDL: 18,
+  MGA: 4600, MKD: 57, MMK: 2100, MNT: 3400, MOP: 8, MRU: 40, MUR: 46, MVR: 15.4,
+  MWK: 1750, MXN: 18, MYR: 4.7, MZN: 64, NAD: 18, NGN: 1600, NIO: 37, NOK: 10.7,
+  NPR: 160, NZD: 1.65, OMR: 0.385, PAB: 1, PEN: 3.8, PGK: 3.9, PHP: 57, PKR: 330,
+  PLN: 4, PYG: 7500, QAR: 3.64, RON: 4.6, RSD: 108, RUB: 95, RWF: 1350, SAR: 3.75,
+  SBD: 8.4, SDG: 600, SEK: 10.5, SGD: 1.34, SHP: 0.79, SLE: 22, SOS: 570, SRD: 35,
+  SSP: 1300, STN: 22.5, SYP: 13000, SZL: 18, THB: 36, TJS: 10.6, TMT: 3.5, TND: 3.1,
+  TOP: 2.35, TRY: 34, TTD: 6.8, TWD: 32, TZS: 2700, UAH: 41, UGX: 3700, USD: 1,
+  UYU: 40, UZS: 12700, VES: 40, VND: 25000, VUV: 120, WST: 2.7, XAF: 605, XCD: 2.7,
+  XOF: 605, XPF: 110, YER: 250, ZAR: 18, ZMW: 27,
 };
 
 function read(key, fallback) {
@@ -92,63 +177,170 @@ function todayKey() {
   return `${d.getFullYear()}-${month}-${day}`;
 }
 
-// Time zone first: a phone set to "English (US)" but used in India should still
-// see rupees, and the time zone follows where the phone actually is.
+// The language the phone reports is the best clue for the country: Android gives
+// "en-IN", "ur-PK", "ar-SA" and so on. The time zone is only the fallback, for a
+// phone whose language carries no country at all (a plain "en").
 const ZONES = [
   [/Calcutta|Kolkata/i, 'IN'],
   [/Karachi/i, 'PK'],
   [/Dhaka/i, 'BD'],
   [/Kathmandu/i, 'NP'],
   [/Colombo/i, 'LK'],
+  [/Riyadh/i, 'SA'],
+  [/Dubai|Muscat/i, 'AE'],
+  [/Qatar/i, 'QA'],
+  [/Kuwait/i, 'KW'],
+  [/Bahrain/i, 'BH'],
+  [/Istanbul/i, 'TR'],
+  [/Jakarta|Pontianak|Makassar|Jayapura/i, 'ID'],
+  [/Kuala_Lumpur|Kuching/i, 'MY'],
+  [/Singapore/i, 'SG'],
+  [/Bangkok/i, 'TH'],
+  [/Manila/i, 'PH'],
+  [/Ho_Chi_Minh|Saigon/i, 'VN'],
+  [/Shanghai|Chongqing|Urumqi|Harbin/i, 'CN'],
+  [/Hong_Kong/i, 'HK'],
+  [/Taipei/i, 'TW'],
+  [/Tokyo/i, 'JP'],
+  [/Seoul/i, 'KR'],
+  [/Sydney|Melbourne|Brisbane|Perth|Adelaide|Hobart|Darwin/i, 'AU'],
+  [/Auckland/i, 'NZ'],
+  [/Toronto|Vancouver|Edmonton|Winnipeg|Halifax|Regina|St_Johns/i, 'CA'],
+  [/London|Belfast/i, 'GB'],
+  [/Dublin/i, 'IE'],
+  [/Paris/i, 'FR'],
+  [/Berlin/i, 'DE'],
+  [/Madrid/i, 'ES'],
+  [/Rome/i, 'IT'],
+  [/Amsterdam/i, 'NL'],
+  [/Brussels/i, 'BE'],
+  [/Zurich/i, 'CH'],
+  [/Vienna/i, 'AT'],
+  [/Stockholm/i, 'SE'],
+  [/Oslo/i, 'NO'],
+  [/Copenhagen/i, 'DK'],
+  [/Helsinki/i, 'FI'],
+  [/Warsaw/i, 'PL'],
+  [/Prague/i, 'CZ'],
+  [/Moscow/i, 'RU'],
+  [/Kyiv|Kiev/i, 'UA'],
+  [/Cairo/i, 'EG'],
+  [/Lagos/i, 'NG'],
+  [/Nairobi/i, 'KE'],
+  [/Johannesburg|Cape_Town/i, 'ZA'],
+  [/Casablanca/i, 'MA'],
+  [/Tunis/i, 'TN'],
+  [/Algiers/i, 'DZ'],
+  [/Baghdad/i, 'IQ'],
+  [/Tehran/i, 'IR'],
+  [/Kabul/i, 'AF'],
+  [/Tashkent/i, 'UZ'],
+  [/Almaty|Astana/i, 'KZ'],
+  [/Baku/i, 'AZ'],
+  [/Bishkek/i, 'KG'],
+  [/Dushanbe/i, 'TJ'],
+  [/Ashgabat/i, 'TM'],
+  [/Sao_Paulo|Rio_Branco/i, 'BR'],
+  [/Buenos_Aires/i, 'AR'],
+  [/Mexico_City|Monterrey|Cancun|Tijuana/i, 'MX'],
+  [/Bogota/i, 'CO'],
+  [/Lima/i, 'PE'],
+  [/Santiago/i, 'CL'],
+  [/Caracas/i, 'VE'],
 ];
 
-/** The region the app is opened in, from the phone's time zone and language. */
+/** "en-IN" / "en_IN" → "IN"; empty when the tag has no country. */
+function countryOf(tag) {
+  const text = String(tag || '');
+  if (!text) return '';
+  try {
+    const region = new Intl.Locale(text).region;
+    if (region) return region.toUpperCase();
+  } catch (error) {
+    /* older browser: use the plain pattern below */
+  }
+  const match = text.toUpperCase().match(/[-_]([A-Z]{2})\b/);
+  return match ? match[1] : '';
+}
+
+/** The region the app is opened in, from the phone's language and time zone. */
 export function region() {
+  const tags = [];
+  try {
+    if (navigator.language) tags.push(navigator.language);
+  } catch (error) {
+    /* no navigator: fall through */
+  }
+  try {
+    if (Array.isArray(navigator.languages)) tags.push(...navigator.languages);
+  } catch (error) {
+    /* ignore */
+  }
+  for (const tag of tags) {
+    const code = countryOf(tag);
+    if (code && COUNTRY_CURRENCY[code]) return code;
+  }
   try {
     const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
     for (const [pattern, code] of ZONES) {
       if (pattern.test(tz)) return code;
     }
-    const lang = navigator.language || '';
-    const match = lang.toUpperCase().match(/-([A-Z]{2})$/);
-    if (match) return match[1];
   } catch (error) {
     /* fall through to the default */
   }
   return 'US';
 }
 
-/** "India" for "IN"; empty when the country has no entry of its own. */
+/** "India" for "IN"; the code itself when the browser cannot name it. */
 export function regionName(code) {
-  if (!PRICES[code]) return '';
   try {
-    const name = new Intl.DisplayNames([PRICES[code].locale], { type: 'region' }).of(code);
+    const name = new Intl.DisplayNames([navigator.language || 'en'], { type: 'region' }).of(code);
     if (name) return name;
   } catch (error) {
     /* older browser: show the code */
   }
-  return code;
+  return code || '';
 }
 
-function money(amount, info) {
+/** A tidy number so a converted price never looks like 3,481.37. */
+function niceAmount(value) {
+  if (value >= 100000) return Math.round(value / 1000) * 1000;
+  if (value >= 10000) return Math.round(value / 500) * 500;
+  if (value >= 1000) return Math.round(value / 100) * 100;
+  if (value >= 100) return Math.round(value / 10) * 10;
+  if (value >= 10) return Math.round(value);
+  return Math.round(value * 100) / 100;
+}
+
+/** "₹99", "3.67 SAR", "¥500" — written the way the phone writes money. */
+function money(amount, currency) {
   try {
-    return new Intl.NumberFormat(info.locale, {
+    return new Intl.NumberFormat(navigator.language || undefined, {
       style: 'currency',
-      currency: info.currency,
-      minimumFractionDigits: amount % 1 === 0 ? 0 : 2,
+      currency,
+      minimumFractionDigits: 0,
       maximumFractionDigits: 2,
     }).format(amount);
   } catch (error) {
-    return `${info.currency} ${amount}`;
+    return `${currency} ${amount}`;
   }
 }
 
-/** Local price of a plan for the region, e.g. "₹99" or "$3.33". */
+/** Local price of a plan for the country the phone is in. */
 export function priceFor(planId) {
   const code = region();
-  const info = PRICES[code] || PRICES.US;
-  const amount = info[planId];
-  return { region: code, currency: info.currency, amount, label: money(amount, info) };
+  const key = planId === 'yearly' ? 'yearly' : 'monthly';
+
+  const fixed = SOUTH_ASIA[code];
+  if (fixed) {
+    const amount = fixed[key];
+    return { region: code, currency: fixed.currency, amount, label: money(amount, fixed.currency) };
+  }
+
+  const currency = COUNTRY_CURRENCY[code] || BASE.currency;
+  const rate = RATES[currency] || 1;
+  const amount = niceAmount(BASE[key] * rate);
+  return { region: code, currency, amount, label: money(amount, currency) };
 }
 
 export function allPrices() {

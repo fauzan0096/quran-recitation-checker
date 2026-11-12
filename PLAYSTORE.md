@@ -130,6 +130,10 @@ anta mein ye file khud bhi de deta hai. Na ho to:
 - Play Console → Monetize → Products → **Subscriptions** → dono product banayein.
 - **Set prices per country** (auto-convert band kar ke manual: India, Pakistan,
   Bangladesh, Nepal, Sri Lanka ke amounts upar; baqi duniya $3.33 / $29.99).
+- App apne aap **har mulk ki apni currency** me price dikhati hai (`premium.js`:
+  country → currency table). South Asia ke 5 mulk fixed ₹99 tier par hain; baqi jagah
+  $3.33 / $29.99 ko local money me badal kar dikhaya jata hai. Jo asal me katega wo
+  **Play ka payment sheet** dikhata hai.
 - Base plan par **free trial offer** banayein: **3 din**, naye subscribers ke liye.
 - Base plan ko **auto-renewing** rakhein; "Grace period" 3 din, "Account hold" on.
 
