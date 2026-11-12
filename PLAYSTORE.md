@@ -74,7 +74,7 @@ PWABuilder se jo package bana wo ek **Trusted Web Activity (TWA)** hai, aur us k
 
 - **Key sambhal kar rakhein**: `signing.keystore` aur us ke passwords kabhi git ya public
   link me na jayein. Agli AAB usi key se sign honi chahiye, warna Play update reject karta hai.
-- **Package name (final): `app.bayyin`** — Play par ek dafa upload hone ke baad badal nahi sakta.
+- **Package name (final): `bayyin.app`** — Play par ek dafa upload hone ke baad badal nahi sakta.
 - **TWA = live site**: app ka HTML/JS/CSS seedha site se aata hai, is liye naye features
   bhejne ke liye naya AAB release nahi chahiye. Sirf native/manifest/billing tab badalta hai
   jab package dobara banayein.
@@ -106,7 +106,7 @@ PWABuilder ek website hai jo AAB banati hai; ye repo ke andar se nahi banti.
 3. **Package for stores** → **Android**.
 4. Settings me:
    - **App name**: `Bayyin` (Play listing ka naam alag hota hai),
-   - **Package ID**: `app.bayyin` — **bilkul wahi**, warna Play naya app samjhega,
+   - **Package ID**: `bayyin.app` — **bilkul wahi**, warna Play naya app samjhega,
    - **Signing key**: **purana `signing.keystore` upload karein** (ya wahi passwords
      daalein). Naya key = purani app par update **reject** ho jayega,
    - **Version code**: purane se **bada** (pehli AAB 1 thi, ab `2` ya us se zyada),
@@ -123,6 +123,14 @@ PWABuilder ek website hai jo AAB banati hai; ye repo ke andar se nahi banti.
 
 ## 2. `assetlinks.json` (TWA ke liye zaroori)
 
+**Kis URL par hona chahiye:** `https://fauzan0096.github.io/.well-known/assetlinks.json`
+
+Yeh **domain root** hai — app ke folder (`/quran-recitation-checker/`) ke bahar. Chrome
+sirf wahin dhoondta hai, is liye root ke liye ek alag repo chahiye:
+**`fauzan0096.github.io`**. Uski dono files is repo me `user-site/` folder me taiyar hain
+(`user-site/README.md` me poore steps) — bas unhe us naye repo me daal dein aur Pages on
+kar dein. Is repo wali `.well-known/assetlinks.json` sirf record ke liye hai.
+
 `https://<aapki-site>/.well-known/assetlinks.json`:
 
 ```json
@@ -131,7 +139,7 @@ PWABuilder ek website hai jo AAB banati hai; ye repo ke andar se nahi banti.
     "relation": ["delegate_permission/common.handle_all_urls"],
     "target": {
       "namespace": "android_app",
-      "package_name": "app.bayyin",
+      "package_name": "bayyin.app",
       "sha256_cert_fingerprints": ["AA:BB:...:ZZ"]
     }
   }
@@ -280,7 +288,7 @@ Play se aane wale token ko yahan verify karein:
 
 ## Mujhe kya chahiye (bas ye 3 jawab)
 
-1. **Package name** — fix ho gaya: `app.bayyin`
+1. **Package name** — fix ho gaya: `bayyin.app`
 2. **SHA-256 fingerprint** — Play Console → App integrity se.
 3. **"Key" ka matlab** — signing keystore hai ya Developer API service-account JSON?
 

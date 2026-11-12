@@ -7,11 +7,10 @@ Jo text chahiye wo `STORE-LISTING.md` me hai — wahan se copy-paste karein.
 
 ## 0. Sab se pehle: package name
 
-Play Console app ke naam ke neeche jo package dikhata hai wo **`app.bayyin`** hona chahiye
-(AAB isi package se banti hai, aur `.well-known/assetlinks.json` me bhi yahi likha hai).
-Agar wahan `bayyin.app` ya kuch aur dikh raha hai to upload se pehle bata dein — main
-assetlinks aur docs usi hisaab se badal dunga, aur PWABuilder me bhi wahi package daalna
-hoga. Package ek dafa upload hone ke baad **badla nahi ja sakta**.
+Play Console app ke naam ke neeche jo package dikhata hai wo **`bayyin.app`** hai (AAB isi
+package se banti hai, aur `.well-known/assetlinks.json` me bhi yahi likha hai). PWABuilder me
+package ID **bilkul `bayyin.app`** daalein — ek dafa upload hone ke baad package **badla
+nahi ja sakta**.
 
 ---
 
@@ -104,7 +103,7 @@ hoga. Package ek dafa upload hone ke baad **badla nahi ja sakta**.
 
 ## 6. Testing → Internal testing
 
-1. **Create new release** → AAB upload karein (PWABuilder se bani hui, package `app.bayyin`).
+1. **Create new release** → AAB upload karein (PWABuilder se bani hui, package `bayyin.app`).
 2. Release notes: `STORE-LISTING.md` ka "What's new".
 3. **Testers**: apna email + 2–3 dost.
 4. **Save → Review → Start rollout**.
