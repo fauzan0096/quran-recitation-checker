@@ -121,7 +121,9 @@ PWABuilder ek website hai jo AAB banati hai; ye repo ke andar se nahi banti.
 > **upload key reset** karna padta hai (aur app ka data/naya install bhi). Is liye
 > `signing.keystore` + passwords ki alag copy rakhein.
 
-## 2. `assetlinks.json` (TWA ke liye zaroori)`https://<aapki-site>/.well-known/assetlinks.json`:
+## 2. `assetlinks.json` (TWA ke liye zaroori)
+
+`https://<aapki-site>/.well-known/assetlinks.json`:
 
 ```json
 [

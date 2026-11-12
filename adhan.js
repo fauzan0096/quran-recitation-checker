@@ -33,11 +33,11 @@ const ORDER = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 export const ADHANS = {
   own: {
     name: 'Azaan',
-    // The owner's recording lives in the repo as `audio/adhan.mp3`. Nothing is
-    // borrowed from anyone else; if the file is not there yet, the app stays
-    // silent and says so instead of playing a muazzin nobody chose.
-    url: 'audio/adhan.mp3',
-    type: 'mp3',
+    // The owner's own recording, kept in the repo as `audio/adhan.m4a`. Nothing is
+    // borrowed from anyone else; if the file is ever missing, the app stays silent
+    // and says so instead of playing a muazzin nobody chose.
+    url: 'audio/adhan.m4a',
+    type: 'm4a',
     credit: '',
   },
 };
@@ -85,8 +85,9 @@ export function setId(id) {
 
 export function list() {
   const ios = /iphone|ipad|ipod/i.test(navigator.userAgent || '');
+  const iosSafe = ['mp3', 'wav', 'm4a', 'mp4'];
   return Object.entries(ADHANS)
-    .filter(([, item]) => !ios || item.type === 'mp3' || item.type === 'wav')
+    .filter(([, item]) => !ios || iosSafe.includes(item.type))
     .map(([id, item]) => ({ id, name: item.name, credit: item.credit }));
 }
 
