@@ -35,22 +35,54 @@ Urdu listing (agar add karein):
 
 ## Short description (max 80)
 
-```
-Recite, record and check your Quran tilawat on your phone. Nothing is uploaded.
-```
-
-Urdu:
+Arabic + English, ek hi listing me (75 characters — limit 80 hai):
 
 ```
-قرآن تلاوت کیوں کر ریکارڈ کریں اور اسی فون پر جانچیں — کچھ اپ لوڈ نہیں ہوتا۔
+قرآن تلاوت کی جانچ اسی فون پر — check your Quran recitation on your phone
 ```
 
 ---
 
 ## Full description (max 4000)
 
+Ye poora text ek hi baar me paste kar dein — pehle Arabic, phir English (dono mila kar
+~3,300 characters, limit 4,000).
+
 ```
-Bayyin (بيّن) checks your Quran recitation as you read it — on your phone, without sending your voice anywhere.
+بیّن — قرآن تلاوت کی جانچ، اسی فون پر۔
+
+سنیں • جانچیں • سدھاریں
+آیت پڑھیں، «ریکارڈ» دبائیں اور اپنی آواز میں پڑھیں۔ ایپ آپ کو فون پر ہی سنتی ہے اور ہر لفظ رنگ دیتی ہے: صحیح، قریب، پکا نہیں، غلط، رہ گیا۔ آپ «✓ صحیح تھا / ✗ غلط تھا» کہہ کر اپنا فیصلہ بھی دے سکتے ہیں۔
+
+مصحف ویسا ہی جیسا چھپا ہے
+مصحف صفحہ بہ صفحہ، مدنی سطروں میں یا اندوپاک خط میں، بالکل ویسا ہی جیسا چھپا ہوا ہے۔ قرآن کا متن نہ چھوٹا ہوتا ہے، نہ بدلتا ہے، نہ آگے پیچھے ہوتا ہے۔
+
+آج کی نیکی
+ایک آیت، ایک حدیث اور ایک سنت — روز، ایک پرسکون صفحے پر۔
+
+نماز
+آپ کی جگہ کے مطابق نماز کے اوقات (فون پر حساب)، قبلہ، اور آپ کی اپنی ریکارڈنگ میں اذان — ایپ پس منظر میں ہو تو بھی۔
+
+دعائیں • تسبیح • قبلہ • اسلامی کیلنڈر
+مسنون دعائیں اردو اور رومن کے ساتھ، اپنے ہدف والی تسبیح، اور ہجری تاریخ۔
+
+کس کے لیے
+حفاظ، طلبہ اور ہر وہ شخص جو قرآن صحیح پڑھنا چاہتا ہے۔
+
+مفت
+قرآن، مصحف، دعائیں، تسبیح، قبلہ، کیلنڈر، روز کی نیکی، ختم کا پلان اور روزانہ 3 تلاوت چیکس — ہمیشہ مفت۔
+
+بیّن پریمیم
+حفظ پلان (سبق / سبقی / مراجعہ)، ہدف ٹیسٹ جس میں قاری کی آواز دہرائی جا سکتی ہے، مراجعہ کی یاد دہانی، اور «میری رپورٹ» — Google Play سے ماہانہ یا سالانہ سبسکرپشن۔ کسی بھی وقت منسوخ کریں۔
+
+رازداری
+آپ کی تلاوت، ریکارڈنگ، تسبیح اور پیش رفت آپ کے فون میں رہتی ہے۔ کوئی اکاؤنٹ نہیں، کوئی تجزیہ نہیں، کوئی اشتہار نہیں، اور کوئی آواز اپ لوڈ نہیں ہوتی۔
+
+قرآن کا متن تنزیل (Tanzil) سے ہے اور اسے بدلا نہیں جاتا؛ قاری کی آواز EveryAyah.com سے آتی ہے۔
+
+———
+
+Bayyin checks your Quran recitation as you read it — on your phone, without sending your voice anywhere.
 
 RECITE • CHECK • IMPROVE
 Read an aya, tap Record, and recite. Bayyin hears you on the device itself and colours every word: correct, close, unsure, wrong or missing. You can tell it "✓ sahi tha / ✗ galat tha" so the accuracy takes your own judgement into account.
@@ -81,8 +113,6 @@ Your recitation, recordings, tasbeeh and progress stay in your phone. There is n
 
 The Quran text is the Tanzil Uthmani text and is never altered. Reciter audio is streamed from EveryAyah.com when you ask for it.
 ```
-
-Urdu full description ke liye alag listing add karna ho to bata dein, tarjuma kar dunga.
 
 ---
 
