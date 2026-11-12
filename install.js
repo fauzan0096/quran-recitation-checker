@@ -85,8 +85,10 @@ import { t } from './i18n.js';
       }
     }
     window.setTimeout(() => {
+      // Show it early: the install card must not wait for the browser's event.
+      // If the prompt is not ready yet, the button explains the steps instead.
       if (!isStandalone() && !wasDismissed()) showCard();
-    }, 2500);
+    }, 700);
   });
 
   function wasDismissed() {
@@ -107,7 +109,6 @@ import { t } from './i18n.js';
 
   function showCard() {
     if (isStandalone() || wasDismissed()) return;
-    if (!deferredPrompt && !isIOS) return; // nothing we can offer on this browser
     if (card) return;
 
     card = document.createElement('div');

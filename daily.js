@@ -7,7 +7,7 @@ import { getLanguage, t } from './i18n.js';
 import { AYAT, AHADITH, AYAT_MEANING, SUNNAHS } from './daily-content.js';
 import { getVerses, isLoaded } from './quran.js';
 import { surahName } from './surahs.js';
-import { shareStatus, shareDailyPage } from './status-card.js';
+import { shareStatus, shareDailyPage, downloadDailyPage } from './status-card.js';
 import { hijriArabic, todayHijri } from './hijri.js';
 
 const english = () => getLanguage() === 'en';
@@ -148,68 +148,69 @@ export function mountDaily(root, options = {}) {
       })
     );
 
-    const parts = [t('home.noor')];
-    for (const box of sheet.querySelectorAll('.daily-card')) {
-      parts.push(
-        [...box.querySelectorAll('.daily-arabic,.daily-text,.daily-ref')].map((n) => n.textContent).join('\n')
-      );
-    }
+    // The whole page as it looks in the app (burgundy, gold, the three cards).
+    const tarjuma = AYAT_MEANING[`${ayah[0]}:${ayah[1]}`];
+    const statusPayload = () => ({
+      date: now.toLocaleDateString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+      hijri: hijriArabic(hijri),
+      items: [
+        {
+          title: t('daily.ayah'),
+          arabic: verse ? verse.ayaText || verse.text : '',
+          text: tarjuma ? meaning(tarjuma) : '',
+          reference,
+        },
+        {
+          title: t('daily.hadith'),
+          arabic: hadith.ar,
+          text: meaning(hadith),
+          reference: hadith.ref,
+        },
+        {
+          title: t('daily.sunnah'),
+          arabic: '',
+          text: meaning(sunnah),
+          reference: sunnah.ref,
+        },
+      ],
+    });
+
+    const withLabel = (button, task) => {
+      button.addEventListener('click', async () => {
+        const label = button.textContent;
+        button.disabled = true;
+        button.textContent = t('daily.working');
+        const result = await task();
+        button.disabled = false;
+        button.textContent =
+          result === 'failed' ? t('daily.failed') : result === 'downloaded' ? t('daily.saved') : label;
+        window.setTimeout(() => {
+          button.textContent = label;
+        }, 2200);
+      });
+    };
+
     const shareAll = document.createElement('button');
     shareAll.type = 'button';
-    shareAll.className = 'btn small noor-share';
+    shareAll.className = 'btn small';
     shareAll.textContent = '↗ ' + t('daily.shareAll');
-    shareAll.addEventListener('click', async () => {
-      // The whole page as it looks in the app (burgundy, gold, the three cards),
-      // not a plain text message.
-      const label = shareAll.textContent;
-      shareAll.disabled = true;
-      shareAll.textContent = t('daily.working');
-      const tarjuma = AYAT_MEANING[`${ayah[0]}:${ayah[1]}`];
-      const result = await shareDailyPage({
-        date: now.toLocaleDateString('en-GB', {
-          weekday: 'long',
-          day: 'numeric',
-          month: 'long',
-          year: 'numeric',
-        }),
-        hijri: hijriArabic(hijri),
-        items: [
-          {
-            title: t('daily.ayah'),
-            arabic: verse ? verse.ayaText || verse.text : '',
-            text: tarjuma ? meaning(tarjuma) : '',
-            reference,
-          },
-          {
-            title: t('daily.hadith'),
-            arabic: hadith.ar,
-            text: meaning(hadith),
-            reference: hadith.ref,
-          },
-          {
-            title: t('daily.sunnah'),
-            arabic: '',
-            text: meaning(sunnah),
-            reference: sunnah.ref,
-          },
-        ],
-        message: parts.join('\n\n') + '\n\n— Bayyin (بيّن)',
-      });
-      shareAll.disabled = false;
-      shareAll.textContent = result === 'failed' ? t('daily.failed') : label;
-      if (result === 'failed') {
-        try {
-          if (navigator.share) await navigator.share({ text: parts.join('\n\n') });
-          else await navigator.clipboard.writeText(parts.join('\n\n'));
-        } catch (error) {
-          /* cancelled */
-        }
-        window.setTimeout(() => {
-          shareAll.textContent = label;
-        }, 1800);
-      }
-    });
-    sheet.appendChild(shareAll);
+    withLabel(shareAll, () => shareDailyPage(statusPayload()));
+
+    const download = document.createElement('button');
+    download.type = 'button';
+    download.className = 'btn ghost small';
+    download.textContent = '⬇ ' + t('daily.download');
+    withLabel(download, () => downloadDailyPage(statusPayload()));
+
+    const row = document.createElement('div');
+    row.className = 'noor-share-row';
+    row.append(shareAll, download);
+    sheet.appendChild(row);
 
     // Roz bas ek sunnah — the whole 60-sunnah list is not opened here.
     if (compact) return;

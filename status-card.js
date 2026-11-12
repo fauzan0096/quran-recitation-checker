@@ -203,37 +203,56 @@ export async function shareStatus({ title, arabic, text, reference, message }) {
 
 
 
+/** Paint the whole page once, as a PNG blob. */
+async function dailyBlob({ date, hijri, items }) {
+  const canvas = document.createElement('canvas');
+  canvas.width = WIDTH;
+  canvas.height = HEIGHT;
+  paintDailyPage(canvas.getContext('2d'), { date, hijri, items: items || [] });
+  return toBlob(canvas);
+}
+
+function saveBlob(blob, filename) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  window.setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
+
 /**
- * The whole Roz ki Naiki page as a status image — the app's own burgundy-and-gold
- * page with its three cards, not a plain text card.
+ * Share the page to WhatsApp status: the PNG only, no text message attached.
+ * Returns 'shared', 'downloaded' or 'failed'.
  */
-export async function shareDailyPage({ date, hijri, items, message }) {
+export async function shareDailyPage(payload) {
   try {
-    const canvas = document.createElement('canvas');
-    canvas.width = WIDTH;
-    canvas.height = HEIGHT;
-    paintDailyPage(canvas.getContext('2d'), { date, hijri, items: items || [] });
-    const blob = await toBlob(canvas);
+    const blob = await dailyBlob(payload);
     if (!blob) return 'failed';
-    const filename = 'bayyin-naiki.png';
-    const file = new File([blob], filename, { type: 'image/png' });
+    const file = new File([blob], 'bayyin-naiki.png', { type: 'image/png' });
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file], text: message || '' });
+      await navigator.share({ files: [file] });
       return 'shared';
     }
-
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 4000);
+    saveBlob(blob, 'bayyin-naiki.png');
     return 'downloaded';
   } catch (error) {
     if (error && error.name === 'AbortError') return 'shared';
+    return 'failed';
+  }
+}
+
+/** Save the same page as a PNG file. */
+export async function downloadDailyPage(payload) {
+  try {
+    const blob = await dailyBlob(payload);
+    if (!blob) return 'failed';
+    saveBlob(blob, 'bayyin-naiki.png');
+    return 'downloaded';
+  } catch (error) {
     return 'failed';
   }
 }

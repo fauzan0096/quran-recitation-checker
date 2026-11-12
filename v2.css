@@ -2186,3 +2186,13 @@ body[data-theme='dark'] .mline-in .w.is-unsure {
   width: 23px;
   height: 23px;
 }
+
+
+
+/* Share and download side by side under the Roz ki Naiki cards. */
+.noor-share-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+}
