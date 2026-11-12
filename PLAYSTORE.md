@@ -82,6 +82,30 @@ PWABuilder se jo package bana wo ek **Trusted Web Activity (TWA)** hai, aur us k
   (Chrome, sirf Play se install ki gayi TWA me). `billing.js` me ab dono raste hain:
   `window.BayyinBilling` (agar kabhi native shell use karein) aur Digital Goods API (TWA).
 
+### 1b. Naya AAB banane ke steps (PWABuilder) — aap khud karte hain
+
+PWABuilder ek website hai jo AAB banati hai; ye repo ke andar se nahi banti.
+
+1. **https://www.pwabuilder.com** kholein.
+2. URL daalein: `https://fauzan0096.github.io/quran-recitation-checker/`
+3. **Package for stores** → **Android**.
+4. Settings me:
+   - **App name**: `Bayyin` (Play listing ka naam alag hota hai),
+   - **Package ID**: `app.bayyin` — **bilkul wahi**, warna Play naya app samjhega,
+   - **Signing key**: **purana `signing.keystore` upload karein** (ya wahi passwords
+     daalein). Naya key = purani app par update **reject** ho jayega,
+   - **Version code**: purane se **bada** (pehli AAB 1 thi, ab `2` ya us se zyada),
+   - Display: `standalone`, orientation: `portrait`.
+5. **Download** → `app-release-bundle.aab`.
+6. PWABuilder jo **SHA-256 fingerprint** dikhaye (ya `signing-key-info.txt` wala), wo
+   `.well-known/assetlinks.json` me `sha256_cert_fingerprints` me daal kar push karein —
+   warna app browser me khulegi, app jaisi nahi.
+7. Play Console → apna app → **Testing/Production** → **New release** → yahi `.aab` upload.
+
+> Purana keystore kho gaya to update mumkin nahi — Play Console → App integrity se
+> **upload key reset** karna padta hai (aur app ka data/naya install bhi). Is liye
+> `signing.keystore` + passwords ki alag copy rakhein.
+
 ## 2. `assetlinks.json` (TWA ke liye zaroori)
 
 `https://<aapki-site>/.well-known/assetlinks.json`:
@@ -116,8 +140,14 @@ anta mein ye file khud bhi de deta hai. Na ho to:
 3. **Store listing**:
    - Icon 512×512 → `icon-512.png`.
    - Feature graphic 1024×500 (banana hoga).
-   - Phone screenshots **1080×1920** (16:9). Hamare `screenshots/` 540×1080 hain —
-     Play ke liye inhe 1080×1920 par export karna behtar hai (ya naye lein).
+   - Phone screenshots **1080×1920** (9:16). Purani `screenshots/` (540×1080) puraani
+     design ki hain — naye screens lein. Phone par jo screen dikhani ho khol kar
+     screenshot lein (Power + Volume Down), phir repo ka tool kholein:
+     **`screenshots.html`** → tasveer chunein → **PNG save karein**. Wo har tasveer
+     khud 1080×1920 bana deta hai (kuch upload nahi hota, sab phone par).
+     Play ke liye ye 6 screen theek hain: (1) Quran aya list, (2) mushaf poora page,
+     (3) tilawat check ka nateeja, (4) Roz ki Naiki, (5) Namaz auqaat + azaan,
+     (6) Tasbeeh ya Qibla.
    - Short + full description.
 
 ## 4. Subscription products (yahi SKU rakhein)

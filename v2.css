@@ -1740,6 +1740,15 @@ ul.credits a { color: #8a5a28; text-decoration: underline; }
 /* ------------------------------------------- mushaf: one page, one screen */
 body[data-mode='page'] #view-reader .reader-controls { display: none; }
 
+/* A page that does not fit even at the smallest readable size is scrolled, never
+   clipped: a hidden word would be a missing word. */
+body[data-mode='page'] #view-reader .mushaf-page.is-tall .page-text,
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.is-tall .page-text {
+  max-height: 100% !important;
+  overflow-y: auto !important;
+  -webkit-overflow-scrolling: touch;
+}
+
 body[data-mode='page'] #view-reader .mushaf-page {
   height: max(300px, calc(100svh - 285px));
   overflow: hidden;
@@ -1891,6 +1900,16 @@ body[data-theme='dark'][data-mode='page'].is-mushaf-full #view-reader .mushaf-pa
 
 
 /* ------------------------------------------------- aya: colour, never moved */
+/* The aya is always Arabic and must keep mushaf order even when every word ends
+   up wrapped in its own bidi-isolated span after a check: with `plaintext` the box
+   then has no strong character to read and falls back to left-to-right, which shows
+   the aya backwards. Pin the direction here so it can never happen. */
+.aya-text {
+  direction: rtl;
+  unicode-bidi: normal;
+  text-align: right;
+}
+
 .aya-text .w,
 .page-text .w {
   border-radius: 4px;

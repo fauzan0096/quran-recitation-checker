@@ -1585,6 +1585,7 @@ function fitMushafPage(page) {
     let size = base;
     while (size + 2 <= cap && fits(size + 2)) size += 2;
     text.style.fontSize = `${size}px`;
+    markTall(page, text, false);
     return;
   }
 
@@ -1595,7 +1596,19 @@ function fitMushafPage(page) {
     if (fits(mid)) low = mid;
     else high = mid;
   }
-  text.style.fontSize = `${Math.max(12, Math.floor(low * 10) / 10)}px`;
+  const finalSize = Math.max(12, Math.floor(low * 10) / 10);
+  // Last check at the size that actually stays on screen: on a very short screen
+  // even 12px may not fit, and the page is allowed to scroll — a clipped aya is
+  // worse than a page that moves.
+  const tall = !fits(finalSize);
+  text.style.fontSize = `${finalSize}px`;
+  markTall(page, text, tall);
+}
+
+/** Never hide a word: a page taller than the screen scrolls instead of clipping. */
+function markTall(page, text, tall) {
+  text.classList.toggle('is-tall', tall);
+  if (page) page.classList.toggle('is-tall', tall);
 }
 
 /**
@@ -1622,6 +1635,7 @@ function fitMadaniLines(text) {
     remembered.size
   ) {
     text.style.fontSize = `${remembered.size}px`;
+    markTall(text.closest('.mushaf-page'), text, text.scrollHeight > text.clientHeight + 1);
     return;
   }
 
@@ -1653,6 +1667,9 @@ function fitMadaniLines(text) {
   const finalSize = Math.floor(size * 10) / 10;
   text.style.fontSize = `${finalSize}px`;
   text.classList.remove('is-measuring');
+  // 15 printed lines can still be taller than the frame on a short screen: let the
+  // page scroll rather than cut the last line off.
+  markTall(text.closest('.mushaf-page'), text, text.scrollHeight > room + 1);
   state.mushafFit = { page: state.page, mushaf: state.mushaf, width, size: finalSize };
 }
 
