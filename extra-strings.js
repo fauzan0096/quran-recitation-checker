@@ -176,6 +176,25 @@ addStrings('roman', {
   'murajaa.old': 'purani talaawat',
   'murajaa.repeat':
     'Kam score wali ayaat roz aati hain; behtar score par agli murajaa 3, 7, 14, 30 din me.',
+
+  'gift.title': 'Gift code',
+  'gift.hint': 'Jo code aap ko diya gaya ho yahan daalein — Premium usi waqt khul jayega.',
+  'gift.redeem': 'Code lagayein',
+  'gift.bad': 'Yeh code ghalat hai. Spelling dobara check karein.',
+  'gift.badFormat': 'Yeh code ki shakal theek nahi — BAYYIN-365-XXXX-XXXXXX jaisa hona chahiye.',
+  'gift.owner': 'Aap ka apna phone khul gaya — ab aap jitne chahein code bana sakte hain.',
+  'gift.ok': 'Premium khul gaya. Alhamdulillah!',
+  'gift.activeLife': 'Is phone par Premium hamesha ke liye khula hai.',
+  'gift.activeLine': 'Is phone par Premium {date} tak hai.',
+  'gift.makeTitle': 'Gift code banayein',
+  'gift.makeHint':
+    'Jitne din chahiye utna code banayein, copy karein aur kisi ko bhi bhej dein — wo usi box me daal kar Premium khol lega.',
+  'gift.copy': 'Copy karein',
+  'gift.copied': 'Code copy ho gaya.',
+  'gift.copyManual': 'Code select ho gaya — copy kar lein.',
+  'gift.month': '30 din',
+  'gift.year': '1 saal',
+  'gift.life': 'Hamesha',
 });
 
 addStrings('ur', {
@@ -348,6 +367,25 @@ addStrings('ur', {
   'murajaa.old': 'پرانی تلاوت',
   'murajaa.repeat':
     'کم اسکور والی آیات روز آتی ہیں؛ بہتر اسکور پر اگلی مراجعہ 3، 7، 14، 30 دن میں۔',
+
+  'gift.title': 'گفٹ کوڈ',
+  'gift.hint': 'جو کوڈ آپ کو دیا گیا ہو یہاں ڈالیں — پریمیم اسی وقت کھل جائے گا۔',
+  'gift.redeem': 'کوڈ لگائیں',
+  'gift.bad': 'یہ کوڈ غلط ہے۔ ہجے دوبارہ دیکھیں۔',
+  'gift.badFormat': 'کوڈ کی شکل ٹھیک نہیں — BAYYIN-365-XXXX-XXXXXX جیسی ہونی چاہیے۔',
+  'gift.owner': 'آپ کا اپنا فون کھل گیا — اب آپ جتنے چاہیں کوڈ بنا سکتے ہیں۔',
+  'gift.ok': 'پریمیم کھل گیا۔ الحمدللہ!',
+  'gift.activeLife': 'اس فون پر پریمیم ہمیشہ کے لیے کھلا ہے۔',
+  'gift.activeLine': 'اس فون پر پریمیم {date} تک ہے۔',
+  'gift.makeTitle': 'گفٹ کوڈ بنائیں',
+  'gift.makeHint':
+    'جتنے دن چاہیں اتنا کوڈ بنائیں، کاپی کریں اور کسی کو بھی بھیج دیں — وہ اسی باکس میں ڈال کر پریمیم کھول لے گا۔',
+  'gift.copy': 'کاپی کریں',
+  'gift.copied': 'کوڈ کاپی ہو گیا۔',
+  'gift.copyManual': 'کوڈ منتخب ہو گیا — کاپی کر لیں۔',
+  'gift.month': '30 دن',
+  'gift.year': '1 سال',
+  'gift.life': 'ہمیشہ',
 });
 
 addStrings('en', {
@@ -520,4 +558,23 @@ addStrings('en', {
   'murajaa.old': 'old recitation',
   'murajaa.repeat':
     'Low scores come back daily; with a better score the next revision is in 3, 7, 14, 30 days.',
+
+  'gift.title': 'Gift code',
+  'gift.hint': 'Enter a code you have been given — Premium opens at once.',
+  'gift.redeem': 'Apply code',
+  'gift.bad': 'That code is not valid. Check the spelling and try again.',
+  'gift.badFormat': 'That is not a code — it should look like BAYYIN-365-XXXX-XXXXXX.',
+  'gift.owner': 'Your own phone is unlocked — you can make codes for anyone now.',
+  'gift.ok': 'Premium is open. Alhamdulillah!',
+  'gift.activeLife': 'Premium is open on this phone for good.',
+  'gift.activeLine': 'Premium on this phone is open until {date}.',
+  'gift.makeTitle': 'Make a gift code',
+  'gift.makeHint':
+    'Pick the days, copy the code and send it to anyone — they enter it in the same box and Premium opens.',
+  'gift.copy': 'Copy',
+  'gift.copied': 'Code copied.',
+  'gift.copyManual': 'Code selected — copy it now.',
+  'gift.month': '30 days',
+  'gift.year': '1 year',
+  'gift.life': 'Lifetime',
 });

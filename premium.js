@@ -5,14 +5,35 @@
 // Everything is stored on the device (no server). When Google Play Billing is
 // connected, `activate(planId)` is the one call a verified purchase makes; a
 // store's "restore" asks Play and calls `setPremium(true)` when it finds one.
+//
+// A gift code (see gift.js) is the third way: the owner, and the people the owner
+// chooses, get Premium without a purchase.
+
+import { giftState } from './gift.js';
 
 export const PAYWALL_ON = true;
 
+// A Play build can be either a native shell that exposes `window.BayyinBilling`
+// or the Play-installed TWA (the PWABuilder package). A TWA has no native bridge:
+// Chrome gives the page the Digital Goods API and an `android-app://` referrer
+// instead, which is how billing.js spots it too. The in-app trial must stay off on
+// both, because on Play the trial is Play's own free-trial offer.
+export function isPlayBuild() {
+  try {
+    if (window.BayyinBilling) return true;
+    if (typeof window.getDigitalGoodsService !== 'function') return false;
+    return /^android-app:\/\//i.test(document.referrer || '');
+  } catch (error) {
+    return false;
+  }
+}
+
 // Demo switches ("Premium chalu karein", "Trial khatam") are for testing only.
-// They appear with ?demo=1 in the URL and never in a normal release — on Play
-// Store a purchase must come from Play Billing (see billing.js).
+// They appear with ?demo=1 in the URL, and never on a Play build: there a
+// purchase must come from Play Billing (see billing.js).
 export const DEMO_UI = (() => {
   try {
+    if (isPlayBuild()) return false;
     return new URLSearchParams(window.location.search).has('demo');
   } catch (error) {
     return false;
@@ -151,22 +172,21 @@ function store() {
   } catch (error) {
     checks = { day: todayKey(), count: 0 };
   }
+  // A gift code counts as Premium for as long as it lasts; a lifetime one (0 days)
+  // has no expiry at all, so `expires` stays 0 and the state reads it as "for good".
+  const gift = giftState();
+  const bought = read(KEY, '0') === '1';
+  const boughtUntil = Number(read(EXPIRES, 0)) || 0;
+  const giftUntil = gift.lifetime ? 0 : gift.until;
   return {
-    paid: read(KEY, '0') === '1',
-    planId: read(PLAN_KEY, '') || null,
-    expires: Number(read(EXPIRES, 0)) || 0,
+    paid: bought || gift.active,
+    bought,
+    gift,
+    planId: read(PLAN_KEY, '') || (gift.active ? 'gift' : null),
+    expires: bought ? boughtUntil : giftUntil,
     since,
     checks,
   };
-}
-
-/** A Play build sets this bridge before the page loads (see billing.js). */
-function playBuild() {
-  try {
-    return Boolean(window.BayyinBilling);
-  } catch (error) {
-    return false;
-  }
 }
 
 /** Everything the UI and the gates need. */
@@ -176,7 +196,7 @@ export function premiumState() {
   const days = Math.floor((Date.now() - data.since) / 86400000);
   // On Play, the 3-day trial is a Play "free trial" offer on the subscription.
   // The app must not hand out Premium on its own there (Play policy).
-  const trial = !active && !playBuild() && days < TRIAL_DAYS;
+  const trial = !active && !isPlayBuild() && days < TRIAL_DAYS;
   const daysLeft = Math.max(0, TRIAL_DAYS - days);
   const limit = active || trial ? Infinity : FREE_CHECKS_PER_DAY;
   const used = data.checks.count;
@@ -189,6 +209,7 @@ export function premiumState() {
     trialDaysLeft: daysLeft,
     expires: data.expires,
     planId: data.planId,
+    gift: data.gift,
     limit,
     used,
     remaining: limit === Infinity ? Infinity : Math.max(0, limit - used),

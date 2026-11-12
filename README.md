@@ -534,13 +534,26 @@ Play app me milti hai. Plan card `billing.buy()` chalata hai, "Purchase restore 
 "Play Store me manage karein" buttons khud aa jate hain, aur app **launch par `restore()`**
 khud chala kar renewal/cancel pick up karti hai (`app.js` → `syncSubscription()`).
 
-Play build me **in-app 3-din trial band** rehta hai (`premium.js` → `playBuild()`):
-trial wahan Play ke "free trial offer" se aata hai, taake Play ki digital-goods policy
-ki khilaf-warzi na ho. Browser/preview me purana 3-din trial jaisa hai.
+Play build me **in-app 3-din trial band** rehta hai (`premium.js` → `isPlayBuild()`): wo
+native bridge aur Play-installed **TWA** (Digital Goods API + `android-app://` referrer)
+dono pehchanta hai, is liye PWABuilder wale package me bhi trial nahi chalta — wahan trial
+Play ke "free trial offer" se aata hai, taake Play ki digital-goods policy ki khilaf-warzi
+na ho. Browser/preview me purana 3-din trial jaisa hai. `?demo=1` wale testing buttons
+Play build par kabhi nahi dikhte.
 
 Play policy: digital subscription sirf Play Billing se — is liye `assetlinks.json` (TWA)
 aur native shell bina release nahi ho sakta. Verify server-side (RTDN) karna behtar hai;
 client par `activate()` sirf verified jawab ke baad chalta hai.
+
+### Gift codes — `gift.js`
+
+Owner (aap) ek dafa **owner phrase** gift box me likh kar apne phone par Premium hamesha ke
+liye khol lete hain; uske baad Premium screen par **"Gift code banayein"** tool aata hai jo
+`BAYYIN-ddd-NNNN-CCCCCC` codes banata hai (`ddd` = din, `000` = hamesha). Jisko chahein wo
+code bhej dein — wo **"Gift code"** box me daal kar Premium khol leta hai. Sab kuch phone
+par check hota hai (koi server nahi), is liye yeh courtesy hai, lock nahi: JS padhne wala
+bhi khol sakta hai. Play ke liye yeh theek hai — Play sirf yeh chahta hai ke *khareedari*
+Play Billing se ho, muft dena mana nahi.
 
 **Poora step-by-step release plan: [`PLAYSTORE.md`](PLAYSTORE.md)** (Play Console account,
 wrapper, asset links, subscription products + per-country prices, billing bridge ka Kotlin

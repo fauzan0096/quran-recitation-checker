@@ -50,10 +50,20 @@ store listing text aur billing bridge ka code.
 | Privacy policy (Play ko URL chahiye) | `privacy.html` |
 | Icons 512 / maskable | `icon-512.png`, `icon-maskable-512.png` |
 | Subscription SKUs | `bayyin_pro_monthly`, `bayyin_pro_yearly` |
+| Gift codes (free Premium for chosen people) | `gift.js` |
 
 Play build par app ab khud:
-- **in-app 3-din trial band** rakhti hai (trial Play ke "free trial offer" se aata hai),
-- launch par **restore** karti hai taake renewal/cancel apne aap pata chale.
+- **in-app 3-din trial band** rakhti hai (trial Play ke "free trial offer" se aata hai).
+  `isPlayBuild()` native bridge aur Play-installed **TWA** (Digital Goods API +
+  `android-app://` referrer) dono pehchanta hai, is liye PWABuilder wale package me bhi
+  trial band rehta hai,
+- launch par **restore** karti hai taake renewal/cancel apne aap pata chale,
+- `?demo=1` wale testing buttons Play build par kabhi nahi dikhte.
+
+**Gift codes aur Play:** kisi ko muft Premium dena Play ke rules ke khilaf nahi — Play
+sirf yeh dekhta hai ke *khareedari* Play Billing se ho. Code offline check hota hai
+(`gift.js`), is liye code ko koi bhi JS padh kar bana sakta hai: yeh courtesy hai, lock
+nahi.
 
 ---
 

@@ -106,6 +106,7 @@ import {
   resetDemo,
   skipTrial,
 } from './premium.js';
+import { makeGiftCode, redeemGift } from './gift.js';
 import {
   clearAll,
   cycleMark,
@@ -2861,7 +2862,9 @@ function premiumStatusText() {
   const s = premiumState();
   if (s.phase === 'open') return t('premium.statusOpen');
   if (s.phase === 'paid') {
-    const date = s.expires ? new Date(s.expires).toLocaleDateString() : '';
+    // No date = a lifetime gift (or a demo unlock): never say "until".
+    if (!s.expires) return t('premium.statusLife');
+    const date = new Date(s.expires).toLocaleDateString();
     return t('premium.statusPaid', { date });
   }
   if (s.phase === 'trial') return t('premium.statusTrial', { days: Math.max(1, s.trialDaysLeft) });
@@ -2920,6 +2923,137 @@ function premiumLine(text) {
   body.textContent = text;
   row.append(mark, body);
   return row;
+}
+
+/**
+ * "Gift code hai?" — a code from the owner (or from anyone the owner gave one to)
+ * opens Premium on this phone. Checked on the phone, offline; see gift.js.
+ */
+function giftBox() {
+  const box = document.createElement('div');
+  box.className = 'gift-box';
+
+  const title = document.createElement('h4');
+  title.textContent = t('gift.title');
+
+  const hint = document.createElement('p');
+  hint.className = 'hint';
+  hint.textContent = t('gift.hint');
+
+  const row = document.createElement('div');
+  row.className = 'gift-row';
+
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.className = 'gift-input';
+  input.autocomplete = 'off';
+  input.spellcheck = false;
+  input.setAttribute('autocapitalize', 'characters');
+  input.placeholder = 'BAYYIN-365-XXXX-XXXXXX';
+
+  const go = document.createElement('button');
+  go.type = 'button';
+  go.className = 'btn primary small';
+  go.textContent = t('gift.redeem');
+
+  const note = document.createElement('p');
+  note.className = 'hint';
+  note.hidden = true;
+
+  const submit = () => {
+    const result = redeemGift(input.value);
+    if (!result.ok) {
+      note.hidden = false;
+      note.textContent = result.reason === 'bad' ? t('gift.bad') : t('gift.badFormat');
+      return;
+    }
+    toast(result.owner ? t('gift.owner') : t('gift.ok'));
+    renderPremium();
+    renderPremiumCard();
+    paintPremiumTabs();
+  };
+
+  go.addEventListener('click', submit);
+  input.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter') submit();
+  });
+
+  row.append(input, go);
+  box.append(title, hint, row, note);
+  return box;
+}
+
+/**
+ * The gift block for someone who already has it: the line saying what they have,
+ * and — for the owner — the tool that makes codes for other people.
+ */
+function giftInfo(gift) {
+  const box = document.createElement('div');
+  box.className = 'gift-box';
+
+  const line = document.createElement('p');
+  line.className = 'hint';
+  line.textContent = gift.lifetime
+    ? t('gift.activeLife')
+    : t('gift.activeLine', { date: new Date(gift.until).toLocaleDateString() });
+  box.appendChild(line);
+
+  if (!gift.owner) return box;
+
+  const title = document.createElement('h4');
+  title.textContent = t('gift.makeTitle');
+
+  const hint = document.createElement('p');
+  hint.className = 'hint';
+  hint.textContent = t('gift.makeHint');
+
+  const choices = document.createElement('div');
+  choices.className = 'gift-choices';
+
+  const out = document.createElement('output');
+  out.className = 'gift-code';
+  out.textContent = '—';
+
+  const copy = document.createElement('button');
+  copy.type = 'button';
+  copy.className = 'btn ghost small';
+  copy.textContent = t('gift.copy');
+  copy.disabled = true;
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(out.textContent);
+      toast(t('gift.copied'));
+    } catch (error) {
+      // No clipboard permission: select the code so it can be copied by hand.
+      const range = document.createRange();
+      range.selectNodeContents(out);
+      const selection = window.getSelection();
+      if (selection) {
+        selection.removeAllRanges();
+        selection.addRange(range);
+      }
+      toast(t('gift.copyManual'));
+    }
+  });
+
+  for (const [days, label] of [
+    [30, t('gift.month')],
+    [365, t('gift.year')],
+    [0, t('gift.life')],
+  ]) {
+    const make = document.createElement('button');
+    make.type = 'button';
+    make.className = 'btn ghost small';
+    make.textContent = label;
+    make.addEventListener('click', () => {
+      out.textContent = makeGiftCode(days);
+      copy.disabled = false;
+    });
+    choices.appendChild(make);
+  }
+
+  box.append(title, hint, choices, out, copy);
+  return box;
 }
 
 /** The paywall: region prices, the trial, the free limits and demo switches. */
@@ -3048,6 +3182,14 @@ function renderPremium() {
       renderPremiumCard();
     });
     root.appendChild(manage);
+  }
+
+  // Gift: a code opens Premium on this phone; the owner also gets the code maker.
+  const gift = s.gift || { active: false, owner: false, lifetime: false, until: 0 };
+  if (s.on && s.phase === 'paid' && gift.active) {
+    root.appendChild(giftInfo(gift));
+  } else if (s.on && s.phase !== 'paid') {
+    root.appendChild(giftBox());
   }
 
   const features = document.createElement('div');
