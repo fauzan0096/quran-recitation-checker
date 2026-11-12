@@ -7,13 +7,28 @@ Play Console → Store listing. Har box me bas ye paste karein.
 ## App name (max 30)
 
 ```
+بيّن — Bayyin
+```
+
+Isme 13 characters hain, Arabic naam pehle (jo app ke icon aur app ke andar bhi hai)
+aur uske baad Latin "Bayyin" — jo phone me English keyboard se search karne wale ke liye
+zaroori hai. "Quran" short description me aa jata hai, is liye naam me dobara likhne ki
+zaroorat nahi.
+
+Search me "Quran" ko aur zyada upar lana ho to ye bhi chalega:
+
+```
 Bayyin — Quran Recitation
 ```
+
+Dono me se ek chunein aur **poore app me wahi naam** rakhein (Play listing, manifest
+`بيّن — Bayyin`, icon, share card). Play par naam baad me badla ja sakta hai, magar review
+se guzarta hai — is liye shuru me hi theek rakh lein.
 
 Urdu listing (agar add karein):
 
 ```
-بیّن — قرآن تلاوت
+بیّن — Bayyin
 ```
 
 ---
