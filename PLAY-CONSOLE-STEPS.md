@@ -26,6 +26,9 @@ Screen poochhta hai: *"Is all or some functionality restricted?"*
 - Is option ke saath **instructions ka box nahi aata**; seedha **Save** karein.
 - Agar Play phir bhi instructions maange (kuch consoles me aata hai), likh dein:
   `No login or account is needed. Every feature opens from the home screen.`
+- **Sign-in details** ka box sirf tab khulta hai jab upar wala doosra option
+  ("some/all functionality is restricted") chunein — us se bachein, warna Play reviewer
+  ke liye username/password maangta hai jo hamare paas nahi hai.
 
 ### 1.2 Ads
 
@@ -135,7 +138,7 @@ App content → **Data safety → Start**.
 
 - **App category**: Education.
 - **Tags**: Quran, Islam, Education.
-- **Contact details**: email + website (upar wala).
+- **Contact details**: email **gormefauzan@gmail.com** + website (upar wala).
 - **External marketing**: tick kar sakte hain (Play aapki app ko promote karega).
 
 ---

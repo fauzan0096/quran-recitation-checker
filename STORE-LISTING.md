@@ -86,7 +86,7 @@ Pehli release: aya-ba-aya tilawat check, mushaf, Roz ki Naiki, namaz ke auqaat, 
 | App or game | App |
 | Category | Education (ya Books & Reference) |
 | Tags | Quran, Islam, Education |
-| Contact email | apna email |
+| Contact email | gormefauzan@gmail.com |
 | Website | https://fauzan0096.github.io/quran-recitation-checker/ |
 | Privacy policy | https://fauzan0096.github.io/quran-recitation-checker/privacy.html |
 | Ads | No |
