@@ -35,12 +35,28 @@ nahi ja sakta**.
 - Age: **13+** (religious content, no ads, no user chat).
 - *"Does your app appeal to children?"* → **No**.
 
-### 1.5 Data safety
-- *"Does your app collect or share any of the required user data types?"* → **No**.
-- *"Is all user data encrypted in transit?"* → **Yes** (jab bhi network use hota hai, HTTPS).
-- Microphone: **used only while recording, processed on the device, never uploaded** —
-  isi tarah likh dein.
-- Baqi sab **No**.
+### 1.5 Data safety (line by line)
+
+App content → **Data safety → Start**.
+
+1. *"Does your app collect or share any of the required user data types?"* → **No**.
+   (Isi jawab se poora lamba form skip ho jata hai — sirf tasdeeq maangi jati hai.)
+2. *"Have you reviewed and accounted for all data types in the Data safety section?"* →
+   **Yes** (tick karein).
+3. Aage jo confirmation aaye ("You have declared that your app does not collect or share
+   user data") → **Save**.
+4. Agar kabhi *"Is all user data encrypted in transit?"* poochha jaye → **Yes** — app ki
+   har network request HTTPS par hoti hai.
+
+**Kyun "No" sach hai (aapke mann me clear ho jaye):**
+- App **kuch bhi upload nahi karti**: zubaan, theme, reading position, tasbih count, hifz
+  progress, backup — sab phone ke local storage me.
+- Tilawat ka audio sirf check hone tak memory me rehta hai, phir mit jata hai.
+- Mic sirf Record dabane par chalta hai aur aawaz device chhodti nahi.
+- Network sirf teen kaam: speech model ka ek dafa download (Hugging Face CDN), IndoPak
+  mushaf ke safhat (Quran.com — sirf page number), aur qari ki audio (EveryAyah.com).
+  In me se kisi me naam/email/phone/location nahi jata.
+- Kahin account nahi banta, is liye "data deletion" ka sawal hi nahi uthta.
 
 ### 1.6 News app
 - **No.**
@@ -49,8 +65,17 @@ nahi ja sakta**.
 - Sab **No.**
 
 ### 1.8 Privacy policy
-- URL: `https://fauzan0096.github.io/quran-recitation-checker/privacy.html`
-- Yeh page live hai (check kar liya gaya hai).
+
+- **Privacy policy URL** (yahi paste karein):
+  `https://fauzan0096.github.io/quran-recitation-checker/privacy.html`
+- Yeh page live hai (maine check kiya) aur usme app ka naam, data, mic, payment, bachon
+  wali baat aur rabta — sab likha hua hai.
+- Agar isi screen par **"Data deletion"** ki line aaye:
+  - *"Do you provide a way for users to request deletion of their data?"* → **No**.
+  - Reason (agar box ho): "The app has no account and stores nothing on a server. All data
+    lives on the user's own device, so deleting the app deletes the data."
+- Agar **"Account deletion URL"** maanga jaye → yeh app accounts nahi banati, is liye
+  box khali chhod dein (ya "Not applicable" chunein).
 
 ---
 
