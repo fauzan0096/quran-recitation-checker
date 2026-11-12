@@ -1834,7 +1834,10 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .aya-score {
   display: none;
 }
 
-/* The page's own Record button stays reachable as a small floating pill. */
+/* The page's status line (recording was removed from the page) stays centred at
+   the bottom, and an empty one takes no room at all. */
+.aya-status:empty { display: none; }
+
 body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .page-actions {
   position: absolute;
   inset-inline: 0;

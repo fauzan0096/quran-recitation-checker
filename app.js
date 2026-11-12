@@ -787,15 +787,27 @@ function stopAyaAudio() {
   paintQariAll();
 }
 
+/**
+ * ▶ Qari: from the aya on screen to the end of its surah, one aya after another.
+ * The audio keeps going when the app goes to the background (qari.js holds one
+ * media session), and the lock-screen next/previous buttons walk the surah too.
+ */
 function playAll() {
   if (qariQueue) {
     stopAyaAudio();
     return;
   }
+  const first = state.verses[0];
+  if (!first) return;
+
   const times = repeatCount();
-  const list = state.verses.flatMap((verse) =>
-    Array.from({ length: times }, () => [verse.surah, verse.aya])
-  );
+  const surah = first.surah;
+  const total = Math.max(first.aya, ayaCount(surah) || first.aya);
+
+  const list = [];
+  for (let aya = first.aya; aya <= total; aya += 1) {
+    for (let r = 0; r < times; r += 1) list.push([surah, aya]);
+  }
   if (!list.length) return;
 
   qariQueue = { list, index: 0 };
@@ -807,9 +819,22 @@ function playAll() {
       stopAyaAudio();
       return;
     }
-    const [surah, aya] = qariQueue.list[qariQueue.index];
+    const [s, a] = qariQueue.list[qariQueue.index];
     qariQueue.index += 1;
-    playQari(surah, aya, { onEnd: next, onError: next });
+    playQari(s, a, {
+      onEnd: next,
+      onError: next,
+      onNext: () => {
+        if (!qariQueue) return;
+        qariQueue.index = Math.min(qariQueue.index + 1, qariQueue.list.length);
+        next();
+      },
+      onPrev: () => {
+        if (!qariQueue) return;
+        qariQueue.index = Math.max(0, qariQueue.index - times - 1);
+        next();
+      },
+    });
   };
 
   next();
@@ -1341,17 +1366,8 @@ function renderMushafPage() {
   const actions = document.createElement('div');
   actions.className = 'page-actions';
 
-  const record = document.createElement('button');
-  record.type = 'button';
-  record.className = 'btn primary record-aya';
-  record.dataset.recId = 'page';
-  record.dataset.label = t('record.page');
-  record.textContent = t('record.page');
-  record.addEventListener('click', () => {
-    const keys = state.verses.map((verse) => keyOf(verse.surah, verse.aya));
-    toggleRecording('page', keys);
-  });
-  actions.appendChild(record);
+  // No page-level recording here: the mushaf page is for reading along. A single
+  // aya can still be checked from the aya list, or recorded aya by aya.
 
   const status = document.createElement('p');
   status.className = 'aya-status';
