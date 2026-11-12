@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 
 // Word level alignment between the Uthmani words of the selected ayaat and the

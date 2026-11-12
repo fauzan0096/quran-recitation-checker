@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 // Calendar: Gregorian date big (English digits), Hijri small underneath.
 // Hijri follows the place (time zone) and can be nudged by a day, because

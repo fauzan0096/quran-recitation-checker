@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 
 // IndoPak mushaf text (Quran.com "Indopak 15 lines", 610 pages) fetched page by

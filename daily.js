@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 // "Roz ka Noor": one aya, one hadith and one sunnah a day, plus the 60 sunnahs.
 // The aya text always comes from the bundled mushaf — it is never retyped.

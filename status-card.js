@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 // Paints a WhatsApp-status sized card (1080 × 1920) and hands it to the share
 // sheet, or downloads it when sharing files is not available.
@@ -167,7 +167,7 @@ function paint(canvas, { title, arabic, text, reference }) {
   ctx.fillText(PLAY_LINE, mid, HEIGHT - 72);
   ctx.fillStyle = 'rgba(231, 201, 168, 0.8)';
   ctx.font = `400 22px ${LATIN_FONT}`;
-  ctx.fillText('·  © 2026 Fauzan Gorme', mid + 118, HEIGHT - 36);
+  ctx.fillText('·  © 2026 F A FS', mid + 118, HEIGHT - 36);
 }
 
 function toBlob(canvas) {
@@ -394,5 +394,5 @@ function paintDailyPage(ctx, { date, hijri, items }) {
   ctx.fillText(PLAY_LINE, mid, HEIGHT - 74);
   ctx.font = `400 20px ${LATIN_FONT}`;
   ctx.fillStyle = 'rgba(240, 193, 147, 0.7)';
-  ctx.fillText('© 2026 Fauzan Gorme', mid, HEIGHT - 36);
+  ctx.fillText('© 2026 F A FS', mid, HEIGHT - 36);
 }

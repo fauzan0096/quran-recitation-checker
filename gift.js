@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 
 // Gift codes: Premium for the people the owner chooses, without Play Billing.
@@ -24,7 +24,7 @@ const KEY = 'tc.gift';
 // worker could do it). Giving Premium away costs Play nothing: the rule Play
 // enforces is that a *purchase* must go through Play Billing, not that nobody may
 // be given the app for free.
-const OWNER_PHRASE = '6202 NIYYAB NAZUAF'.split('').reverse().join('');
+const OWNER_PHRASE = '6202 NIYYAB SF A F'.split('').reverse().join('');
 
 const PREFIX = 'BAYYIN';
 // Crockford-style base 32: no I, L, O, U, so a code cannot be misread.

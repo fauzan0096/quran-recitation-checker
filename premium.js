@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved.
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved.
 // Premium system: the trial timeline, the free limits, the plans and the prices
 // shown for the region the app is opened in.
 //

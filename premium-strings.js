@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved.
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved.
 // Strings for the premium screen, the settings card and the limits.
 
 import { addStrings } from './i18n.js';

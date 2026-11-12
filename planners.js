@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Copying, redistribution
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 // Khatam planner (free) and Hifz planner (premium): each person sets their own pace,
 // the app says how many days it takes, shows today's portion and reminds.

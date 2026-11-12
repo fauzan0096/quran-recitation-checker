@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved. Use of this file is
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved. Use of this file is
 // governed by the LICENSE in the project root.
 
 // A tally of how often the checker's verdict matched what the reciter knows to

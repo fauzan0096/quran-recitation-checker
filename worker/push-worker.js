@@ -1,4 +1,4 @@
-// © 2026 Fauzan Gorme — Bayyin (بيّن). All rights reserved.
+// © 2026 F A FS — Bayyin (بيّن). All rights reserved.
 //
 // Bayyin — push Worker (Cloudflare Workers, free plan).
 //
