@@ -7,7 +7,7 @@ import { getLanguage, t } from './i18n.js';
 import { AYAT, AHADITH, AYAT_MEANING, SUNNAHS } from './daily-content.js';
 import { getVerses, isLoaded } from './quran.js';
 import { surahName } from './surahs.js';
-import { shareStatus, shareDailyPage, downloadDailyPage } from './status-card.js';
+import { shareStatus, shareDailyPage } from './status-card.js';
 import { hijriArabic, todayHijri } from './hijri.js';
 
 const english = () => getLanguage() === 'en';
@@ -201,15 +201,36 @@ export function mountDaily(root, options = {}) {
     shareAll.textContent = '↗ ' + t('daily.shareAll');
     withLabel(shareAll, () => shareDailyPage(statusPayload()));
 
-    const download = document.createElement('button');
-    download.type = 'button';
-    download.className = 'btn ghost small';
-    download.textContent = '⬇ ' + t('daily.download');
-    withLabel(download, () => downloadDailyPage(statusPayload()));
+    const appLink = document.createElement('button');
+    appLink.type = 'button';
+    appLink.className = 'btn ghost small';
+    appLink.textContent = '📲 ' + t('daily.appLink');
+    appLink.addEventListener('click', async () => {
+      const label = appLink.textContent;
+      const link = location.origin + location.pathname;
+      try {
+        if (navigator.share) {
+          await navigator.share({ title: 'Bayyin (بيّن)', text: `${t('share.text')} ${link}` });
+        } else {
+          await navigator.clipboard.writeText(`${t('share.text')} ${link}`);
+          appLink.textContent = t('daily.appCopied');
+        }
+      } catch (error) {
+        appLink.textContent = t('daily.appCopied');
+        try {
+          await navigator.clipboard.writeText(`${t('share.text')} ${link}`);
+        } catch (inner) {
+          /* clipboard refused */
+        }
+      }
+      window.setTimeout(() => {
+        appLink.textContent = label;
+      }, 2200);
+    });
 
     const row = document.createElement('div');
     row.className = 'noor-share-row';
-    row.append(shareAll, download);
+    row.append(shareAll, appLink);
     sheet.appendChild(row);
 
     // Roz bas ek sunnah — the whole 60-sunnah list is not opened here.
