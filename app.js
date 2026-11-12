@@ -1361,7 +1361,6 @@ function renderMushafPage() {
   if (state.turn) page.classList.add(state.turn === 'fwd' ? 'turn-fwd' : 'turn-back');
   state.turn = '';
   els.ayaList.appendChild(page);
-
   fitMushafPage(page);
   attachPageSwipe(page);
   if (window.ResizeObserver) {
@@ -1583,6 +1582,21 @@ function fitMadaniLines(text) {
   const lines = Array.from(text.querySelectorAll('.mline-in'));
   if (!lines.length) return;
 
+  // The same page keeps the same size after a check: colouring a word must not
+  // re-flow the page and move the ayaat around. Only a new page or a new width
+  // (rotation, keyboard) measures again.
+  const remembered = state.mushafFit;
+  if (
+    remembered &&
+    remembered.page === state.page &&
+    remembered.mushaf === state.mushaf &&
+    remembered.width === width &&
+    remembered.size
+  ) {
+    text.style.fontSize = `${remembered.size}px`;
+    return;
+  }
+
   text.classList.add('is-measuring');
   const widest = () => {
     let max = 0;
@@ -1606,8 +1620,10 @@ function fitMadaniLines(text) {
   // Never taller than its row: the harakat need about 1.9 lines of height.
   const rowCap = room / Math.max(1, text.children.length) / 1.9;
   size = Math.max(12, Math.min(size, rowCap * 1.35, 64));
-  text.style.fontSize = `${Math.floor(size * 10) / 10}px`;
+  const finalSize = Math.floor(size * 10) / 10;
+  text.style.fontSize = `${finalSize}px`;
   text.classList.remove('is-measuring');
+  state.mushafFit = { page: state.page, mushaf: state.mushaf, width, size: finalSize };
 }
 
 /** Fit the page again once the reader is really on screen (it was hidden before). */
