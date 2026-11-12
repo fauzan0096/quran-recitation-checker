@@ -273,6 +273,20 @@ async function init() {
   window.addEventListener('pointerdown', unlockOnce, { passive: true });
   window.addEventListener('keydown', unlockOnce);
 
+  // Tapping the prayer notification sends this message from the service worker.
+  // It plays the azaan even when the app was already open (navigate() is often
+  // refused in an installed app, and then nothing used to play).
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      const data = event.data || {};
+      if (data.type !== 'ADHAN') return;
+      setView('namaz');
+      playAdhan().then((ok) => {
+        if (!ok) toast(t('adhan.failed'));
+      });
+    });
+  }
+
   hideSplash();
   maybeWelcome();
   watchBackSwipe();

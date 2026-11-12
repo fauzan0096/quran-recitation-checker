@@ -273,6 +273,7 @@ function prayerPayload(name) {
     body: `${label} ka waqt ho gaya. Tap karein — azaan sunne ke liye.`,
     url: `./?adhan=${encodeURIComponent(name)}`,
     tag: `bayyin-azaan-${name}`,
+    adhan: name,
     requireInteraction: true,
     vibrate: [180, 80, 180],
   };

@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v70';
+const CACHE = 'bayyin-v71';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -259,7 +259,7 @@ self.addEventListener('push', (event) => {
     requireInteraction: Boolean(data.requireInteraction),
     lang: 'en',
     dir: 'auto',
-    data: { url: data.url || './?go=daily' },
+    data: { url: data.url || './?go=daily', adhan: data.adhan || '' },
   };
   if (Array.isArray(data.vibrate) && data.vibrate.length) options.vibrate = data.vibrate;
   event.waitUntil(self.registration.showNotification(title, options));
@@ -273,11 +273,16 @@ self.addEventListener('pushsubscriptionchange', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const target = (event.notification.data && event.notification.data.url) || './';
+  const data = event.notification.data || {};
+  const target = data.url || './';
+  const adhan = data.adhan || '';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       for (const client of list) {
         if ('focus' in client) {
+          // Tell the open app to play the azaan first: in an installed app
+          // navigate() is often refused, and then nothing would play.
+          if (adhan && client.postMessage) client.postMessage({ type: 'ADHAN', name: adhan });
           if ('navigate' in client && target !== './') client.navigate(target).catch(() => {});
           return client.focus();
         }
