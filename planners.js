@@ -9,6 +9,7 @@ import { getVerses, isLoaded } from './quran.js';
 import { SURAHS, surahName } from './surahs.js';
 import { isPremium } from './premium.js';
 import { hifzTestDue } from './hifz-test.js';
+import { play as playQari, stop as stopQari } from './qari.js';
 
 const L = (ro, ur, en) => ({ roman: ro, ur, en }[getLanguage()] || ro);
 const TOTAL_PAGES = 604;
@@ -517,6 +518,127 @@ export function mountHifz(root) {
     return card;
   }
 
+  // ---------------------------------------------------- qari: sabaq on repeat
+  // The sabaq in the qari's voice, each aya as many times as the person wants
+  // (1, 3, 5 or their own number). It keeps playing in the background, because
+  // qari.js holds one media session for the whole app.
+  const REPEAT_KEY = 'tc.qariSabaqRepeat';
+  let sabaqPlay = null; // { list, index, round, times }
+  let paintSabaq = () => {};
+
+  function readSabaqRepeat() {
+    const n = Number(readJSON(REPEAT_KEY));
+    if (!Number.isFinite(n) || n < 1) return 3;
+    return Math.min(20, Math.round(n));
+  }
+  function writeSabaqRepeat(n) {
+    writeJSON(REPEAT_KEY, n);
+  }
+
+  function sabaqNext() {
+    if (!sabaqPlay) return;
+    const st = sabaqPlay;
+    if (st.index >= st.list.length) {
+      sabaqPlay = null;
+      paintSabaq();
+      return;
+    }
+    const [s, a] = st.list[st.index];
+    playQari(s, a, {
+      onEnd: () => {
+        if (sabaqPlay !== st) return;
+        st.round += 1;
+        if (st.round >= st.times) {
+          st.round = 0;
+          st.index += 1;
+        }
+        sabaqNext();
+      },
+      onError: () => {
+        if (sabaqPlay !== st) return;
+        st.round = 0;
+        st.index += 1;
+        sabaqNext();
+      },
+    });
+  }
+
+  function stopSabaq() {
+    sabaqPlay = null;
+    stopQari();
+    paintSabaq();
+  }
+
+  function toggleSabaq(list, times) {
+    if (sabaqPlay) {
+      stopSabaq();
+      return;
+    }
+    if (!list.length) return;
+    sabaqPlay = { list: list.slice(), index: 0, round: 0, times };
+    paintSabaq();
+    sabaqNext();
+  }
+
+  /** The "Qari ×N" card for today's sabaq. */
+  function qariCard(list) {
+    const card = h('div', 'pl-card');
+    card.append(
+      h('h4', '', L('Qari se sunein', 'قاری سے سنیں', 'Listen to the qari')),
+      h(
+        'p',
+        'hint',
+        L(
+          'Aaj ke sabaq ki ayat qari ki awaaz me — har aya jitni dafa chahein. App background me ho to bhi chalti rahegi.',
+          'آج کے سبق کی آیات قاری کی آواز میں — ہر آیت جتنی بار چاہیں۔ ایپ پس منظر میں ہو تو بھی چلتی رہے گی۔',
+          'Today’s sabaq in the qari’s voice — each aya as many times as you like. It keeps playing with the app in the background.'
+        )
+      )
+    );
+
+    let repeat = readSabaqRepeat();
+    const row = h('div', 'pl-chips');
+    const chips = [];
+    for (const n of [1, 3, 5]) {
+      const chip = button(`×${n}`, 'dua-chip', () => {
+        repeat = n;
+        writeSabaqRepeat(n);
+        paintSabaq();
+      });
+      chips.push([n, chip]);
+      row.appendChild(chip);
+    }
+    const custom = h('input', 'pl-num');
+    custom.type = 'number';
+    custom.min = '1';
+    custom.max = '20';
+    custom.setAttribute('inputmode', 'numeric');
+    custom.setAttribute('aria-label', L('Apni ginti', 'اپنی گنتی', 'Your own count'));
+    custom.value = String(repeat);
+    custom.addEventListener('change', () => {
+      const n = Math.min(20, Math.max(1, Math.round(Number(custom.value) || 1)));
+      custom.value = String(n);
+      repeat = n;
+      writeSabaqRepeat(n);
+      paintSabaq();
+    });
+    row.appendChild(custom);
+    card.appendChild(row);
+
+    const playBtn = button('', 'btn gold', () => toggleSabaq(list, repeat));
+    card.appendChild(playBtn);
+
+    paintSabaq = () => {
+      for (const [n, chip] of chips) chip.classList.toggle('is-on', n === repeat);
+      custom.value = String(repeat);
+      playBtn.textContent = sabaqPlay
+        ? '⏹ ' + L('Rokein', 'روکیں', 'Stop')
+        : '▶ ' + L('Qari sunen', 'قاری سنیں', 'Play the qari');
+    };
+    paintSabaq();
+    return card;
+  }
+
   function build() {
     const p = readJSON(HF);
     if (!p) return setup();
@@ -552,6 +674,12 @@ export function mountHifz(root) {
         root.appendChild(box);
         if (end + 1 - g.startPos > 12) root.appendChild(h('p', 'hint', '…'));
       }
+
+      // The qari, on repeat, for the ayas of today's sabaq.
+      root.appendChild(
+        qariCard(items.slice(g.startPos, end + 1).map(([s, a]) => [s, a]))
+      );
+
       const act = h('div', 'pl-actions');
       act.append(
         button(L('Mushaf mein kholein', 'مصحف میں کھولیں', 'Open in Mushaf'), 'btn', () => openAt(items[g.startPos][0], items[g.startPos][1])),
@@ -616,7 +744,7 @@ export function mountHifz(root) {
   }
 
   build();
-  return { refresh: build };
+  return { refresh: build, stop: stopSabaq };
 }
 
 // ---------------------------------------------------------------- today list + reminder loop

@@ -1737,6 +1737,8 @@ ul.credits a { color: #8a5a28; text-decoration: underline; }
 
 
 
+.pl-num { width: 64px; padding: 8px 10px; border-radius: 12px; border: 1.5px solid var(--line); background: var(--paper); color: var(--ink); font: inherit; text-align: center; }
+
 /* ------------------------------------------- mushaf: one page, one screen */
 body[data-mode='page'] #view-reader .reader-controls { display: none; }
 

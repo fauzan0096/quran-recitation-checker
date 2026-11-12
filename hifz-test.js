@@ -944,7 +944,7 @@ export function mountHifzTest(root, deps) {
 
       setStatus(L('Sun kar samajh raha hoon…', 'سن کر سمجھ رہا ہوں…', 'Transcribing…'));
       const text = await transcribe(model, audio);
-      if (!text) throw new Error(L('Kuch samajh nahi aaya — dobara bolein.', 'کچھ سمجھ نہیں آیا — دوبارہ بولیں۔', 'Could not understand — recite again.'));
+      if (!text) throw new Error(L('Kuch sunai nahi diya — dobara bolein.', 'کچھ سنائی نہیں دیا — دوبارہ بولیں۔', 'Nothing was heard — recite again.'));
       evaluate(q, text);
       busy = false;
       renderQuestion();

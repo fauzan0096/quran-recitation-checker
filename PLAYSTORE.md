@@ -78,6 +78,21 @@ PWABuilder se jo package bana wo ek **Trusted Web Activity (TWA)** hai, aur us k
 - **TWA = live site**: app ka HTML/JS/CSS seedha site se aata hai, is liye naye features
   bhejne ke liye naya AAB release nahi chahiye. Sirf native/manifest/billing tab badalta hai
   jab package dobara banayein.
+
+## 1b. Target SDK — Play ki minimum (Android 15/16 ke baad)
+
+Play har naye app aur update par ek **minimum target SDK** maangta hai (2025 me API 35,
+uske baad API 36 — "Android 15/16"). Yeh app ke JavaScript ka nahi, **package ki setting**
+hai:
+
+- **PWABuilder** me package banate waqt Android SDK / target SDK me sab se **naya**
+  (API 35 ya 36) chunein. PWABuilder khud latest rakhta hai, phir bhi ek dafa dekh lein.
+- Play Console par agar "Target SDK version is too low" aa jaye, to matlab purana package
+  hai — PWABuilder se **naya AAB** bana kar upload karein; website ka code waisa hi rahega.
+- `minSdk` (kitne purane phones chalenge) PWABuilder ka default theek rehta hai; sirf
+  target SDK naya hona chahiye.
+- Is app ki taraf se kuch karne ki zaroorat nahi: web code har Android version par ek hi
+  chalta hai.
 - **Billing**: TWA me native bridge nahi chalta — Play **Digital Goods API** deta hai
   (Chrome, sirf Play se install ki gayi TWA me). `billing.js` me ab dono raste hain:
   `window.BayyinBilling` (agar kabhi native shell use karein) aur Digital Goods API (TWA).
@@ -106,9 +121,7 @@ PWABuilder ek website hai jo AAB banati hai; ye repo ke andar se nahi banti.
 > **upload key reset** karna padta hai (aur app ka data/naya install bhi). Is liye
 > `signing.keystore` + passwords ki alag copy rakhein.
 
-## 2. `assetlinks.json` (TWA ke liye zaroori)
-
-`https://<aapki-site>/.well-known/assetlinks.json`:
+## 2. `assetlinks.json` (TWA ke liye zaroori)`https://<aapki-site>/.well-known/assetlinks.json`:
 
 ```json
 [
