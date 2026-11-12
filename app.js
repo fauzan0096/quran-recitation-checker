@@ -18,8 +18,9 @@ import {
   splitBasmala,
   INDOPAK_BASMALA,
 } from './quran.js';
-import { loadPages, pageTotal, pageAyahs, juzAyahs } from './quran-pages.js';
-import { indopakPage, INDOPAK_PAGES } from './indopak.js';
+import { loadPages, juzAyahs, juzOfAya } from './quran-pages.js';
+import { MADANI_PAGE_TOTAL, madaniPageAyahs, madaniPageLines } from './madani-layout.js';
+import { indopakPage, indopakPageLines, INDOPAK_PAGES } from './indopak.js';
 import { alignWords, WORD_STATUS } from './align.js';
 import { tajweedHints } from './tajweed.js';
 import { normalizeArabic } from './normalize.js';
@@ -45,7 +46,7 @@ import {
   manageAvailable as billingManageAvailable,
   restore as billingRestore,
 } from './billing.js';
-import { download as backupDownload, restore as backupRestore, share as backupShare } from './backup.js';
+import { download as backupDownload, restore as backupRestore } from './backup.js';
 import { mountBadges, checkBadges, celebrate } from './badges.js';
 import {
   reciters,
@@ -60,7 +61,6 @@ import {
 } from './qari.js';
 import { mountCard as mountReminderCard, start as startDailyReminder, state as reminderState } from './reminder.js';
 import { enable as pushEnable, disable as pushDisable } from './push.js';
-import { record as recordAccuracy, stats as accuracyStats, reset as resetAccuracy, percent as accuracyPercent } from './accuracy.js';
 import { playWord } from './word-audio.js';
 import {
   ADHANS,
@@ -138,6 +138,8 @@ const state = {
   mushafFull: true, // the mushaf tab opens as one full page, like a printed mus'haf
   surah: 1,
   page: 1,
+  indopakLens: null, // words per printed line of the IndoPak page, when known
+  turn: '', // 'fwd' | 'back' while a page turn is being drawn
   verses: [],
   visible: CHUNK,
   results: new Map(),
@@ -508,9 +510,8 @@ function cacheElements() {
     'hifz-root', 'hztest-root', 'murajaa-root', 'report-root', 'open-report',
     'more-badges', 'view-badges', 'badges-root', 'close-badges',
     'more-murajaa-count',
-    'backup-export', 'backup-import', 'backup-file', 'backup-share', 'error-log', 'errors-copy',
+    'backup-export', 'backup-import', 'backup-file', 'error-log', 'errors-copy',
     'view-premium', 'close-premium', 'premium-root', 'open-premium', 'premium-status',
-    'accuracy-root',
     'premium-chart', 'premium-tabs', 'premium-plan', 'premium-test',
     'premium-murajaa', 'premium-report',
     'view-namaz', 'namaz-tabs', 'namaz-times', 'namaz-qibla', 'namaz-adhan',
@@ -908,7 +909,7 @@ function updatePageTotal() {
 }
 
 function pageMax() {
-  return state.mushaf === 'indopak' ? INDOPAK_PAGES : Math.max(1, pageTotal() || 604);
+  return state.mushaf === 'indopak' ? INDOPAK_PAGES : MADANI_PAGE_TOTAL;
 }
 
 async function showList() {
@@ -924,6 +925,7 @@ async function showList() {
       if (state.mushaf === 'indopak') {
         setGlobalStatus(t('status.indopak', { page: state.page }));
         const list = await indopakPage(state.page);
+        state.indopakLens = await indopakPageLines(state.page);
         state.verses = list.map((entry) => verseFromText(entry.surah, entry.aya, entry.text));
         setGlobalStatus('');
         els.listTitle.textContent = t('list.pageIndopak', {
@@ -931,7 +933,7 @@ async function showList() {
           total: INDOPAK_PAGES,
         });
       } else {
-        const list = pageAyahs(state.page);
+        const list = madaniPageAyahs(state.page);
         if (!list.length) throw new Error(t('error.pageText'));
         state.verses = list.map(({ surah, aya }) => getVerses(surah, aya, aya)[0]).filter(Boolean);
         els.listTitle.textContent = t('list.pageMadani', { page: state.page, total: pageMax() });
@@ -1245,28 +1247,37 @@ function renderMushafPage() {
   text.lang = 'ar';
   text.dir = 'rtl';
 
-  state.verses.forEach((verse) => {
-    if (verse.basmala) text.appendChild(basmalaLine(verse.basmala));
-    const key = keyOf(verse.surah, verse.aya);
-    const seg = document.createElement('span');
-    seg.className = 'aya-seg';
-    seg.dataset.key = key;
-    if (state.selectedKey === key) seg.classList.add('is-selected');
+  // Madani: the page is cut into its 15 printed lines. IndoPak (or any page the
+  // line data does not fit) keeps the flowing text.
+  const lens = state.mushaf === 'madani' ? madaniPageLines(state.page) : state.indopakLens;
+  const asLines = Array.isArray(lens) && renderMadaniLines(text, page, lens);
+  if (!asLines) {
+    text.classList.remove('is-lines');
+    text.textContent = '';
+    state.verses.forEach((verse) => {
+      if (verse.basmala) text.appendChild(basmalaLine(verse.basmala));
+      const key = keyOf(verse.surah, verse.aya);
+      const seg = document.createElement('span');
+      seg.className = 'aya-seg';
+      seg.dataset.key = key;
+      if (state.selectedKey === key) seg.classList.add('is-selected');
 
-    renderAyaText(seg, verse, state.results.get(key));
+      renderAyaText(seg, verse, state.results.get(key));
 
-    const marker = document.createElement('span');
-    marker.className = 'aya-marker';
-    marker.textContent = toArabicDigits(verse.aya);
-    marker.setAttribute('aria-label', `Aya ${verse.aya}`);
-    seg.appendChild(document.createTextNode(' '));
-    seg.appendChild(marker);
-    seg.appendChild(document.createTextNode(' '));
+      const marker = document.createElement('span');
+      marker.className = 'aya-marker';
+      marker.textContent = toArabicDigits(verse.aya);
+      marker.setAttribute('aria-label', `Aya ${verse.aya}`);
+      seg.appendChild(document.createTextNode(' '));
+      seg.appendChild(marker);
+      seg.appendChild(document.createTextNode(' '));
 
-    seg.addEventListener('click', () => selectAya(page, key));
+      seg.addEventListener('click', () => selectAya(page, key));
 
-    text.appendChild(seg);
-  });
+      text.appendChild(seg);
+    });
+  }
+  page.appendChild(mushafTopStrip());
   page.appendChild(text);
 
   if (state.pageAlignment) {
@@ -1329,10 +1340,156 @@ function renderMushafPage() {
   page.appendChild(toggle);
   paintMushafToggle(toggle);
 
+  if (state.turn) page.classList.add(state.turn === 'fwd' ? 'turn-fwd' : 'turn-back');
+  state.turn = '';
   els.ayaList.appendChild(page);
 
   fitMushafPage(page);
   attachPageSwipe(page);
+  if (window.ResizeObserver) {
+    const text = page.querySelector('.page-text');
+    let last = '';
+    const ro = new ResizeObserver(() => {
+      if (!page.isConnected) { ro.disconnect(); return; }
+      const size = `${text.clientWidth}x${text.clientHeight}`;
+      if (size === last || !text.clientWidth) return;
+      last = size;
+      fitMushafPage(page);
+    });
+    ro.observe(text);
+  }
+  // The Arabic font may arrive after the first fit: fit once more when it has.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      if (page.isConnected) fitMushafPage(page);
+    });
+  }
+}
+
+const BASMALA_FALLBACK = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ';
+
+/** Thin strip above the page, as in the printed mus'haf: juz, page number, surah. */
+function mushafTopStrip() {
+  const strip = document.createElement('div');
+  strip.className = 'mpage-top';
+  strip.dir = 'rtl';
+  const first = state.verses[0];
+  const juz = first ? juzOfAya(first.surah, first.aya) : 0;
+  const right = document.createElement('span');
+  right.className = 'mpage-juz';
+  right.lang = 'ar';
+  right.textContent = juz ? `الجزء ${toArabicDigits(juz)}` : '';
+  const mid = document.createElement('span');
+  mid.className = 'mpage-no';
+  mid.textContent = toArabicDigits(state.page);
+  const left = document.createElement('span');
+  left.className = 'mpage-surah';
+  left.lang = 'ar';
+  const last = state.verses[state.verses.length - 1] || first;
+  const sOf = (n) => (SURAHS[n - 1] ? SURAHS[n - 1].arabic : '');
+  left.textContent = last ? `سورة ${sOf(last.surah)}` : '';
+  strip.append(right, mid, left);
+  return strip;
+}
+
+/**
+ * Fill `text` with the printed lines of the current Madani page. Returns false
+ * (and leaves `text` for the flowing fallback) when the line data does not add
+ * up to the words on the page, so a page is never shown with a word missing.
+ */
+function renderMadaniLines(text, page, lens) {
+  const flat = [];
+  for (const verse of state.verses) {
+    const key = keyOf(verse.surah, verse.aya);
+    const alignment = state.results.get(key);
+    verse.words.forEach((word, i) => {
+      flat.push({ verse, key, i, word, alignment, lastWord: i === verse.words.length - 1 });
+    });
+  }
+  const total = lens.reduce((a, b) => a + b, 0);
+  if (!lens.length || total !== flat.length) return false;
+
+  text.classList.add('is-lines');
+  let at = 0;
+  for (const len of lens) {
+    const slice = flat.slice(at, at + len);
+    at += len;
+    const head = slice[0];
+
+    if (head.i === 0 && head.verse.aya === 1) {
+      const banner = document.createElement('div');
+      banner.className = 'msurah';
+      const inner = document.createElement('div');
+      inner.className = 'msurah-in';
+      inner.lang = 'ar';
+      const info = SURAHS[head.verse.surah - 1];
+      inner.textContent = `سورة ${info ? info.arabic : ''}`;
+      banner.appendChild(inner);
+      text.appendChild(banner);
+      if (head.verse.surah !== 1 && head.verse.surah !== 9) {
+        const row = document.createElement('div');
+        row.className = 'mbasmala';
+        const inn = document.createElement('div');
+        inn.className = 'mbasmala-in';
+        inn.lang = 'ar';
+        inn.dir = 'rtl';
+        inn.textContent = head.verse.basmala || BASMALA_FALLBACK;
+        row.appendChild(inn);
+        text.appendChild(row);
+      }
+    }
+
+    const row = document.createElement('div');
+    row.className = 'mline';
+    const inner = document.createElement('div');
+    inner.className = 'mline-in';
+    inner.lang = 'ar';
+    inner.dir = 'rtl';
+
+    let seg = null;
+    slice.forEach((entry, n) => {
+      if (!seg || seg.dataset.key !== entry.key) {
+        if (seg) inner.appendChild(document.createTextNode(' '));
+        seg = document.createElement('span');
+        seg.className = 'aya-seg';
+        seg.dataset.key = entry.key;
+        if (state.selectedKey === entry.key) seg.classList.add('is-selected');
+        const key = entry.key;
+        seg.addEventListener('click', () => selectAya(page, key));
+        inner.appendChild(seg);
+      } else {
+        seg.appendChild(document.createTextNode(' '));
+      }
+
+      const result = entry.alignment ? entry.alignment.results[entry.i] : null;
+      if (result && result.status !== WORD_STATUS.CORRECT) {
+        const span = document.createElement('span');
+        span.className = `w is-${result.status}`;
+        span.textContent = entry.word;
+        span.title = noteFor(result);
+        seg.appendChild(span);
+      } else {
+        seg.appendChild(document.createTextNode(entry.word));
+      }
+
+      if (entry.lastWord) {
+        const marker = document.createElement('span');
+        marker.className = 'aya-marker';
+        marker.textContent = toArabicDigits(entry.verse.aya);
+        marker.setAttribute('aria-label', `Aya ${entry.verse.aya}`);
+        seg.appendChild(document.createTextNode(' '));
+        seg.appendChild(marker);
+        // The last line of a surah is not stretched, as in the printed mus'haf.
+        if (n === slice.length - 1 && entry.verse.aya === Math.max(1, ayaCount(entry.verse.surah))) {
+          inner.classList.add('is-end');
+        }
+      }
+    });
+
+    row.appendChild(inner);
+    text.appendChild(row);
+  }
+  return true;
 }
 
 /** The floating button shows what it will do on the next tap. */
@@ -1360,6 +1517,10 @@ function toggleMushafFull(page) {
 function fitMushafPage(page) {
   const text = page.querySelector('.page-text');
   if (!text) return;
+  if (text.classList.contains('is-lines')) {
+    fitMadaniLines(text);
+    return;
+  }
   text.style.fontSize = '';
 
   const room = text.clientHeight;
@@ -1392,6 +1553,56 @@ function fitMushafPage(page) {
   text.style.fontSize = `${Math.max(12, Math.floor(low * 10) / 10)}px`;
 }
 
+/**
+ * Size the printed lines so the widest one just fills the page width and no
+ * line wraps; every line is then stretched to the same width (justify), like
+ * the printed mus'haf. Width and height are measured, never guessed.
+ */
+function fitMadaniLines(text) {
+  const width = text.clientWidth;
+  const room = text.clientHeight;
+  if (!width || !room) return;
+  const lines = Array.from(text.querySelectorAll('.mline-in'));
+  if (!lines.length) return;
+
+  text.classList.add('is-measuring');
+  const widest = () => {
+    let max = 0;
+    for (const line of lines) {
+      const range = document.createRange();
+      range.selectNodeContents(line);
+      max = Math.max(max, range.getBoundingClientRect().width);
+    }
+    return max;
+  };
+
+  text.style.fontSize = '40px';
+  let natural = widest() || 1;
+  let size = (40 * (width - 2)) / natural;
+  for (let guard = 0; guard < 8; guard += 1) {
+    text.style.fontSize = `${size}px`;
+    natural = widest();
+    if (natural <= width - 1) break;
+    size *= 0.97;
+  }
+  // Never taller than its row: the harakat need about 1.9 lines of height.
+  const rowCap = room / Math.max(1, text.children.length) / 1.9;
+  size = Math.max(12, Math.min(size, rowCap * 1.35, 64));
+  text.style.fontSize = `${Math.floor(size * 10) / 10}px`;
+  text.classList.remove('is-measuring');
+}
+
+/** Fit the page again once the reader is really on screen (it was hidden before). */
+function refitMushafSoon() {
+  for (const wait of [0, 120, 400]) {
+    window.setTimeout(() => {
+      if (currentView !== 'reader') return;
+      const page = els.ayaList.querySelector('.mushaf-page');
+      if (page) fitMushafPage(page);
+    }, wait);
+  }
+}
+
 /** Swipe left/right on the mushaf page to move to the next/previous page. */
 function attachPageSwipe(page) {
   let x0 = 0;
@@ -1417,8 +1628,10 @@ function attachPageSwipe(page) {
       const dy = touch.clientY - y0;
       if (Date.now() - started > 900) return;
       if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.4) return;
-      // RTL mushaf: a left swipe moves forward, like the mus'haf apps.
-      goPage(dx < 0 ? 1 : -1);
+      // RTL mus'haf: the next page lies to the LEFT, so the finger moves
+      // left-to-right to turn forward (like a printed Arabic book and the
+      // mus'haf apps); right-to-left turns back.
+      goPage(dx > 0 ? 1 : -1);
     },
     { passive: true }
   );
@@ -1427,6 +1640,7 @@ function attachPageSwipe(page) {
 function goPage(delta) {
   const next = clamp(state.page + delta, 1, pageMax());
   if (next === state.page) return;
+  state.turn = delta > 0 ? 'fwd' : 'back';
   state.page = next;
   els.pageNumber.value = String(next);
   showList();
@@ -1590,11 +1804,9 @@ function mistakeBlock(key, problems) {
     tag.textContent =
       r.status === WORD_STATUS.CLOSE
         ? t('count.close')
-        : r.status === WORD_STATUS.UNSURE
-          ? t('count.unsure')
-          : r.status === WORD_STATUS.MISSING
-            ? t('note.missing')
-            : t('count.wrong');
+        : r.status === WORD_STATUS.MISSING
+          ? t('note.missing')
+          : t('count.wrong');
 
     const expected = document.createElement('span');
     expected.className = 'aya-word';
@@ -1671,7 +1883,6 @@ function renderAyaText(target, verse, alignment) {
 
 function noteFor(result) {
   if (result.status === WORD_STATUS.MISSING || !result.heard) return t('note.missing');
-  if (result.status === WORD_STATUS.UNSURE) return t('note.unsure');
   if (result.status === WORD_STATUS.CLOSE) return t('note.closeHeard', { word: result.heard });
   return t('note.readHeard', { word: result.heard });
 }
@@ -1680,7 +1891,6 @@ function countsLine(c) {
   return [
     `${c.correct} ${t('count.correct')}`,
     c.close ? `${c.close} ${t('count.close')}` : '',
-    c.unsure ? `${c.unsure} ${t('count.unsure')}` : '',
     c.wrong ? `${c.wrong} ${t('count.wrong')}` : '',
     c.missing ? `${c.missing} ${t('count.missing')}` : '',
     c.extra ? `${c.extra} ${t('count.extra')}` : '',
@@ -1708,13 +1918,6 @@ function renderAyaResult(target, alignment, key) {
   strip.append(score, verdict, counts);
   target.appendChild(strip);
 
-  // Whisper hears words, not tajweed: say so where the result is read, so
-  // nobody expects a madd or ghunnah to be judged here.
-  const scope = document.createElement('p');
-  scope.className = 'hint result-scope';
-  scope.textContent = t('result.tajweedNote');
-  target.appendChild(scope);
-
   const problems = alignment.results.filter((r) => r.status !== WORD_STATUS.CORRECT);
   if (!problems.length) {
     const ok = document.createElement('p');
@@ -1725,52 +1928,12 @@ function renderAyaResult(target, alignment, key) {
     return;
   }
   target.appendChild(mistakeBlock(key, problems));
-  target.appendChild(accuracyButtons());
 }
 
 function scoreClass(score) {
   if (score >= 85) return 'good';
   if (score >= 60) return 'mid';
   return 'bad';
-}
-
-/**
- * "Sahi tha / Galat tha": the person's own verdict on what the app said. It is
- * what turns "the checker feels right" into a counted accuracy in Settings.
- */
-function accuracyButtons() {
-  const row = document.createElement('div');
-  row.className = 'verdict-ask';
-
-  const ask = document.createElement('span');
-  ask.className = 'hint accuracy-ask';
-  ask.textContent = t('accuracy.ask');
-  row.appendChild(ask);
-
-  const yes = document.createElement('button');
-  yes.type = 'button';
-  yes.className = 'btn small';
-  yes.textContent = t('accuracy.yes');
-
-  const no = document.createElement('button');
-  no.type = 'button';
-  no.className = 'btn ghost small';
-  no.textContent = t('accuracy.no');
-
-  const finish = (right) => {
-    recordAccuracy(right);
-    row.textContent = '';
-    const done = document.createElement('span');
-    done.className = 'hint';
-    done.textContent = t('accuracy.thanks');
-    row.appendChild(done);
-  };
-
-  yes.addEventListener('click', () => finish(true));
-  no.addEventListener('click', () => finish(false));
-
-  row.append(yes, no);
-  return row;
 }
 
 function toArabicDigits(value) {
@@ -2038,7 +2201,7 @@ async function checkTarget(id, keys, blob) {
 
 /** counts + score + verdict for a set of word results. */
 function summarise(results, extras) {
-  const counts = { correct: 0, close: 0, unsure: 0, wrong: 0, missing: 0, extra: extras.length };
+  const counts = { correct: 0, close: 0, wrong: 0, missing: 0, extra: extras.length };
   let gained = 0;
   let counted = 0;
   for (const result of results) {
@@ -2550,7 +2713,6 @@ function setView(view, tab) {
   }
   if (name === 'settings') {
     renderPremiumCard();
-    renderAccuracyCard();
     paintErrors();
   }
   if (name === 'premium') {
@@ -2558,6 +2720,7 @@ function setView(view, tab) {
     paintPremiumTabs();
     loadQuranInBackground();
   }
+  if (name === 'reader') refitMushafSoon();
   if (name === 'daily') moreViews.daily?.refresh();
   if (name === 'tasbeeh') moreViews.tasbeeh?.refresh();
   if (name === 'calendar') moreViews.calendar?.refresh();
@@ -2622,41 +2785,8 @@ function renderPremiumCard() {
   }
 }
 
-/**
- * Settings: how often the checker's verdict was actually right. The person
- * rates each result ("Sahi tha / Galat tha") and this counts it — the only
- * honest way to know, instead of a guess.
- */
-function renderAccuracyCard() {
-  const root = els.accuracyRoot;
-  if (!root) return;
-  root.textContent = '';
-
-  const data = accuracyStats();
-  const pct = accuracyPercent(data);
-
-  const line = document.createElement('p');
-  line.className = 'hint';
-  line.textContent =
-    pct === null
-      ? t('accuracy.none')
-      : t('accuracy.line', { ok: data.ok, total: data.total, pct });
-  root.appendChild(line);
-
-  if (!data.total) return;
-
-  const reset = document.createElement('button');
-  reset.type = 'button';
-  reset.className = 'btn ghost small';
-  reset.textContent = t('accuracy.reset');
-  reset.addEventListener('click', () => {
-    resetAccuracy();
-    renderAccuracyCard();
-  });
-  root.appendChild(reset);
-}
-
-function premiumLine(text) {  const row = document.createElement('li');
+function premiumLine(text) {
+  const row = document.createElement('li');
   const mark = document.createElement('span');
   mark.className = 'premium-mark';
   mark.textContent = '✓';
@@ -3169,13 +3299,16 @@ function wireEvents() {
     state.page = clamp(els.pageNumber.value, 1, pageMax());
     showList();
   });
-  els.pagePrev.addEventListener('click', () => {
-    state.page = clamp(state.page - 1, 1, pageMax());
-    showList();
-  });
-  els.pageNext.addEventListener('click', () => {
-    state.page = clamp(state.page + 1, 1, pageMax());
-    showList();
+  // ◀ (left) is the NEXT page and ▶ (right) the previous one: the mus'haf runs
+  // right to left, so its next page lies on the left.
+  els.pagePrev.addEventListener('click', () => goPage(-1));
+  els.pageNext.addEventListener('click', () => goPage(1));
+  window.addEventListener('keydown', (event) => {
+    if (state.mode !== 'page' || currentView !== 'reader') return;
+    const tag = event.target && event.target.tagName;
+    if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+    if (event.key === 'ArrowLeft') goPage(1);
+    else if (event.key === 'ArrowRight') goPage(-1);
   });
 
   els.searchGo.addEventListener('click', runSearch);
@@ -3292,14 +3425,6 @@ function wireEvents() {
     els.backupExport.addEventListener('click', () => {
       const result = backupDownload();
       toast(result.ok ? t('backup.done', { count: result.count }) : t('backup.failed'));
-    });
-  }
-
-  if (els.backupShare) {
-    els.backupShare.addEventListener('click', async () => {
-      const result = await backupShare();
-      if (result.ok) toast(t('backup.shared', { count: result.count }));
-      else toast(t('backup.shareFailed'));
     });
   }
 

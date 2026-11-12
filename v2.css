@@ -2032,40 +2032,104 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .selection-bar {
 }
 
 
+/* ================================================================== */
+/* Madani mus'haf: the 15 printed lines, right to left                 */
+/* ================================================================== */
 
-/* ------------------------------------------------- unsure is not a mistake */
-/* A word the recogniser heard but could not place is shown in a calm grey —
-   never in the red of a real mistake. A wrong tick is what breaks trust. */
-.aya-text .w.is-unsure,
-.page-text .w.is-unsure {
-  color: #6b5a4a;
-  text-decoration-style: dashed;
-  text-decoration-color: rgba(107, 90, 74, 0.7);
+.mushaf-page.turn-fwd { animation: mpage-in-fwd 0.22s ease-out; }
+.mushaf-page.turn-back { animation: mpage-in-back 0.22s ease-out; }
+@keyframes mpage-in-fwd {
+  from { opacity: 0.2; transform: translateX(-36px); }
+  to { opacity: 1; transform: none; }
 }
-body[data-theme='dark'] .aya-text .w.is-unsure,
-body[data-theme='dark'] .page-text .w.is-unsure {
-  color: #cbb79e;
+@keyframes mpage-in-back {
+  from { opacity: 0.2; transform: translateX(36px); }
+  to { opacity: 1; transform: none; }
 }
-
-.mistake.is-unsure .tag {
-  background: rgba(107, 90, 74, 0.16);
-  color: #4a3a2c;
+@media (prefers-reduced-motion: reduce) {
+  .mushaf-page.turn-fwd, .mushaf-page.turn-back { animation: none; }
 }
 
-.result-scope {
-  margin: 6px 2px 2px;
-  font-size: 12px;
-}
-
-.verdict-ask {
+.mpage-top {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
-  flex-wrap: wrap;
-  margin-top: 8px;
+  /* keeps clear of the ✕ / ☰ button in the corner */
+  padding: 2px 4px 4px 50px;
+  font-family: 'Amiri Quran', var(--arabic);
+  font-size: 15px;
+  line-height: 1.4;
+  color: var(--gold);
+  border-bottom: 1px solid var(--line);
+  direction: rtl;
 }
+.mpage-no {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--green);
+}
+body[data-theme='dark'] .mpage-no { color: var(--green-dark); }
 
-.accuracy-ask {
-  width: 100%;
-  margin: 0;
+.page-text.is-lines {
+  display: flex;
+  flex-direction: column;
+  font-family: 'Amiri Quran', var(--arabic);
+  line-height: normal;
+  text-align: initial;
+  direction: rtl;
 }
+.page-text.is-lines .mline,
+.page-text.is-lines .msurah,
+.page-text.is-lines .mbasmala {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+}
+.page-text.is-lines .mline-in {
+  width: 100%;
+  white-space: nowrap;
+  line-height: 1.5;
+  direction: rtl;
+  text-align: justify;
+  text-align-last: justify;
+}
+.page-text.is-lines .mline-in.is-end { text-align-last: center; }
+.page-text.is-lines.is-measuring .mline-in {
+  text-align: right !important;
+  text-align-last: right !important;
+}
+.page-text.is-lines .mbasmala-in {
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--green-dark);
+}
+.page-text.is-lines .msurah-in {
+  position: relative;
+  width: 100%;
+  padding: 0.12em 0;
+  text-align: center;
+  white-space: nowrap;
+  font-size: 0.92em;
+  line-height: 1.35;
+  color: var(--green);
+  border: 1.5px solid var(--gold);
+  border-radius: 10px;
+  background: linear-gradient(180deg, rgba(176, 122, 60, 0.12), rgba(176, 122, 60, 0.04));
+}
+.page-text.is-lines .msurah-in::before {
+  content: '';
+  position: absolute;
+  inset: 2px;
+  border: 1px solid rgba(176, 122, 60, 0.4);
+  border-radius: 7px;
+  pointer-events: none;
+}
+body[data-theme='dark'] .page-text.is-lines .msurah-in { color: var(--green-dark); }
+/* the circle at the end of an aya must never push a line wider */
+.page-text.is-lines .aya-marker { font-size: 0.5em; margin: 0 0.2em; }
+.page-text.is-lines .aya-seg { padding: 0; border-radius: 4px; }
+.page-text.is-lines .msurah-in,
+.page-text.is-lines .mbasmala-in { text-align: center; text-align-last: center; }

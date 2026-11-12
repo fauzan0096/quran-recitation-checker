@@ -55,3 +55,64 @@ export async function indopakPage(page) {
   writeCache(page, verses);
   return verses;
 }
+
+// ---------------------------------------------------------------- 15 lines
+
+const LINES_API = 'https://api.quran.com/api/v4/verses/by_page';
+const LINES_KEY = 'tc.indopakLens.';
+const linesCache = new Map();
+
+/**
+ * Words per printed line of one IndoPak page (top to bottom), from the
+ * `line_number` of every word on Quran.com's 15-line IndoPak mus'haf (id 6).
+ * Returns null when it cannot be had (offline, or the answer has no line
+ * numbers): the page then simply stays flowing text, never wrong text.
+ */
+export async function indopakPageLines(page) {
+  if (linesCache.has(page)) return linesCache.get(page);
+  try {
+    const raw = localStorage.getItem(LINES_KEY + page);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      linesCache.set(page, parsed);
+      return parsed;
+    }
+  } catch (error) {
+    console.warn('indopak lines cache read failed', error);
+  }
+  try {
+    const url = `${LINES_API}/${page}?mushaf=6&words=true&word_fields=line_number&per_page=50`;
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) return null;
+    const lens = linesFromApi(await response.json());
+    if (!lens) return null;
+    linesCache.set(page, lens);
+    try {
+      localStorage.setItem(LINES_KEY + page, JSON.stringify(lens));
+    } catch (error) {
+      console.warn('indopak lines cache write failed', error);
+    }
+    return lens;
+  } catch (error) {
+    return null;
+  }
+}
+
+/** Pure: Quran.com `by_page` answer -> words per line, or null if unusable. */
+export function linesFromApi(data) {
+  const counts = new Map();
+  let total = 0;
+  for (const verse of (data && data.verses) || []) {
+    for (const word of verse.words || []) {
+      if (word.char_type_name && word.char_type_name !== 'word') continue; // aya-end marker
+      const line = Number(word.line_number);
+      if (!Number.isInteger(line) || line < 1) return null;
+      counts.set(line, (counts.get(line) || 0) + 1);
+      total += 1;
+    }
+  }
+  if (!total) return null;
+  return Array.from(counts.keys())
+    .sort((a, b) => a - b)
+    .map((line) => counts.get(line));
+}

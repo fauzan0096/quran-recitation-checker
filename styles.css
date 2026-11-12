@@ -2176,16 +2176,9 @@ a.more-card {
   counter-reset: tasbeeh;
 }
 
+/* tasbeeh: no star ornament behind the dial — the app's own plain look */
 .tasbeeh::before {
-  content: '۞';
-  position: absolute;
-  top: -22px;
-  inset-inline-end: 4px;
-  font-size: 92px;
-  line-height: 1;
-  color: var(--gold);
-  opacity: 0.09;
-  pointer-events: none;
+  content: none;
 }
 
 .tasbeeh-presets {

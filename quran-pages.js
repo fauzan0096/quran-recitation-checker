@@ -98,3 +98,13 @@ export function pageAyahs(page) {
   }
   return out;
 }
+
+/** The juz (1..30) an aya belongs to. */
+export function juzOfAya(surah, aya) {
+  let found = 0;
+  for (const entry of juzs) {
+    if (entry.surah < surah || (entry.surah === surah && entry.aya <= aya)) found = entry.juz;
+    else break;
+  }
+  return found;
+}

@@ -146,7 +146,7 @@ export async function transcribe(instance, audioFloat32, options = {}) {
   if (!instance) throw new Error('Model load nahi hua');
 
   const fast = options.fast !== false;
-  const audio = trimSilence(audioFloat32 || new Float32Array(0));
+  const audio = normalizeLevel(trimSilence(audioFloat32 || new Float32Array(0)));
   const seconds = audio.length / TARGET_RATE;
 
   // Greedy (num_beams 1) is several times faster than Whisper's default beam
@@ -157,7 +157,8 @@ export async function transcribe(instance, audioFloat32, options = {}) {
     return_timestamps: false,
     temperature: 0,
     condition_on_previous_text: false,
-    num_beams: fast ? 1 : 5,
+    // Short clips are cheap to decode, so a small beam search is affordable there.
+    num_beams: fast ? (seconds <= 10 ? 2 : 1) : 5,
     do_sample: false,
     max_new_tokens: Math.max(96, Math.min(448, Math.round(seconds * 8) + 64)),
   };
@@ -184,7 +185,7 @@ export async function transcribe(instance, audioFloat32, options = {}) {
     const text = Array.isArray(output)
       ? output.map((part) => (part && part.text) || '').join(' ')
       : (output && output.text) || '';
-    return text.trim();
+    return collapseRunaways(text);
   } finally {
     if (timer) clearTimeout(timer);
   }
@@ -239,6 +240,28 @@ function resampleMono(mono, sourceRate) {
   const ratio = sourceRate / TARGET_RATE;
   const outLength = Math.max(1, Math.floor(length / ratio));
   const out = new Float32Array(outLength);
+  if (ratio > 1) {
+    // Downsampling (44.1/48 kHz -> 16 kHz): average the source samples under each
+    // output sample. Picking single samples folds high frequencies back into the
+    // voice band (aliasing) and blurs the consonants the model relies on.
+    for (let i = 0; i < outLength; i += 1) {
+      const from = i * ratio;
+      const to = Math.min(length, from + ratio);
+      let a = Math.floor(from);
+      let sum = 0;
+      let weight = 0;
+      while (a < to) {
+        const lo = Math.max(a, from);
+        const hi = Math.min(a + 1, to);
+        const w = hi - lo;
+        sum += mono[a] * w;
+        weight += w;
+        a += 1;
+      }
+      out[i] = weight ? sum / weight : 0;
+    }
+    return out;
+  }
   for (let i = 0; i < outLength; i += 1) {
     const position = i * ratio;
     const index = Math.floor(position);
@@ -247,6 +270,57 @@ function resampleMono(mono, sourceRate) {
     out[i] = mono[index] * (1 - fraction) + mono[next] * fraction;
   }
   return out;
+}
+
+/**
+ * Bring a quiet recording up to a steady level (and drop the DC offset some
+ * phone mics add). Gain is capped, so background noise is never blown up, and a
+ * recording that is already loud is left alone.
+ */
+export function normalizeLevel(samples, targetPeak = 0.9, maxGain = 8) {
+  const length = samples.length;
+  if (!length) return samples;
+  let mean = 0;
+  for (let i = 0; i < length; i += 1) mean += samples[i];
+  mean /= length;
+  let peak = 0;
+  for (let i = 0; i < length; i += 1) {
+    const v = Math.abs(samples[i] - mean);
+    if (v > peak) peak = v;
+  }
+  if (peak < 0.003) return samples; // silence: nothing to lift
+  const gain = Math.min(maxGain, targetPeak / peak);
+  if (gain <= 1.05 && Math.abs(mean) < 0.002) return samples;
+  const out = new Float32Array(length);
+  for (let i = 0; i < length; i += 1) out[i] = (samples[i] - mean) * Math.max(1, gain);
+  return out;
+}
+
+/**
+ * Whisper sometimes loops on one word or phrase. Keep at most three copies of
+ * anything repeated back to back four or more times; a real recitation never
+ * says the same word four times in a row without a gap.
+ */
+export function collapseRunaways(text) {
+  const words = String(text || '').trim().split(/\s+/).filter(Boolean);
+  let changed = true;
+  let current = words;
+  while (changed) {
+    changed = false;
+    for (let size = 1; size <= 4 && !changed; size += 1) {
+      for (let i = 0; i + size * 4 <= current.length; i += 1) {
+        const unit = current.slice(i, i + size).join(' ');
+        let copies = 1;
+        while (current.slice(i + copies * size, i + (copies + 1) * size).join(' ') === unit) copies += 1;
+        if (copies >= 4) {
+          current = [...current.slice(0, i + size * 3), ...current.slice(i + copies * size)];
+          changed = true;
+          break;
+        }
+      }
+    }
+  }
+  return current.join(' ');
 }
 
 /** 16-bit mono WAV: plays everywhere and decodes everywhere (unlike webm on iOS). */

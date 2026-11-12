@@ -16,9 +16,6 @@ import { compareDistance, normalizeArabic } from './normalize.js';
 export const WORD_STATUS = {
   CORRECT: 'correct',
   CLOSE: 'close',
-  // Heard something, but not confidently the right word. It is shown as
-  // "pakka nahi" — never as a red mistake. A wrong tick is what breaks trust.
-  UNSURE: 'unsure',
   WRONG: 'wrong',
   MISSING: 'missing',
 };
@@ -200,9 +197,7 @@ export function alignWords(expectedWords, heardWords) {
           ? WORD_STATUS.CORRECT
           : sim >= 0.55
             ? WORD_STATUS.CLOSE
-            : sim >= 0.3
-              ? WORD_STATUS.UNSURE
-              : WORD_STATUS.WRONG,
+            : WORD_STATUS.WRONG,
       distance,
       similarity: sim,
       optional: item.optional,
@@ -216,7 +211,7 @@ export function alignWords(expectedWords, heardWords) {
     if (result.heardIndex !== null) heardStatus[result.heardIndex] = result.status;
   }
 
-  const counts = { correct: 0, close: 0, unsure: 0, wrong: 0, missing: 0, extra: extras.length };
+  const counts = { correct: 0, close: 0, wrong: 0, missing: 0, extra: extras.length };
   let gained = 0;
   let counted = 0;
   for (const result of results) {
@@ -226,7 +221,6 @@ export function alignWords(expectedWords, heardWords) {
     counts[result.status] += 1;
     if (result.status === WORD_STATUS.CORRECT) gained += 1;
     else if (result.status === WORD_STATUS.CLOSE) gained += 0.6;
-    // An unsure word neither earns a point nor loses one.
     else if (result.status === WORD_STATUS.WRONG) gained += 0.15;
   }
 
@@ -246,10 +240,10 @@ export function alignWords(expectedWords, heardWords) {
 }
 
 function verdictFor(score, counts) {
-  const total = counts.correct + counts.close + counts.unsure + counts.wrong + counts.missing;
-  if (total === 0) return 'Kuch suna nahi gaya';
+  if (counts.correct + counts.close + counts.wrong + counts.missing === 0) {
+    return 'Kuch suna nahi gaya';
+  }
   if (counts.missing === 0 && counts.wrong === 0 && counts.extra === 0) {
-    if (counts.unsure > 0 && counts.correct + counts.close <= counts.unsure) return 'Kuch lafz pakke nahi';
     return score === 100 ? 'Bilkul sahi' : 'Sahi (thori bariqi)';
   }
   if (score >= 85) return 'Achha — chhoti ghaltiyan';
@@ -266,7 +260,6 @@ export function statusLine(alignment) {
   const letters = {
     [WORD_STATUS.CORRECT]: 'C',
     [WORD_STATUS.CLOSE]: 'K',
-    [WORD_STATUS.UNSURE]: 'U',
     [WORD_STATUS.WRONG]: 'W',
     [WORD_STATUS.MISSING]: 'M',
   };
