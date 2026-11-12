@@ -64,7 +64,6 @@ import { enable as pushEnable, disable as pushDisable } from './push.js';
 import { record as recordAccuracy, stats as accuracyStats, reset as resetAccuracy, percent as accuracyPercent } from './accuracy.js';
 import { playWord } from './word-audio.js';
 import {
-  ADHANS,
   list as adhanList,
   current as currentAdhan,
   setId as setAdhanId,
@@ -620,25 +619,33 @@ function mountReminderCardUI() {
   if (els.remindRoot) mountReminderCard(els.remindRoot);
 }
 
-/** Azaan: pick a muazzin, turn it on, and try it. */
+/** Azaan: the app's own recording (or the person's own file), on or off. */
 function fillAdhans() {
-  if (!els.adhanSelect) return;
-
-  els.adhanSelect.textContent = '';
-  for (const item of adhanList()) {
-    const option = document.createElement('option');
-    option.value = item.id;
-    option.textContent = item.name;
-    els.adhanSelect.appendChild(option);
+  // The muazzin picker is gone with the borrowed recordings; if one is ever put
+  // back, this keeps working.
+  if (els.adhanSelect) {
+    const items = adhanList();
+    const ids = items.map((item) => item.id);
+    els.adhanSelect.textContent = '';
+    for (const item of items) {
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = item.name;
+      els.adhanSelect.appendChild(option);
+    }
+    els.adhanSelect.value = ids.includes(adhanState().id)
+      ? adhanState().id
+      : ids[0] || 'own';
+    els.adhanSelect.addEventListener('change', () => {
+      setAdhanId(els.adhanSelect.value);
+      paintAdhan();
+      armAdhanNow();
+    });
+    if (ids.length < 2) {
+      const field = els.adhanSelect.closest('.field, .pl-row');
+      if (field) field.hidden = true;
+    }
   }
-  els.adhanSelect.value = Object.keys(ADHANS).includes(adhanState().id)
-    ? adhanState().id
-    : 'aaqib';
-  els.adhanSelect.addEventListener('change', () => {
-    setAdhanId(els.adhanSelect.value);
-    paintAdhan();
-    armAdhanNow();
-  });
 
   if (els.adhanToggle) {
     els.adhanToggle.addEventListener('click', () => {
@@ -654,9 +661,13 @@ function fillAdhans() {
     els.adhanTest.addEventListener('click', async () => {
       primeAdhan();
       const ok = await playAdhan();
-      if (els.adhanCredit) {
-        els.adhanCredit.textContent = ok ? currentAdhan().credit : t('adhan.failed');
+      if (!els.adhanCredit) return;
+      if (ok) {
+        els.adhanCredit.textContent = currentAdhan().credit || '';
+        return;
       }
+      const own = await hasAdhanFile().catch(() => false);
+      els.adhanCredit.textContent = own ? t('adhan.failed') : t('adhan.noFile');
     });
   }
 

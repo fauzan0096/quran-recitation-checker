@@ -125,14 +125,10 @@ used only to seek inside the EveryAyah recording of the same aya.
 
 
 
-## Azaan recordings — Wikimedia Commons
+## Azaan recording — the app's own
 
-The Settings → Azaan player streams one of four free recordings:
-
-- **Adhan** by Aishatu98 — CC0 (public domain).
-- **Adhan — Jarih** — CC BY-SA 3.0.
-- **The Adhan — Aaqib Azeez** (Atcovi) — CC BY-SA 4.0.
-- **Llamada a oración, Mezquita Hassan II** by Fraguando — CC BY-SA 4.0.
-
-All four are on <https://commons.wikimedia.org> and are used unmodified with the
-credit shown in Settings. Nothing is bundled with the app.
+The azaan the app plays is the owner's own recording, kept in this repository as
+`audio/adhan.mp3`, included with the permission of the person who recorded it.
+The free recordings from Wikimedia Commons that earlier versions streamed were
+removed at the owner's request and are no longer used. A person can also set
+their own mp3/mp4 from their phone; that file never leaves the device.

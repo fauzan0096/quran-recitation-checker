@@ -1,12 +1,14 @@
 // © 2026 F A FS — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 
-// Azaan (adhan) — a free recording played at the exact prayer time.
+// Azaan (adhan) — the app's own recording, played at the exact prayer time.
 //
-// The four recordings are from Wikimedia Commons and are free to use as long as
-// they are credited and not sold: one is public domain (CC0), the others are
-// CC BY-SA. Attribution is shown in Settings and in LICENSES.md. Ogg files do
-// not play on iPhone, so iOS picks the mp3/wav ones.
+// Only one sound is ever played: the owner's recording, which belongs in the
+// repository as `audio/adhan.mp3` and is pointed to by `url` below. Until that
+// file is in place `url` stays empty and the app plays nothing — the prayer
+// notification still arrives, and no borrowed muazzin is forced on anyone. A
+// person can also pick their own mp3/mp4 from the phone (kept in IndexedDB), and
+// that one is used first whenever it is there.
 //
 // Timing: `arm()` sets a single timer for the exact second of the next prayer
 // (a 60-second poll was up to a minute late and kept running all day). `check()`
@@ -29,33 +31,18 @@ const WINDOW = 15;
 const ORDER = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
 export const ADHANS = {
-  aaqib: {
-    name: 'Adhan — Aaqib Azeez',
-    url: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/The_Adhan_-_Muslim_Call_to_Prayer_-_Aaqib_Azeez.mp3',
+  own: {
+    name: 'Azaan',
+    // The owner's recording lives in the repo as `audio/adhan.mp3`. Nothing is
+    // borrowed from anyone else; if the file is not there yet, the app stays
+    // silent and says so instead of playing a muazzin nobody chose.
+    url: 'audio/adhan.mp3',
     type: 'mp3',
-    credit: 'Aaqib Azeez (Atcovi), CC BY-SA 4.0 — Wikimedia Commons',
-  },
-  hassan: {
-    name: 'Adhan — Hassan II Mosque',
-    url: 'https://upload.wikimedia.org/wikipedia/commons/9/9c/Llamada_a_oraci%C3%B3n_Mezquita_Hassan_II.wav',
-    type: 'wav',
-    credit: 'Fraguando, CC BY-SA 4.0 — Wikimedia Commons',
-  },
-  adhan: {
-    name: 'Adhan (public domain)',
-    url: 'https://upload.wikimedia.org/wikipedia/commons/e/e7/Adhan.ogg',
-    type: 'ogg',
-    credit: 'Aishatu98, CC0 — Wikimedia Commons',
-  },
-  wiki: {
-    name: 'Adhan — Jarih',
-    url: 'https://upload.wikimedia.org/wikipedia/commons/1/16/Adhan_wiki.oga',
-    type: 'oga',
-    credit: 'Jarih, CC BY-SA 3.0 — Wikimedia Commons',
+    credit: '',
   },
 };
 
-const DEFAULT = 'aaqib';
+const DEFAULT = 'own';
 
 function load() {
   try {
@@ -110,7 +97,7 @@ export function current() {
 
 // ------------------------------------------- a recording of your own
 // Kept in IndexedDB (a Blob survives restarts), so a person can use their own
-// muazzin's mp3 or mp4 even when the Wikimedia links do not play for them.
+// muazzin's mp3 or mp4 straight away, without waiting for a new app version.
 const DB_NAME = 'bayyin-adhan';
 const STORE_NAME = 'files';
 const FILE_KEY = 'mine';

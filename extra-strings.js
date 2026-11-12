@@ -107,7 +107,10 @@ addStrings('roman', {
   'push.testSent': 'Push bhej di — notification aani chahiye.',
   'push.testFailed': 'Push nahi gayi — Worker/KV check karein.',
   'adhan.heading': 'Azaan',
-  'adhan.hint': 'App khuli ho ya background me ho — namaz ke waqt azaan khud bajegi, kuch dabana nahi padega. App poori band ho to usi minute notification aati hai; us par tap karein to azaan chalti hai. Neeche se muazzin ya apni file chunein.',
+  'adhan.hint':
+    'App khuli ho ya background me ho — namaz ke waqt apni azaan ki recording khud bajegi, kuch dabana nahi padega. App poori band ho to usi minute notification aati hai; us par tap karein to azaan chalti hai.',
+  'adhan.noFile':
+    'Azaan ki recording abhi app me nahi hai. Neeche se apni mp3/mp4 chun lein — usi se azaan bajegi.',
   'adhan.label': 'Muazzin',
   'adhan.test': 'Azaan test',
   'adhan.on': 'Azaan chalu',
@@ -300,7 +303,10 @@ addStrings('ur', {
   'push.testSent': 'پش بھیج دی — نوٹیفکیشن آنی چاہیے۔',
   'push.testFailed': 'پش نہیں گئی — ورکر/KV دیکھیں۔',
   'adhan.heading': 'اذان',
-  'adhan.hint': 'ایپ کھلی ہو یا پس منظر میں ہو — نماز کے وقت اذان خود بجے گی، کچھ دبانا نہیں پڑے گا۔ ایپ پوری بند ہو تو اسی منٹ اطلاع آتی ہے؛ اس پر ٹیپ کریں تو اذان چلتی ہے۔ نیچے سے مؤذن یا اپنی فائل چنیں۔',
+  'adhan.hint':
+    'ایپ کھلی ہو یا پس منظر میں ہو — نماز کے وقت اپنی اذان کی ریکارڈنگ خود بجے گی، کچھ دبانا نہیں پڑے گا۔ ایپ پوری بند ہو تو اسی منٹ اطلاع آتی ہے؛ اس پر ٹیپ کریں تو اذان چلتی ہے۔',
+  'adhan.noFile':
+    'اذان کی ریکارڈنگ ابھی ایپ میں نہیں ہے۔ نیچے سے اپنی mp3/mp4 چن لیں — اسی سے اذان بجے گی۔',
   'adhan.label': 'مؤذن',
   'adhan.test': 'اذان ٹیسٹ',
   'adhan.on': 'اذان چالو',
@@ -493,7 +499,10 @@ addStrings('en', {
   'push.testSent': 'Push sent — a notification should appear.',
   'push.testFailed': 'Push did not go through — check the Worker/KV.',
   'adhan.heading': 'Azaan',
-  'adhan.hint': 'With the app open — even in the background — the azaan starts by itself at prayer time, nothing to tap. With the app fully closed a notification arrives at that minute; tap it and the azaan plays. Pick a muazzin or your own file below.',
+  'adhan.hint':
+    'With the app open — even in the background — your own azaan recording starts by itself at prayer time, nothing to tap. With the app fully closed a notification arrives at that minute; tap it and the azaan plays.',
+  'adhan.noFile':
+    'The azaan recording is not in the app yet. Pick your own mp3/mp4 below and that one will play.',
   'adhan.label': 'Muazzin',
   'adhan.test': 'Test azaan',
   'adhan.on': 'Azaan on',
