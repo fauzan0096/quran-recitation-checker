@@ -1162,6 +1162,14 @@ body[data-theme='dark'] {
 .hz-target { border-top: 4px solid var(--gold); background: linear-gradient(180deg, rgba(176,122,60,.12), var(--card)); }
 .hz-label { font-size: 12px; font-weight: 700; color: var(--green); letter-spacing: .02em; }
 .hz-aya { margin: 0; }
+/* The aya words in the test are separate .hz-w spans, and every span is bidi
+   isolated (so a hint never pulls a letter to the wrong side). The .aya-text box
+   asks the browser to guess its direction from the text (unicode-bidi: plaintext),
+   and that rule skips isolated runs when it looks for the first strong letter — so
+   with no readable letter it fell back to left-to-right and the aya came out
+   reversed. Pin the box to rtl so the words always run right to left like the
+   mushaf, whether the aya is plain text or made of word spans. */
+.hz-aya.aya-text { direction: rtl; unicode-bidi: normal; text-align: right; }
 .hz-banner { text-align: center; }
 .hz-banner-name { font-family: var(--arabic); font-size: 30px; color: var(--green-dark); line-height: 1.8; }
 .hz-prompt { margin: 0; font-size: 13px; color: var(--muted); }
