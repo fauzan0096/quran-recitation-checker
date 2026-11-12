@@ -2172,3 +2172,17 @@ body[data-theme='dark'] .mline-in .w.is-unsure {
   width: 100%;
   margin: 0;
 }
+
+
+
+/* Five items in the bottom bar: keep the labels readable. */
+.bottom-nav .bn-item {
+  font-size: 10.5px;
+  padding: 6px 2px;
+  gap: 1px;
+}
+
+.bottom-nav .bn-item svg {
+  width: 23px;
+  height: 23px;
+}
