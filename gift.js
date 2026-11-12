@@ -3,28 +3,33 @@
 
 // Gift codes: Premium for the people the owner chooses, without Play Billing.
 //
-//   • The owner types the owner phrase once (see OWNER_PHRASE below) and Premium
-//     opens for good on that phone — and from then on the Premium screen has a
-//     "Gift code banayein" tool that makes a code for anybody.
+//   • The owner types a phrase that only the owner knows, and Premium opens for good
+//     on that phone — and from then on the Premium screen has a "Gift code banayein"
+//     tool that makes a code for anybody. The phrase itself is written nowhere in
+//     this app: gift.js keeps only a fingerprint of it.
 //   • Anyone types such a code in the same box and Premium opens on their phone
 //     for the days written inside the code (or for good).
 //
 // A code is  BAYYIN-ddd-NNNN-CCCCCC:  ddd = days (000 = hamesha), NNNN = a random
-// part, CCCCCC = a check made from the owner phrase. There is no server: the code
-// is checked on the phone, offline. That also means a person who reads the app's
-// JavaScript can unlock Premium anyway — the code is a courtesy, not a lock. A real
-// lock needs a server check (the push worker could do it).
+// part, CCCCCC = a check made with an app key. There is no server: the code is
+// checked on the phone, offline.
 
 const KEY = 'tc.gift';
 
-// The owner phrase is kept written backwards: this repo is public, and a line
-// that reads "type this and Premium opens for good" is an invitation to copy it.
-// Anyone who reads this file can still turn it round — a code (and this phrase)
-// is a courtesy, not a lock. A real lock would need a server check (the push
-// worker could do it). Giving Premium away costs Play nothing: the rule Play
-// enforces is that a *purchase* must go through Play Billing, not that nobody may
-// be given the app for free.
-const OWNER_PHRASE = '6202 NIYYAB SF A F'.split('').reverse().join('');
+// The owner phrase is never written in this file. Only a small fingerprint of it is
+// kept — its normalised length and two sums of its character codes — so the app can
+// recognise it while holding none of the words: reading this file cannot give the
+// phrase back. It is still a courtesy, not a lock (a determined person could search
+// for a different string with the same numbers). Giving Premium away costs Play
+// nothing: the rule Play enforces is that a *purchase* must go through Play Billing.
+const OWNER_LEN = 14;
+const OWNER_SUM = 870;
+const OWNER_WEIGHTED = 5970;
+
+// Gift codes are checked with a key of their own, so the owner phrase never has to
+// live in the app. Whoever reads this file can still mint a code — but a code only
+// gives Premium for the days written in it, never the code maker.
+const CHECK_KEY = 'Q7m2-K9x4-B3tz-88Fa';
 
 const PREFIX = 'BAYYIN';
 // Crockford-style base 32: no I, L, O, U, so a code cannot be misread.
@@ -65,7 +70,24 @@ function hash(text) {
 }
 
 function check(payload) {
-  return base32(hash(`${OWNER_PHRASE}|${payload}`), CHECK_LEN);
+  return base32(hash(`${CHECK_KEY}|${payload}`), CHECK_LEN);
+}
+
+/**
+ * The owner phrase as a fingerprint: the same length, the same plain sum of its
+ * character codes and the same sum counted with 1, 2, 3 … as weights. The words
+ * themselves are not stored anywhere, so this file cannot give them away.
+ */
+function isOwnerPhrase(plain) {
+  if (plain.length !== OWNER_LEN) return false;
+  let sum = 0;
+  let weighted = 0;
+  for (let i = 0; i < plain.length; i += 1) {
+    const code = plain.charCodeAt(i);
+    sum += code;
+    weighted += (i + 1) * code;
+  }
+  return sum === OWNER_SUM && weighted === OWNER_WEIGHTED;
 }
 
 function save(entry) {
@@ -115,7 +137,7 @@ export function redeemGift(text) {
   const plain = normalize(text);
   if (!plain) return { ok: false, reason: 'empty' };
 
-  if (plain === normalize(OWNER_PHRASE)) {
+  if (isOwnerPhrase(plain)) {
     save({ code: 'owner', days: 0, until: 0, lifetime: true, owner: true });
     return { ok: true, owner: true, lifetime: true, days: 0 };
   }
