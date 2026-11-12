@@ -118,3 +118,101 @@ input.addEventListener('change', () => {
   files.forEach((file, index) => addItem(file, index));
   input.value = '';
 });
+
+// ------------------------------------------------------------- feature graphic
+// Play listing ke sab se upar wali 1024×500 tasveer. Canvas par banti hai, is liye
+// har phone par ek hi shakal me aati hai.
+const FW = 1024;
+const FH = 500;
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+
+/** Ek chhoti si gold arch — masjid ka ishara. */
+function arch(ctx, cx, baseY, w, h) {
+  const r = w / 2;
+  ctx.beginPath();
+  ctx.moveTo(cx - r, baseY);
+  ctx.lineTo(cx - r, baseY - h + r);
+  ctx.arc(cx, baseY - h + r, r, Math.PI, 0);
+  ctx.lineTo(cx + r, baseY);
+  ctx.stroke();
+}
+
+function drawFeature() {
+  const canvas = document.getElementById('feature');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+
+  const bg = ctx.createLinearGradient(0, 0, FW, FH);
+  bg.addColorStop(0, '#3d1419');
+  bg.addColorStop(0.55, '#4b1b21');
+  bg.addColorStop(1, '#2c0f13');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, FW, FH);
+
+  const glow = ctx.createRadialGradient(FW - 130, 90, 20, FW - 130, 90, 380);
+  glow.addColorStop(0, 'rgba(216,166,107,0.38)');
+  glow.addColorStop(1, 'rgba(216,166,107,0)');
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, FW, FH);
+
+  ctx.strokeStyle = 'rgba(231,201,168,0.5)';
+  ctx.lineWidth = 3;
+  roundRect(ctx, 22, 22, FW - 44, FH - 44, 28);
+  ctx.stroke();
+
+  // ornaments, right side
+  ctx.strokeStyle = 'rgba(231,201,168,0.35)';
+  ctx.lineWidth = 4;
+  arch(ctx, FW - 210, FH - 96, 120, 190);
+  arch(ctx, FW - 340, FH - 96, 90, 150);
+
+  // Arabic name
+  ctx.textBaseline = 'middle';
+  ctx.direction = 'rtl';
+  ctx.textAlign = 'right';
+  ctx.fillStyle = '#f3d9b0';
+  ctx.font = '700 150px "Amiri Quran", "Traditional Arabic", serif';
+  ctx.fillText('بيّن', FW - 170, FH / 2 - 6);
+
+  // Latin name + lines
+  ctx.direction = 'ltr';
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#fff6eb';
+  ctx.font = '700 76px -apple-system, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('Bayyin', 98, FH / 2 - 52);
+
+  ctx.fillStyle = '#e7c9a8';
+  ctx.font = '400 31px -apple-system, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('Quran recitation — checked on the phone', 100, FH / 2 + 22);
+
+  ctx.fillStyle = 'rgba(231,201,168,0.75)';
+  ctx.font = '400 23px -apple-system, "Segoe UI", Roboto, sans-serif';
+  ctx.fillText('No recording leaves your phone  •  Duaein, tasbeeh, namaz, qibla', 100, FH / 2 + 74);
+}
+
+const featureSave = document.getElementById('feature-save');
+if (featureSave) {
+  featureSave.addEventListener('click', () => {
+    const canvas = document.getElementById('feature');
+    if (canvas) download(canvas, 'bayyin-feature-1024x500.png');
+  });
+}
+
+if (document.fonts && document.fonts.load) {
+  document.fonts.load('700 150px "Amiri Quran"').then(drawFeature).catch(drawFeature);
+} else {
+  drawFeature();
+}

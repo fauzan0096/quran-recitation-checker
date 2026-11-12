@@ -10,6 +10,11 @@
     <link rel="icon" href="favicon-32.png" sizes="32x32" />
     <link rel="stylesheet" href="styles.css" />
     <style>
+      @font-face {
+        font-family: 'Amiri Quran';
+        src: url('amiri-quran.ttf') format('truetype');
+        font-display: swap;
+      }
       body {
         background: #f7f1e6;
         color: #2a1a1e;
@@ -61,8 +66,7 @@
   </head>
   <body>
     <main>
-      <h1>Play Store screenshots — 1080×1920</h1>
-      <p>
+      <h1>Play Store screenshots — 1080×1920</h1>      <p>
         Phone par jo screen dikhani ho use khol kar screenshot lein (Power + Volume Down), phir yahan
         daal dein. Ye page har tasveer ko theek <strong>1080×1920</strong> me badal deta hai (bhare hue
         hisse ko app ke paper rang se pura karta hai). Play Console me yahi PNG upload karein.
@@ -105,6 +109,19 @@
       <div id="list" class="card" hidden>
         <strong>Taiyar</strong>
         <div id="items"></div>
+      </div>
+
+      <div class="card">
+        <strong>Feature graphic — 1024×500</strong>
+        <p class="hint">
+          Play listing ki sab se upar wali tasveer. Play ise lazmi maangta hai aur is ke baghair app
+          publish nahi hoti. Neeche taiyar tasveer hai — sirf PNG save karein aur Play Console →
+          Store listing → Feature graphic me upload karein.
+        </p>
+        <canvas id="feature" width="1024" height="500" style="width:100%;height:auto;border-radius:12px;border:1px solid #e2d2ba"></canvas>
+        <div class="row">
+          <button type="button" id="feature-save">⬇ PNG save karein (1024×500)</button>
+        </div>
       </div>
     </main>
     <script type="module" src="screenshots.js"></script>

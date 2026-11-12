@@ -78,6 +78,9 @@ PWABuilder se jo package bana wo ek **Trusted Web Activity (TWA)** hai, aur us k
 - **TWA = live site**: app ka HTML/JS/CSS seedha site se aata hai, is liye naye features
   bhejne ke liye naya AAB release nahi chahiye. Sirf native/manifest/billing tab badalta hai
   jab package dobara banayein.
+- **Billing**: TWA me native bridge nahi chalta — Play **Digital Goods API** deta hai
+  (Chrome, sirf Play se install ki gayi TWA me). `billing.js` me ab dono raste hain:
+  `window.BayyinBilling` (agar kabhi native shell use karein) aur Digital Goods API (TWA).
 
 ## 1b. Target SDK — Play ki minimum (Android 15/16 ke baad)
 
@@ -93,11 +96,8 @@ hai:
   target SDK naya hona chahiye.
 - Is app ki taraf se kuch karne ki zaroorat nahi: web code har Android version par ek hi
   chalta hai.
-- **Billing**: TWA me native bridge nahi chalta — Play **Digital Goods API** deta hai
-  (Chrome, sirf Play se install ki gayi TWA me). `billing.js` me ab dono raste hain:
-  `window.BayyinBilling` (agar kabhi native shell use karein) aur Digital Goods API (TWA).
 
-### 1b. Naya AAB banane ke steps (PWABuilder) — aap khud karte hain
+### 1c. Naya AAB banane ke steps (PWABuilder) — aap khud karte hain
 
 PWABuilder ek website hai jo AAB banati hai; ye repo ke andar se nahi banti.
 
@@ -143,6 +143,24 @@ anta mein ye file khud bhi de deta hai. Na ho to:
 `keytool -list -v -keystore signing.keystore -alias android` se nikal sakte hain.
 
 **Mujhe do:** SHA-256 fingerprint — main file bana dunga aur batadunga kahan host karni hai.
+
+### Fingerprint kahan se (2 hote hain, dono daalein)
+
+1. **Play App Signing** — jab app Play se install hoti hai to Google apni key se sign karta
+   hai. Play Console → **Test and release → Setup → App signing** → *App signing key
+   certificate* → **SHA-256**. Yeh TWA verification ke liye sab se zaroori hai.
+2. **Upload key** — PWABuilder ke `signing-key-info.txt` me (`SHA-256 fingerprint:`), ya
+   `keytool -list -v -keystore signing.keystore -alias android`. Play Console → App
+   integrity me bhi milti hai. AAB/APK jo aap khud phone par sideload karte hain, wo isi se
+   sign hoti hai.
+
+`.well-known/assetlinks.json` me abhi dono ke liye jagah hai — dono strings ko asli
+fingerprints se badal dein (`AA:BB:…` format, uppercase). Warna app Play se khulne par
+URL bar ke saath khulegi.
+
+**Listing ka poora text** (title, short/full description, data safety ke jawab, rating,
+subscription disclosure) → `STORE-LISTING.md`. Feature graphic aur screenshots
+`screenshots.html` se bante hain.
 
 ## 3. Play Console — app ki tayyari
 
