@@ -5,6 +5,11 @@
 
 const WIDTH = 1080;
 const HEIGHT = 1920;
+// Where a viewer of the status can get the app.
+export const APP_URL = 'play.google.com/store/apps/details?id=app.bayyin';
+const PLAY_URL = `https://${APP_URL}`;
+/** "Play Store: app.bayyin" — short enough to read on a phone status. */
+const PLAY_LINE = 'Play Store: app.bayyin';
 const ARABIC_FONT = '"SF Arabic", "Geeza Pro", "Noto Naskh Arabic", "Amiri Quran", serif';
 const LATIN_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 
@@ -224,7 +229,8 @@ function saveBlob(blob, filename) {
 }
 
 /**
- * Share the page to WhatsApp status: the PNG only, no text message attached.
+ * Share the page to WhatsApp status: the designed PNG, with the Play Store line
+ * printed on it, plus the link as the caption so it opens for the viewer.
  * Returns 'shared', 'downloaded' or 'failed'.
  */
 export async function shareDailyPage(payload) {
@@ -234,7 +240,7 @@ export async function shareDailyPage(payload) {
     const file = new File([blob], 'bayyin-naiki.png', { type: 'image/png' });
 
     if (navigator.canShare && navigator.canShare({ files: [file] })) {
-      await navigator.share({ files: [file] });
+      await navigator.share({ files: [file], text: `https://${PLAY_URL}` });
       return 'shared';
     }
     saveBlob(blob, 'bayyin-naiki.png');
@@ -379,7 +385,10 @@ function paintDailyPage(ctx, { date, hijri, items }) {
 
   ctx.font = `500 28px ${ARABIC_FONT}`;
   ctx.fillStyle = 'rgba(255, 246, 235, 0.8)';
-  ctx.fillText('بيّن', mid, HEIGHT - 72);
+  ctx.fillText('بيّن', mid, HEIGHT - 116);
+  ctx.font = `600 22px ${LATIN_FONT}`;
+  ctx.fillStyle = 'rgba(240, 193, 147, 0.92)';
+  ctx.fillText(PLAY_LINE, mid, HEIGHT - 74);
   ctx.font = `400 20px ${LATIN_FONT}`;
   ctx.fillStyle = 'rgba(240, 193, 147, 0.7)';
   ctx.fillText('© 2026 Fauzan Gorme', mid, HEIGHT - 36);
