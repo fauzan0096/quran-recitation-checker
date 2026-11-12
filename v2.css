@@ -2030,3 +2030,42 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .selection-bar {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+
+
+/* ------------------------------------------------- unsure is not a mistake */
+/* A word the recogniser heard but could not place is shown in a calm grey —
+   never in the red of a real mistake. A wrong tick is what breaks trust. */
+.aya-text .w.is-unsure,
+.page-text .w.is-unsure {
+  color: #6b5a4a;
+  text-decoration-style: dashed;
+  text-decoration-color: rgba(107, 90, 74, 0.7);
+}
+body[data-theme='dark'] .aya-text .w.is-unsure,
+body[data-theme='dark'] .page-text .w.is-unsure {
+  color: #cbb79e;
+}
+
+.mistake.is-unsure .tag {
+  background: rgba(107, 90, 74, 0.16);
+  color: #4a3a2c;
+}
+
+.result-scope {
+  margin: 6px 2px 2px;
+  font-size: 12px;
+}
+
+.verdict-ask {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.accuracy-ask {
+  width: 100%;
+  margin: 0;
+}

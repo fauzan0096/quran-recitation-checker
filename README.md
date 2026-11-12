@@ -642,3 +642,32 @@ Ghalti ki wazahat ke saath ab sahi tilawat bhi suni ja sakti hai.
 - iOS par web push sirf iOS 16.4+ aur Home Screen par install hone par chalta hai.
 - App **band** hone par awaz khud nahi baj sakti (koi browser app closed page ko sound
   nahi bajane deta) — us waqt notification aati hai, tap par azaan chalti hai.
+
+
+
+## Kya pakadta hai, kya nahi
+
+- Checker sirf **lafz** dekhta hai: sahi / qareeb / **pakka nahi** / galat /
+  chhoot gaya.
+- **Jo pakka nahi suna gaya, wo "pakke nahi" (grey) dikhta hai — galat nahi.**
+  Galat ka nishan lagana bharosa todta hai, is liye aisa lafz na sahi gina jata
+  hai na galat.
+- **Tajweed** (madd, ghunnah, qalqala, ikhfa…) Whisper nahi pakad sakta — wo
+  sirf alfaaz sunta hai. Result ke neeche yeh baat saaf likhi hai, taake koi
+  ghalat umeed na rakhe. Tajweed ke liye kisi qari se mashwara karein.
+
+## Checker ki jaanch (accuracy)
+
+- Har result ke neeche **"✓ Sahi tha / ✗ Galat tha"** hai.
+- Settings → **Checker ki jaanch** me ginti aur percentage banti hai.
+- 20–30 asli recordings (bade aur bachche, alag awaazein) par rate karein — tab
+  yeh number andaze ki jagah **naapi hui accuracy** ban jata hai.
+
+## Backup (naya phone)
+
+- Settings → Backup → **Backup file save karein** ya **Backup bhejein
+  (WhatsApp / Drive)**.
+- File me hifz plan, yaad ki hui ayaat, murajaa, tasbeeh, badges, settings aur
+  report — sab kuch hai (`tc.*` keys).
+- Naye phone par app kholein → Settings → **Backup wapas laayein** → sab wapas.
+  (Yeh file hi sync hai: device se device, bina account.)

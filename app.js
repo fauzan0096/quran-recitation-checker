@@ -45,7 +45,7 @@ import {
   manageAvailable as billingManageAvailable,
   restore as billingRestore,
 } from './billing.js';
-import { download as backupDownload, restore as backupRestore } from './backup.js';
+import { download as backupDownload, restore as backupRestore, share as backupShare } from './backup.js';
 import { mountBadges, checkBadges, celebrate } from './badges.js';
 import {
   reciters,
@@ -60,6 +60,7 @@ import {
 } from './qari.js';
 import { mountCard as mountReminderCard, start as startDailyReminder, state as reminderState } from './reminder.js';
 import { enable as pushEnable, disable as pushDisable } from './push.js';
+import { record as recordAccuracy, stats as accuracyStats, reset as resetAccuracy, percent as accuracyPercent } from './accuracy.js';
 import { playWord } from './word-audio.js';
 import {
   ADHANS,
@@ -507,8 +508,9 @@ function cacheElements() {
     'hifz-root', 'hztest-root', 'murajaa-root', 'report-root', 'open-report',
     'more-badges', 'view-badges', 'badges-root', 'close-badges',
     'more-murajaa-count',
-    'backup-export', 'backup-import', 'backup-file', 'error-log', 'errors-copy',
+    'backup-export', 'backup-import', 'backup-file', 'backup-share', 'error-log', 'errors-copy',
     'view-premium', 'close-premium', 'premium-root', 'open-premium', 'premium-status',
+    'accuracy-root',
     'premium-chart', 'premium-tabs', 'premium-plan', 'premium-test',
     'premium-murajaa', 'premium-report',
     'view-namaz', 'namaz-tabs', 'namaz-times', 'namaz-qibla', 'namaz-adhan',
@@ -1588,9 +1590,11 @@ function mistakeBlock(key, problems) {
     tag.textContent =
       r.status === WORD_STATUS.CLOSE
         ? t('count.close')
-        : r.status === WORD_STATUS.MISSING
-          ? t('note.missing')
-          : t('count.wrong');
+        : r.status === WORD_STATUS.UNSURE
+          ? t('count.unsure')
+          : r.status === WORD_STATUS.MISSING
+            ? t('note.missing')
+            : t('count.wrong');
 
     const expected = document.createElement('span');
     expected.className = 'aya-word';
@@ -1667,6 +1671,7 @@ function renderAyaText(target, verse, alignment) {
 
 function noteFor(result) {
   if (result.status === WORD_STATUS.MISSING || !result.heard) return t('note.missing');
+  if (result.status === WORD_STATUS.UNSURE) return t('note.unsure');
   if (result.status === WORD_STATUS.CLOSE) return t('note.closeHeard', { word: result.heard });
   return t('note.readHeard', { word: result.heard });
 }
@@ -1675,6 +1680,7 @@ function countsLine(c) {
   return [
     `${c.correct} ${t('count.correct')}`,
     c.close ? `${c.close} ${t('count.close')}` : '',
+    c.unsure ? `${c.unsure} ${t('count.unsure')}` : '',
     c.wrong ? `${c.wrong} ${t('count.wrong')}` : '',
     c.missing ? `${c.missing} ${t('count.missing')}` : '',
     c.extra ? `${c.extra} ${t('count.extra')}` : '',
@@ -1702,6 +1708,13 @@ function renderAyaResult(target, alignment, key) {
   strip.append(score, verdict, counts);
   target.appendChild(strip);
 
+  // Whisper hears words, not tajweed: say so where the result is read, so
+  // nobody expects a madd or ghunnah to be judged here.
+  const scope = document.createElement('p');
+  scope.className = 'hint result-scope';
+  scope.textContent = t('result.tajweedNote');
+  target.appendChild(scope);
+
   const problems = alignment.results.filter((r) => r.status !== WORD_STATUS.CORRECT);
   if (!problems.length) {
     const ok = document.createElement('p');
@@ -1712,12 +1725,52 @@ function renderAyaResult(target, alignment, key) {
     return;
   }
   target.appendChild(mistakeBlock(key, problems));
+  target.appendChild(accuracyButtons());
 }
 
 function scoreClass(score) {
   if (score >= 85) return 'good';
   if (score >= 60) return 'mid';
   return 'bad';
+}
+
+/**
+ * "Sahi tha / Galat tha": the person's own verdict on what the app said. It is
+ * what turns "the checker feels right" into a counted accuracy in Settings.
+ */
+function accuracyButtons() {
+  const row = document.createElement('div');
+  row.className = 'verdict-ask';
+
+  const ask = document.createElement('span');
+  ask.className = 'hint accuracy-ask';
+  ask.textContent = t('accuracy.ask');
+  row.appendChild(ask);
+
+  const yes = document.createElement('button');
+  yes.type = 'button';
+  yes.className = 'btn small';
+  yes.textContent = t('accuracy.yes');
+
+  const no = document.createElement('button');
+  no.type = 'button';
+  no.className = 'btn ghost small';
+  no.textContent = t('accuracy.no');
+
+  const finish = (right) => {
+    recordAccuracy(right);
+    row.textContent = '';
+    const done = document.createElement('span');
+    done.className = 'hint';
+    done.textContent = t('accuracy.thanks');
+    row.appendChild(done);
+  };
+
+  yes.addEventListener('click', () => finish(true));
+  no.addEventListener('click', () => finish(false));
+
+  row.append(yes, no);
+  return row;
 }
 
 function toArabicDigits(value) {
@@ -1985,7 +2038,7 @@ async function checkTarget(id, keys, blob) {
 
 /** counts + score + verdict for a set of word results. */
 function summarise(results, extras) {
-  const counts = { correct: 0, close: 0, wrong: 0, missing: 0, extra: extras.length };
+  const counts = { correct: 0, close: 0, unsure: 0, wrong: 0, missing: 0, extra: extras.length };
   let gained = 0;
   let counted = 0;
   for (const result of results) {
@@ -2497,6 +2550,7 @@ function setView(view, tab) {
   }
   if (name === 'settings') {
     renderPremiumCard();
+    renderAccuracyCard();
     paintErrors();
   }
   if (name === 'premium') {
@@ -2568,8 +2622,41 @@ function renderPremiumCard() {
   }
 }
 
-function premiumLine(text) {
-  const row = document.createElement('li');
+/**
+ * Settings: how often the checker's verdict was actually right. The person
+ * rates each result ("Sahi tha / Galat tha") and this counts it — the only
+ * honest way to know, instead of a guess.
+ */
+function renderAccuracyCard() {
+  const root = els.accuracyRoot;
+  if (!root) return;
+  root.textContent = '';
+
+  const data = accuracyStats();
+  const pct = accuracyPercent(data);
+
+  const line = document.createElement('p');
+  line.className = 'hint';
+  line.textContent =
+    pct === null
+      ? t('accuracy.none')
+      : t('accuracy.line', { ok: data.ok, total: data.total, pct });
+  root.appendChild(line);
+
+  if (!data.total) return;
+
+  const reset = document.createElement('button');
+  reset.type = 'button';
+  reset.className = 'btn ghost small';
+  reset.textContent = t('accuracy.reset');
+  reset.addEventListener('click', () => {
+    resetAccuracy();
+    renderAccuracyCard();
+  });
+  root.appendChild(reset);
+}
+
+function premiumLine(text) {  const row = document.createElement('li');
   const mark = document.createElement('span');
   mark.className = 'premium-mark';
   mark.textContent = '✓';
@@ -3205,6 +3292,14 @@ function wireEvents() {
     els.backupExport.addEventListener('click', () => {
       const result = backupDownload();
       toast(result.ok ? t('backup.done', { count: result.count }) : t('backup.failed'));
+    });
+  }
+
+  if (els.backupShare) {
+    els.backupShare.addEventListener('click', async () => {
+      const result = await backupShare();
+      if (result.ok) toast(t('backup.shared', { count: result.count }));
+      else toast(t('backup.shareFailed'));
     });
   }
 

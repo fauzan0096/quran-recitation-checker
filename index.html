@@ -233,6 +233,14 @@
         </div>
 
         <div class="card">
+          <h3 data-i18n="accuracy.title">Checker ki jaanch</h3>
+          <p class="hint" data-i18n="accuracy.about">
+            Har result ke neeche "Sahi tha / Galat tha" dabayein — yahan ginti aur percentage ban jayegi.
+          </p>
+          <div id="accuracy-root"></div>
+        </div>
+
+        <div class="card">
           <h3 data-i18n="progress.heading">Meri yaad-dasht</h3>
           <p class="hint" data-i18n="progress.hint">
             Har aya par ★ (bookmark) ya ✓ / ↺ ka nishan lagayein — sab kuch isi phone par rehta hai.
@@ -247,10 +255,13 @@
         <div class="card">
           <h3 data-i18n="backup.heading">Backup</h3>
           <p class="hint" data-i18n="backup.hint">
-            Progress, report aur settings ek file me — phone badalne ya data mitne se pehle save karein.
+            Hifz plan, yaad ki hui ayaat, murajaa, tasbeeh, badges aur settings — sab ek file me. Naya phone lete waqt isi file se sab wapas aa jata hai.
           </p>
           <button type="button" id="backup-export" class="btn primary small" data-i18n="backup.export">
             Backup file save karein
+          </button>
+          <button type="button" id="backup-share" class="btn small" data-i18n="backup.share">
+            Backup bhejein (WhatsApp / Drive)
           </button>
           <button type="button" id="backup-import" class="btn ghost small" data-i18n="backup.import">
             Backup wapas laayein
