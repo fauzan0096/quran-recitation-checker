@@ -14,8 +14,8 @@
 import { activate } from './premium.js';
 
 const SKU = {
-  monthly: 'bayyin_pro_monthly',
-  yearly: 'bayyin_pro_yearly',
+  monthly: 'premium_monthly',
+  yearly: 'premium_yearly',
 };
 
 const DIGITAL_GOODS = 'https://play.google.com/billing';
@@ -180,7 +180,7 @@ export async function restore() {
   }
 }
 
-/** A base plan id comes back as "bayyin_pro_monthly" or "bayyin_pro_monthly:monthly". */
+/** A base plan id comes back as "premium_monthly" or "premium_monthly:monthly". */
 function foundSku(itemId) {
   return String(itemId || '').split(':')[0];
 }

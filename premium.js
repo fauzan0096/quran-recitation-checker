@@ -65,8 +65,8 @@ const PLAN_KEY = 'tc.premiumPlan';
 const CHECKS = 'tc.premiumChecks';
 
 export const PLANS = {
-  monthly: { id: 'monthly', sku: 'bayyin_pro_monthly', days: 30 },
-  yearly: { id: 'yearly', sku: 'bayyin_pro_yearly', days: 365 },
+  monthly: { id: 'monthly', sku: 'premium_monthly', days: 30 },
+  yearly: { id: 'yearly', sku: 'premium_yearly', days: 365 },
 };
 
 // Two price points. The South Asian row is the ₹99 tier, set by hand in Play

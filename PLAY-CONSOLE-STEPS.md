@@ -185,7 +185,7 @@ subscription **publish/activate nahi hoti** (draft ban jati hai). Ek dafa ka kaa
 ### 5.2 Monthly subscription (ek ek step)
 
 1. Play Console → **Monetize → Products → Subscriptions → Create subscription**.
-2. **Product ID**: `bayyin_pro_monthly` → **exact yahi** (app ke `billing.js` me yahi SKU
+2. **Product ID**: `premium_monthly` → **exact yahi** (app ke `billing.js` me yahi SKU
    hai; baad me badla nahi ja sakta).
 3. **Name**: `Bayyin Premium (Monthly)`
    **Description**: `Hifz plan, Hifz Test, Murajaa aur Meri report — har mahine.`
@@ -204,7 +204,7 @@ subscription **publish/activate nahi hoti** (draft ban jati hai). Ek dafa ka kaa
 ### 5.3 Yearly subscription
 
 Wahi steps, bas:
-- Product ID: `bayyin_pro_yearly`
+- Product ID: `premium_yearly`
 - Base plan: `yearly`, **1 year**, auto-renewing
 - India: **₹799** (PK 2640 / BD 1120 / NP 1280 / LK 2720)
 - 3 din ka free trial

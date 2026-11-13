@@ -416,8 +416,8 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   chaaron Premium cards ek hi jagah hain, "Premium" badge ke saath.
 - **Trial**: pehli dafa app khulne par **3 din** poora Premium khula rehta hai
   (`tc.premiumSince`), uske baad free hadd lag jati hai.
-- **Plans aur SKUs** (`premium.js` me `PLANS`): `bayyin_pro_monthly` (30 din),
-  `bayyin_pro_yearly` (365 din).
+- **Plans aur SKUs** (`premium.js` me `PLANS`): `premium_monthly` (30 din),
+  `premium_yearly` (365 din).
 - **Price mulk ke hisaab se**: `region()` phone ke **time zone** se mulk nikalta
   hai (Kolkata → IN, Karachi → PK, Dhaka → BD, Kathmandu → NP, Colombo → LK),
   warna phone ki language ke region tag se; currency `Intl.NumberFormat` se banti
