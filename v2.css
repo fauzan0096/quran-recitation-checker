@@ -2403,3 +2403,70 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.mf-indopak {
   hyphens: none;
   letter-spacing: 0;
 }
+
+/* ------------------------------------------------------- dark mushaf page */
+/* The same printed frame on dark paper, for Madani and IndoPak both: only the
+   paper, the ink and the frame colour change, the layout does not. */
+body[data-theme='dark'] #view-reader .mushaf-page.mf-madani,
+body[data-theme='dark'] #view-reader .mushaf-page.mf-indopak {
+  background: #15110f !important;
+  color: #f2e7d3;
+}
+body[data-theme='dark'] .mf-madani { --mf: #57b98a; }
+body[data-theme='dark'] .mf-indopak { --mf: #6aa4f0; }
+
+body[data-theme='dark'] .mf-madani::before,
+body[data-theme='dark'] .mf-indopak::before {
+  background-color: color-mix(in srgb, var(--mf) 16%, #15110f);
+}
+body[data-theme='dark'] .mf-madani::after,
+body[data-theme='dark'] .mf-indopak::after {
+  border-color: var(--mf);
+}
+
+body[data-theme='dark'] .mf-madani .mpage-top,
+body[data-theme='dark'] .mf-indopak .mpage-top {
+  color: #f2e7d3;
+  border-bottom-color: rgba(242, 231, 211, 0.55);
+}
+body[data-theme='dark'] .mf-madani .mpage-no,
+body[data-theme='dark'] .mf-indopak .mpage-no { color: var(--mf); }
+
+body[data-theme='dark'] .mf-madani .page-text,
+body[data-theme='dark'] .mf-indopak .page-text,
+body[data-theme='dark'] .mf-madani .page-text.is-lines .mline-in,
+body[data-theme='dark'] .mf-indopak .page-text.is-lines .mline-in {
+  color: #f4ead8;
+  text-shadow: none;
+}
+
+body[data-theme='dark'] .mf-madani .page-text .aya-marker,
+body[data-theme='dark'] .mf-indopak .page-text .aya-marker {
+  color: #f4ead8;
+  border-color: var(--mf);
+}
+
+body[data-theme='dark'] .mf-madani .page-text.is-lines .msurah-in,
+body[data-theme='dark'] .mf-indopak .page-text.is-lines .msurah-in {
+  color: #f4ead8;
+  background: color-mix(in srgb, var(--mf) 18%, #15110f);
+}
+body[data-theme='dark'] .mf-madani .page-text.is-lines .mbasmala-in,
+body[data-theme='dark'] .mf-indopak .page-text.is-lines .mbasmala-in { color: #f4ead8; }
+
+body[data-theme='dark'] .mf-indopak .page-text.is-lines .mline,
+body[data-theme='dark'] .mf-indopak .page-text.is-lines .msurah,
+body[data-theme='dark'] .mf-indopak .page-text.is-lines .mbasmala {
+  border-bottom-color: rgba(242, 231, 211, 0.35);
+}
+
+body[data-theme='dark'] .mf-madani .basmala-line,
+body[data-theme='dark'] .mf-indopak .basmala-line {
+  color: #f4ead8;
+  border-color: var(--mf);
+}
+
+body[data-theme='dark'] .mf-madani .aya-seg.is-selected,
+body[data-theme='dark'] .mf-indopak .aya-seg.is-selected {
+  background: color-mix(in srgb, var(--mf) 28%, transparent);
+}
