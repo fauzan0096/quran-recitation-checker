@@ -35,11 +35,20 @@ Urdu listing (agar add karein):
 
 ## Short description (max 80)
 
-Arabic + English, ek hi listing me (75 characters — limit 80 hai):
+**Sirf English me** rakhna bilkul chalta hai — listing ki default language English hai,
+aur Arabic naam title me hi dikhta hai. Ye 79 characters ka hai:
 
 ```
-قرآن تلاوت کی جانچ اسی فون پر — check your Quran recitation on your phone
+Recite, record and check your Quran tilawat on your phone. Nothing is uploaded.
 ```
+
+Chhota aur seedha chahiye to:
+
+```
+Check your Quran recitation on your phone — no upload, no account.
+```
+
+(68 characters. Isme "Quran" aur "recitation" dono hain, jo search me kaam aate hain.)
 
 ---
 
