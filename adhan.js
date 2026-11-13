@@ -3,7 +3,7 @@
 
 // Azaan (adhan) — the app's own recordings, played at the exact prayer time.
 //
-// Two recordings by Mohammad Mujeebullah Duste are kept in the repository as
+// Two recordings by Mohammad Duste are kept in the repository as
 // `audio/adhan-1.m4a` and `audio/adhan-2.m4a`; the person picks one on Namaz →
 // Azaan. A person can also pick their own mp3/mp4 from the phone (kept in
 // IndexedDB), and that one is used first whenever it is there.
@@ -30,16 +30,16 @@ const ORDER = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
 export const ADHANS = {
   one: {
-    name: 'Adhan by Mohammad Mujeebullah Duste 1',
+    name: 'Adhan by Mohammad Duste 1',
     url: 'audio/adhan-1.m4a',
     type: 'm4a',
-    credit: 'Mohammad Mujeebullah Duste',
+    credit: 'Mohammad Duste',
   },
   two: {
-    name: 'Adhan by Mohammad Mujeebullah Duste 2',
+    name: 'Adhan by Mohammad Duste 2',
     url: 'audio/adhan-2.m4a',
     type: 'm4a',
-    credit: 'Mohammad Mujeebullah Duste',
+    credit: 'Mohammad Duste',
   },
 };
 

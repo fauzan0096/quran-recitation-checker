@@ -1,15 +1,15 @@
 # Azaan recordings
 
-Two recordings, both by **Mohammad Mujeebullah Duste**:
+Two recordings, both by **Mohammad Duste**:
 
 ```
 audio/adhan-1.m4a
 audio/adhan-2.m4a
 ```
 
-`adhan.js` points at them; the person picks "Adhan by Mohammad Mujeebullah Duste
-1" or "2" on Namaz → Azaan. They play in the app, in the background, and from the
-prayer notification.
+`adhan.js` points at them; the person picks "Adhan by Mohammad Duste 1" or "2" on
+Namaz → Azaan. They play in the app, in the background, and from the prayer
+notification.
 
 Notes
 
