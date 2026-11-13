@@ -3246,7 +3246,9 @@ function renderPremium() {
 
     const hint = document.createElement('p');
     hint.className = 'hint';
-    hint.textContent = t('premium.buyHint');
+    // In a browser there is no Play Billing, so a card can never charge anyone:
+    // say that in plain words instead of leaving a tap to fall on a toast.
+    hint.textContent = billingAvailable() ? t('premium.buyHint') : t('premium.notAvailable');
     root.appendChild(hint);
 
     // Play asks that the renewal terms are on screen before anyone subscribes.
