@@ -195,6 +195,8 @@ function element() {
     return null;
   }
   audio.preload = 'auto';
+  audio.setAttribute('playsinline', '');
+  audio.setAttribute('webkit-playsinline', '');
   audio.addEventListener('ended', () => {
     try {
       audio.currentTime = 0;
@@ -239,6 +241,10 @@ export function unlock() {
   const el = element();
   if (!el) return false;
   if (playing()) return true; // already sound on this page: nothing to unlock
+
+  // Warm the person's own file (IndexedDB) now, so a later tap can start it
+  // without spending its gesture on an await.
+  readLocalFile().catch(() => {});
 
   try {
     const silent = silentSource();
@@ -304,24 +310,29 @@ export function stop() {
 }
 
 /** Play the chosen azaan; resolves false when the browser refuses the sound. */
-export async function play() {
+export function play() {
   const el = element();
-  if (!el) return false;
+  if (!el) return Promise.resolve(false);
   unlocking = false;
 
-  // Your own file first; otherwise the chosen muazzin, then the others in case
-  // a host does not answer on this phone.
-  const local = await readLocalFile();
+  // Nothing is awaited before the first play(): iOS only allows sound inside the
+  // tap itself, and an `await` (the local file from IndexedDB) spends that
+  // permission. The person's own file is used from the value already read at
+  // startup (`localUrl`), so the very first el.play() stays in the gesture.
+  const list = [];
+  if (localUrl) list.push(localUrl);
   const first = current().url;
-  const urls = local ? [local] : [first, ...fallbackUrls(first)];
+  if (first) list.push(first);
+  list.push(...fallbackUrls(first));
 
-  for (const url of urls) {
-    if (!url) continue;
+  const attempt = (index) => {
+    if (index >= list.length) return Promise.resolve(false);
+    const url = list[index];
     audioSrc = url;
     try {
       el.src = url;
     } catch (error) {
-      /* the next one may work */
+      return attempt(index + 1);
     }
     try {
       el.currentTime = 0;
@@ -344,16 +355,28 @@ export async function play() {
       /* not supported */
     }
 
+    let started;
     try {
-      await el.play();
-      return true;
+      started = el.play();
     } catch (error) {
-      // "Not allowed" is the browser blocking sound (no tap yet), not a bad
-      // file: another recording will not help.
-      if (error && (error.name === 'NotAllowedError' || error.name === 'AbortError')) return false;
+      return attempt(index + 1);
     }
-  }
-  return false;
+    if (!started || typeof started.then !== 'function') return Promise.resolve(true);
+
+    return started.then(
+      () => true,
+      (error) => {
+        // "Not allowed" is the browser blocking sound (no tap yet), not a bad
+        // file: another file will not help.
+        if (error && (error.name === 'NotAllowedError' || error.name === 'AbortError')) {
+          return false;
+        }
+        return attempt(index + 1);
+      }
+    );
+  };
+
+  return attempt(0);
 }
 
 /** The other recordings, mp3/wav first (ogg does not play on iPhone). */

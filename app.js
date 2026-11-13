@@ -1561,7 +1561,11 @@ function toggleMushafFull(page) {
   document.body.classList.toggle('is-mushaf-full', state.mushafFull && state.mode === 'page');
   const button = page ? page.querySelector('.mushaf-toggle') : null;
   paintMushafToggle(button);
-  if (page) window.requestAnimationFrame(() => fitMushafPage(page));
+  // The frame changes size the moment the class is toggled; fitting inside a
+  // single animation frame measured the old height and left the page with an
+  // oversized font that got clipped (paper with no ayaat). Fit again after the
+  // layout has really settled.
+  if (page) refitMushafSoon();
   return state.mushafFull;
 }
 
@@ -1674,9 +1678,11 @@ function fitMadaniLines(text) {
     size *= (width - 2) / natural;
     text.style.fontSize = `${Math.floor(size * 10) / 10}px`;
   }
-  // Never taller than its row: the harakat need about 1.9 lines of height.
-  const rowCap = room / Math.max(1, text.children.length) / 1.9;
-  size = Math.max(12, Math.min(size, rowCap * 1.35, 64));
+  // Size the page by its width only, so every line fills the frame and no gaps
+  // are left between the words. If those fifteen lines are taller than the frame
+  // on a short screen, the page scrolls (is-tall) instead of shrinking the text —
+  // a smaller text is what used to leave big holes in the lines.
+  size = Math.max(12, Math.min(size, 64));
   const finalSize = Math.floor(size * 10) / 10;
   text.style.fontSize = `${finalSize}px`;
   text.classList.remove('is-measuring');
@@ -1695,11 +1701,6 @@ function fitMadaniLines(text) {
  */
 function spreadMushafLines(text) {
   const range = document.createRange();
-  const size = parseFloat(window.getComputedStyle(text).fontSize) || 16;
-  // A gap wider than about half a character pushes the words onto another
-  // visual line: on a short page that leaves the frame looking empty. Lines
-  // that would need more than that are simply left unstretched.
-  const maxGap = Math.max(2, size * 0.45);
   for (const line of text.querySelectorAll('.mline-in')) {
     line.style.wordSpacing = '0px';
     if (line.classList.contains('is-end')) continue;
@@ -1708,7 +1709,9 @@ function spreadMushafLines(text) {
     range.selectNodeContents(line);
     const natural = range.getBoundingClientRect().width;
     const extra = (line.clientWidth - natural - 0.5) / gaps;
-    line.style.wordSpacing = extra > 0 && extra <= maxGap ? `${extra.toFixed(2)}px` : '0px';
+    // Only the spaces between words are widened, and the line is `nowrap`, so no
+    // word is ever pushed onto another line and no gap is left at the edge.
+    if (extra > 0) line.style.wordSpacing = `${extra.toFixed(2)}px`;
   }
 }
 
@@ -2756,14 +2759,28 @@ function rememberNav(name) {
  * history entry sends the person straight to the start.
  */
 function handleBack() {
+  // The full-screen mushaf is a layer over the reader: back leaves it first.
+  if (state.mushafFull && state.mode === 'page') {
+    state.mushafFull = false;
+    document.body.classList.remove('is-mushaf-full');
+    const page = els.ayaList ? els.ayaList.querySelector('.mushaf-page') : null;
+    if (page) {
+      paintMushafToggle(page.querySelector('.mushaf-toggle'));
+      refitMushafSoon();
+    }
+    pushHistory();
+    return;
+  }
+
   const had = navStack.length > 1;
   if (had) navStack.pop();
   const target = navStack[navStack.length - 1] || 'home';
   navSkipPush = true;
   setView(target);
   navSkipPush = false;
-  // Still screens behind this one? keep a sentinel so back does not escape.
-  if (had && navStack.length > 1) pushHistory();
+  // Keep one entry behind us while there is a trail, so the phone's back goes
+  // home first and only a second press at home leaves the app.
+  if (had) pushHistory();
 }
 
 /** One step back, through the browser so both stay in step. */

@@ -2384,6 +2384,7 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.mf-indopak {
   letter-spacing: 0 !important;
   word-break: keep-all;
   overflow-wrap: normal;
+  white-space: nowrap;
   hyphens: none;
   font-kerning: normal;
   font-variant-ligatures: normal;
