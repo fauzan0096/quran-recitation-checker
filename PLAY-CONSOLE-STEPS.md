@@ -169,13 +169,79 @@ App content → **Data safety → Start**.
 
 ## 5. Monetize → Products → Subscriptions
 
-1. **Create subscription** → Product ID: `bayyin_pro_monthly`
-2. Base plan: `monthly`, **auto-renewing**, billing period **P1M**.
-3. Price: India ₹99; baqi mulk Play khud convert kar dega (chahein to manual bhi kar
-   sakte hain).
-4. **Free trial**: 3 din, naye subscribers ke liye.
-5. **Activate** karein.
-6. Wahi cheez dobara: Product ID `bayyin_pro_yearly`, base plan `yearly`, **P1Y**, ₹799.
+### 5.0 Order: pehle subscription ya pehle PWA/AAB?
+
+**Pehle subscription products bana lein** (ye sirf catalog hai, 5 minute ka kaam), **phir AAB
+upload karein** — is tarah jab tester app install karega, Premium ka button foran kaam
+karega. AAB ke bina bhi subscription ban jati hai; magar **kharidari test** karne ke liye
+Play se install ki hui build chahiye. Agar "Monetize" menu nazar na aaye to pehle Internal
+testing par ek AAB chadha dein, phir menu aa jata hai.
+
+### 5.1 Pehle payments profile
+
+Play Console → **Setup → Payments profile** — bank account, PAN, address. Iske baghair
+subscription **publish/activate nahi hoti** (draft ban jati hai). Ek dafa ka kaam.
+
+### 5.2 Monthly subscription (ek ek step)
+
+1. Play Console → **Monetize → Products → Subscriptions → Create subscription**.
+2. **Product ID**: `bayyin_pro_monthly` → **exact yahi** (app ke `billing.js` me yahi SKU
+   hai; baad me badla nahi ja sakta).
+3. **Name**: `Bayyin Premium (Monthly)`
+   **Description**: `Hifz plan, Hifz Test, Murajaa aur Meri report — har mahine.`
+4. **Add base plan**:
+   - Base plan ID: `monthly` (default)
+   - Billing period: **1 month**, **Auto-renewing**
+   - Renewal type: charge full price (default)
+5. **Set price** → India: **₹99**. Baqi mulkon ke liye:
+   - chahein to "Set prices automatically" (Play khud convert karega), ya
+   - manual: Pakistan 330 PKR, Bangladesh 140 BDT, Nepal 160 NPR, Sri Lanka 340 LKR.
+6. **Free trial offer** (base plan ke andar): **3 days**, "New subscribers only",
+   ek dafa per user.
+7. **Activate base plan** → phir upar **Activate subscription** dabayein.
+   (Draft rehne par testers ko price nahi milegi.)
+
+### 5.3 Yearly subscription
+
+Wahi steps, bas:
+- Product ID: `bayyin_pro_yearly`
+- Base plan: `yearly`, **1 year**, auto-renewing
+- India: **₹799** (PK 2640 / BD 1120 / NP 1280 / LK 2720)
+- 3 din ka free trial
+
+### 5.4 Testers ke liye free kharidari
+
+1. Play Console → **Settings → License testing**.
+2. Testers ke **Gmail** add karein → Save.
+3. Unke liye Play ka "Test card, always approves" chalta hai — paisa nahi katta,
+   purchase phir bhi asli tarah verify hoti hai.
+
+### 5.5 Asli test (Play se install karke)
+
+1. Testers app Play se install karein (closed testing ka opt-in link).
+2. App → **Aur → Bayyin Premium** → monthly/y
+   yearly card dabayein.
+3. Play ka payment sheet khulega ("Test card") → Continue.
+4. App me **Premium khul jana chahiye** (Hifz plan, Hifz Test, Report tabs aa jayenge).
+5. App band karke dobara kholen — launch par **restore** chalta hai, Premium bana rehna
+   chahiye.
+6. **Cancel test**: Play Store → Payments & subscriptions → Subscriptions → cancel →
+   app kholen → wapas free ho jana chahiye.
+
+### 5.6 Price baad me badalna
+
+Monetize → Products → Subscriptions → product → base plan → **Edit price** → naye
+countries/prices → **Save → Publish**. Purane subscribers par naya price tab lagta hai jab
+aap "apply to existing subscribers" chunein (Play usi waqt batata hai).
+
+### 5.7 App ke andar kya dikhta hai
+
+- Price app khud dikhati hai: South Asia me fixed ₹99 tier, baqi mulkon me $3.33/$29.99 ka
+  local conversion (`premium.js`), aur **asal price Play ka payment sheet** dikhata hai.
+- Kharidari Play Billing (TWA me Digital Goods API) se hoti hai — `billing.js`.
+- `VERIFY_URL` abhi khali hai: release se pehle server verification lagana behtar hai
+  (PLAYSTORE.md step 6), warna token sirf phone par check hota hai.
+
 
 ---
 
