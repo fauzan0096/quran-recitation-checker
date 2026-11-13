@@ -5,13 +5,14 @@
 
 @font-face {
   font-family: 'Amiri Quran';
-  /* The full Amiri Quran (OFL): unlike a glyph-only subset it keeps every
-     shaping table, so joined letters stay joined and nothing is cut. */
-  src: url('amiri-quran.ttf') format('truetype');
+  /* The full Amiri Quran (OFL) first, then the older file as a fallback. A
+     glyph-only build can drop the medial forms of a letter (a kaf that comes out
+     detached); the full build keeps every shaping table. No unicode-range, so the
+     browser never mixes two Arabic fonts inside one page. */
+  src: url('amiri-quran-full.ttf') format('truetype'), url('amiri-quran.ttf') format('truetype');
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+0600-06FF, U+0750-077F, U+08A0-08FF, U+FB50-FDFF, U+FE70-FEFF, U+200C-200F, U+25CC;
 }
 
 :root {
@@ -2297,7 +2298,15 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.mf-indopak {
 .mf-madani .page-text.is-lines .mline-in,
 .mf-indopak .page-text.is-lines .mline-in {
   color: #000;
-  text-shadow: 0.3px 0 0 #000;
+  /* No text-shadow: a shadow offset of a fraction of a pixel draws a second,
+     faint copy of the letters, which is what makes a kaf or a lam look as if it
+     has been cut off. The print look comes from the colour and the frame. */
+  text-shadow: none;
+  font-kerning: normal;
+  font-variant-ligatures: normal;
+  font-synthesis: none;
+  letter-spacing: normal;
+  word-spacing: normal;
 }
 .mf-madani .page-text,
 .mf-indopak .page-text { margin-inline: 6px; }
