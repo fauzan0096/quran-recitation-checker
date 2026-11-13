@@ -96,13 +96,28 @@ App content → **Data safety → Start**.
   In me se kisi me naam/email/phone/location nahi jata.
 - Kahin account nahi banta, is liye "data deletion" ka sawal hi nahi uthta.
 
-### 1.6 News app
+### 1.6 AI-generated content / AI assets
+
+- *"Does your app generate content using AI?"* → **No**.
+- Kyun: app me ek hi AI hai — **on-device speech recognition model** (jo tilawat sun kar
+  lafzon se milata hai). Yeh content **banata nahi**, sirf suni hui baat ko text me badal
+  kar check karta hai. Koi text, tasveer, audio ya video user ko dikhane ke liye generate
+  nahi hota, aur kuch upload bhi nahi hota.
+- App ke icon, illustrations aur screenshots **static assets** hain (design files), AI se
+  banne wala koi user-facing content nahi.
+- Agar form "AI assets" ke naam se poochhe ke app/listing me AI se banayi tasveerein hain →
+  jo sach ho wahi batayein. Yahan declaration app ke *content* ki hoti hai, aur uska jawab
+  **No** hai.
+- **"Yes" na karein** — us se Play in-app reporting aur extra review maangta hai, aur app
+  me aisa kuch hai hi nahi.
+
+### 1.7 News app
 - **No.**
 
-### 1.7 COVID-19 apps / Government apps / Financial features / Health
+### 1.8 COVID-19 apps / Government apps / Financial features / Health
 - Sab **No.**
 
-### 1.8 Privacy policy
+### 1.9 Privacy policy
 
 - **Privacy policy URL** (yahi paste karein):
   `https://fauzan0096.github.io/quran-recitation-checker/privacy.html`
