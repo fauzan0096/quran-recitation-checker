@@ -191,16 +191,78 @@ App content → **Data safety → Start**.
 
 ---
 
-## 7. Closed testing (production se pehle zaroori)
+### 7.1 Pehle ye taiyar rakhein
 
-Naye **personal** developer account par production se pehle **12 testers × 14 din** ki
-closed testing lazmi hai:
+- **AAB** PWABuilder se (package **`bayyin.app`**, purana keystore, version code `1`).
+  Baad ki har update me version code **bara** karna hai.
+- **assetlinks** domain root par (`user-site/README.md` dekhein) — warna test ke doran app
+  upar URL bar ke saath khulegi. Testing ke liye lazmi nahi, magar theek karna behtar hai.
+- **Subscriptions** pehle bana kar **Activate** kar dein, warna testers ko Premium ka
+  button "unavailable" milega.
+- **License testing** (free kharidari testers ke liye): Play Console → **Settings →
+  License testing** → testers ke email add karein → "Response: RESPOND_NORMALLY".
+  Iske baad testers ka payment "Test card, always approves" se ho jata hai (paisa nahi
+  katta).
 
-1. **Testing → Closed testing → Create track**.
-2. Wahi AAB upload karein (ya internal wali release ko promote karein).
-3. 12 testers ke email daalein, 14 din tak unhe app use karne dein.
-4. 14 din poore hone par **Production → Apply for production access** — Play kuch sawal
-   poochta hai (kaun test kiya, kya feedback mila). Saaf-saaf likh dein.
+### 7.2 Track aur release banayein
+
+1. Play Console → **Testing → Closed testing → Create track** (naam: `Beta`).
+2. **Create new release** → AAB upload karein.
+3. Release notes: `STORE-LISTING.md` ka "What's new".
+4. **Countries/regions**: sab (ya kam se kam un mulkon ko jahan testers hain).
+5. **Save → Review release → Start rollout to Closed testing**.
+
+### 7.3 Testers (12 se kam nahi)
+
+1. **Testers tab → Create email list** (naam: `Beta testers`).
+2. **Kam se kam 12 Gmail/Google accounts** daalein — apne + dost/rishtedar. Ek hi banda do
+   email se count nahi hota; 12 **alag** accounts chahiye.
+3. Save karke **opt-in link** copy karein (do link hote hain: web link aur Play link —
+   Play link phone par kholna aasan hai).
+4. Wahi link testers ko WhatsApp par bhejein.
+
+### 7.4 14 din ka qanoon (sab se ahem)
+
+- Tester ko **opt-in karna** hai (link khol kar "Become a tester" → **Accept**), phir Play
+  se app install karni hai.
+- Play **14 lagataar din** ginta hai jisme tester **opted-in rehna** chahiye — app uninstall
+  kar dena theek hai, magar **opt-out** kar dena din ka hisab reset kar deta hai.
+- Is liye: link bhejne ke baad khud har tester se confirm karein ke usne accept kar liya.
+  Jis ne accept nahi kiya, wo 14 din me count nahi hota.
+- 14 din poore hone se pehle production ki apply **nahi** ho sakti.
+
+### 7.5 Testers ko bhejne wala message (copy-paste)
+
+```
+Assalamu alaikum! Bayyin (Quran tilawat checker) ka beta test chal raha hai.
+Ye link khol kar "Become a tester" → Accept karein, phir Play Store se app install karein:
+<OPT-IN LINK>
+
+Zaroori: 14 din tak test se opt-out na karein, warna test dobara shuru karna padega.
+App chala kar batayein kya acha laga aur kya dikkat aayi. JazakAllah!
+```
+
+### 7.6 Ye galtiyan test rad kar deti hain
+
+- 12 se kam testers, ya testers ka opt-in na karna.
+- Test ke doran AAB/release **delete** kar dena ya track band kar dena.
+- Tester khud ke hi 12 fake accounts (Play pakad leta hai) — asli log rakhein.
+- App ka package badalna (naya package = naya app, test dobara).
+
+### 7.7 14 din ke baad: Production access
+
+1. **Production → Apply for production access** (Dashboard par bhi link aa jata hai).
+2. Play kuch sawal poochta hai. Aise jawab dein (apne asli tajurbe ke hisaab se):
+   - **How did you test?** "12 testers ne Play ki closed testing track se app install ki
+     aur 14 din tak istemal ki — tilawat check, mushaf, namaz, azaan aur Hifz plan."
+   - **What did testers find?** 3–5 asli cheezein likhein jo aapne theek ki (misal:
+     aya ka ulta hona, mushaf page ka fit, azaan ki recording, qari ka background
+     playback).
+   - **How did you recruit testers?** "Family and friends, WhatsApp par opt-in link."
+   - **What is different now?** Jo changes kiye wo saaf likhein.
+3. Review 1–7 din leta hai. Manzoor hone par **Production → Create new release** → wahi
+   AAB → rollout (20% se shuru karna behtar).
+
 
 ---
 
