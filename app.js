@@ -1700,15 +1700,24 @@ function fitMadaniLines(text) {
  * (ال ك تاب); this never touches a letter.
  */
 function spreadMushafLines(text) {
+  const lines = Array.from(text.querySelectorAll('.mline-in'));
+  if (!lines.length) return;
   const range = document.createRange();
-  for (const line of text.querySelectorAll('.mline-in')) {
+
+  // Read every line first, then write every gap: measuring after each write
+  // forced a fresh layout fifteen times per fit, which is what made the page
+  // feel slow to open and to swipe.
+  const plans = [];
+  for (const line of lines) {
     line.style.wordSpacing = '0px';
     if (line.classList.contains('is-end')) continue;
     const gaps = (line.textContent.match(/ /g) || []).length;
     if (!gaps) continue;
     range.selectNodeContents(line);
     const natural = range.getBoundingClientRect().width;
-    const extra = (line.clientWidth - natural - 0.5) / gaps;
+    plans.push([line, (line.clientWidth - natural - 0.5) / gaps]);
+  }
+  for (const [line, extra] of plans) {
     // Only the spaces between words are widened, and the line is `nowrap`, so no
     // word is ever pushed onto another line and no gap is left at the edge.
     if (extra > 0) line.style.wordSpacing = `${extra.toFixed(2)}px`;
@@ -1717,7 +1726,9 @@ function spreadMushafLines(text) {
 
 /** Fit the page again once the reader is really on screen (it was hidden before). */
 function refitMushafSoon() {
-  for (const wait of [0, 120, 400]) {
+  // Two passes: one now, one after the view transition has settled. Each pass
+  // measures 15 lines, so a third only cost time without changing anything.
+  for (const wait of [0, 200]) {
     window.setTimeout(() => {
       if (currentView !== 'reader') return;
       const page = els.ayaList.querySelector('.mushaf-page');

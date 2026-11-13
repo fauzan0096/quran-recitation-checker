@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v98';
+const CACHE = 'bayyin-v99';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -66,7 +66,6 @@ const SHELL = [
   'manifest.webmanifest',
   'widgets/noor-template.json',
   'widgets/noor-data.json',
-  'amiri-quran.ttf',
   'icon-96.png',
   'icon-192.png',
   'icon-512.png',
@@ -74,8 +73,9 @@ const SHELL = [
   'apple-touch-icon-180.png',
   'favicon.ico',
   'favicon-32.png',
-  'quran-tanzil.txt',
-  'quran-pages.xml',
+  // The Quran text and the page map (1.3 MB + 1.5 MB) are deliberately not
+  // precached: they are fetched and cached on the first open by the runtime
+  // handler, so a new code version does not re-download them for every update.
 ];
 
 const IMMUTABLE = /\.(?:png|ico|woff2|ttf|xml|txt|json)$/i;
