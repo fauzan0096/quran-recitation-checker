@@ -1695,6 +1695,11 @@ function fitMadaniLines(text) {
  */
 function spreadMushafLines(text) {
   const range = document.createRange();
+  const size = parseFloat(window.getComputedStyle(text).fontSize) || 16;
+  // A gap wider than about half a character pushes the words onto another
+  // visual line: on a short page that leaves the frame looking empty. Lines
+  // that would need more than that are simply left unstretched.
+  const maxGap = Math.max(2, size * 0.45);
   for (const line of text.querySelectorAll('.mline-in')) {
     line.style.wordSpacing = '0px';
     if (line.classList.contains('is-end')) continue;
@@ -1703,7 +1708,7 @@ function spreadMushafLines(text) {
     range.selectNodeContents(line);
     const natural = range.getBoundingClientRect().width;
     const extra = (line.clientWidth - natural - 0.5) / gaps;
-    if (extra > 0) line.style.wordSpacing = `${extra.toFixed(2)}px`;
+    line.style.wordSpacing = extra > 0 && extra <= maxGap ? `${extra.toFixed(2)}px` : '0px';
   }
 }
 
