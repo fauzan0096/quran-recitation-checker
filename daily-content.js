@@ -3,9 +3,11 @@
 // Daily content: 60 ayat (references only — the text comes from Tanzil),
 // 30 short ahadith and 60 beloved sunnahs.
 //
-// NOTE: the ahadith are short, well-known ones with their collections; the sunnah
-// references are collection-level. Before publishing, have a scholar check the
-// 60 sunnahs and complete the takhreej.
+// Takhreej note: the 30 ahadith are well-known ones with Bukhari / Muslim /
+// Tirmidhi / Nasa'i numbers. The 60 sunnahs carry collection-level references —
+// one of them ("give gifts") pointed at Bayhaqi, whose chain is weak, and now
+// cites the Bukhari narration instead (2585). A scholar should still read the
+// whole list once before release.
 
 /** [surah, aya] — text is read from the bundled Tanzil mushaf, never retyped. */
 export const AYAT = [
@@ -300,7 +302,7 @@ export const SUNNAHS = [
   { rm: 'Janaze ke sath chalna.', en: 'Follow the funeral.', ref: 'Bukhari 1315' },
   { rm: 'Musafaha (haath milana) karna.', en: 'Shake hands.', ref: 'Tirmidhi 2727' },
   { rm: 'Mehmaan ki izzat karna.', en: 'Honour the guest.', ref: 'Muslim 47' },
-  { rm: 'Hadiya dena aur qabool karna.', en: 'Give gifts and accept them.', ref: 'Bayhaqi' },
+  { rm: 'Hadiya dena aur qabool karna.', en: 'Give gifts and accept them.', ref: 'Bukhari 2585' },
   { rm: 'Rishtedari jodna.', en: 'Keep the ties of kinship.', ref: 'Bukhari 5985' },
   { rm: 'Walidain ki khidmat karna.', en: 'Serve your parents.', ref: 'Bukhari 5971' },
   { rm: 'Yateem ki dekh-bhal karna.', en: 'Care for the orphan.', ref: 'Bukhari 5304' },
