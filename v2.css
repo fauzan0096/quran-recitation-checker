@@ -2226,3 +2226,171 @@ body[data-theme='dark'] .mline-in .w.is-unsure {
   justify-content: center;
   gap: 8px;
 }
+
+
+/* ================================================================== */
+/* Print-mushaf look: white paper, black text, coloured side border     */
+/* Madani = green frame, IndoPak = blue frame (change --mf to swap).    */
+/* ================================================================== */
+
+.mushaf-page.mf-madani { --mf: #1f7a4d; }
+.mushaf-page.mf-indopak { --mf: #1f56a3; }
+
+body[data-mode='page'] #view-reader .mushaf-page.mf-madani,
+body[data-mode='page'] #view-reader .mushaf-page.mf-indopak,
+body[data-theme='dark'] #view-reader .mushaf-page.mf-madani,
+body[data-theme='dark'] #view-reader .mushaf-page.mf-indopak {
+  background: #ffffff !important;
+  color: #000;
+  position: relative;
+  padding-inline: 24px !important;
+}
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.mf-madani,
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.mf-indopak {
+  position: fixed;
+  padding-top: max(16px, calc(env(safe-area-inset-top) + 6px)) !important;
+  padding-bottom: max(16px, calc(env(safe-area-inset-bottom) + 6px)) !important;
+}
+
+/* the ornamental side border (ring made of a lattice pattern) */
+.mushaf-page.mf-madani::before,
+.mushaf-page.mf-indopak::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  box-sizing: border-box;
+  padding: 10px;
+  border: 2px solid var(--mf);
+  pointer-events: none;
+  background-color: color-mix(in srgb, var(--mf) 14%, #fff);
+  background-image:
+    repeating-linear-gradient(45deg, var(--mf) 0 1.4px, transparent 1.4px 7px),
+    repeating-linear-gradient(-45deg, var(--mf) 0 1.4px, transparent 1.4px 7px);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+}
+/* thin inner line, like the printed page */
+.mushaf-page.mf-madani::after,
+.mushaf-page.mf-indopak::after {
+  content: '';
+  position: absolute;
+  inset: 18px;
+  border: 1.5px solid var(--mf);
+  pointer-events: none;
+}
+
+/* header strip: juz | page no. | surah, black on paper */
+.mf-madani .mpage-top,
+.mf-indopak .mpage-top {
+  color: #000;
+  border-bottom: 1px solid #000;
+  padding-inline: 8px;
+  margin-inline: 6px;
+}
+.mf-madani .mpage-no,
+.mf-indopak .mpage-no { color: var(--mf); }
+
+/* text: pure black, a touch heavier like print */
+.mf-madani .page-text,
+.mf-indopak .page-text,
+.mf-madani .page-text.is-lines .mline-in,
+.mf-indopak .page-text.is-lines .mline-in {
+  color: #000;
+  text-shadow: 0.3px 0 0 #000;
+}
+.mf-madani .page-text,
+.mf-indopak .page-text { margin-inline: 6px; }
+
+/* aya-end circle */
+.mf-madani .page-text .aya-marker,
+.mf-indopak .page-text .aya-marker {
+  color: #000;
+  text-shadow: none;
+  border-color: var(--mf);
+}
+.mf-indopak .page-text .aya-marker { border-color: #000; }
+
+/* surah name banner + basmala */
+.mf-madani .page-text.is-lines .msurah-in,
+.mf-indopak .page-text.is-lines .msurah-in {
+  color: #000;
+  text-shadow: none;
+  border: 1.5px solid var(--mf);
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--mf) 10%, #fff);
+}
+.mf-madani .page-text.is-lines .msurah-in::before,
+.mf-indopak .page-text.is-lines .msurah-in::before {
+  border: 1px solid var(--mf);
+  border-radius: 2px;
+  opacity: 0.55;
+}
+.mf-madani .page-text.is-lines .mbasmala-in,
+.mf-indopak .page-text.is-lines .mbasmala-in { color: #000; }
+
+/* IndoPak: a thin black rule under every line, as in the printed copy */
+.mf-indopak .page-text.is-lines .mline,
+.mf-indopak .page-text.is-lines .msurah,
+.mf-indopak .page-text.is-lines .mbasmala {
+  border-bottom: 1px solid #000;
+}
+.mf-indopak .page-text.is-lines > :last-child { border-bottom: 0; }
+
+/* selected aya stays visible on white */
+.mf-madani .aya-seg.is-selected,
+.mf-indopak .aya-seg.is-selected {
+  background: color-mix(in srgb, var(--mf) 16%, transparent);
+  box-shadow: none;
+}
+
+/* keep the ✕ / ☰ button inside the frame, clear of the header text */
+.mf-madani ~ .mushaf-toggle,
+.mushaf-page.mf-madani .mushaf-toggle,
+.mushaf-page.mf-indopak .mushaf-toggle {
+  top: max(24px, calc(env(safe-area-inset-top) + 14px));
+  inset-inline-end: 24px;
+  width: 28px;
+  height: 28px;
+  font-size: 13px;
+  opacity: 0.85;
+}
+.mf-madani .mpage-top,
+.mf-indopak .mpage-top {
+  padding-inline-end: 38px;
+}
+.mf-madani .basmala-line,
+.mf-indopak .basmala-line {
+  color: #000;
+  border-color: var(--mf);
+  text-align: center;
+}
+
+/* Words are never cut and letters are never pulled apart: lines are filled by
+   widening only the gaps between words (see spreadMushafLines in app.js). */
+.mf-madani .page-text.is-lines .mline-in,
+.mf-indopak .page-text.is-lines .mline-in {
+  text-align: right !important;
+  text-align-last: right !important;
+  letter-spacing: 0 !important;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
+  font-kerning: normal;
+  font-variant-ligatures: normal;
+  text-rendering: optimizeLegibility;
+}
+.mf-madani .page-text.is-lines .mline-in.is-end,
+.mf-indopak .page-text.is-lines .mline-in.is-end {
+  text-align: center !important;
+  text-align-last: center !important;
+}
+/* flowing fallback (IndoPak offline): spaces only, whole words only */
+.mf-madani .page-text:not(.is-lines),
+.mf-indopak .page-text:not(.is-lines) {
+  text-justify: inter-word;
+  word-break: keep-all;
+  overflow-wrap: normal;
+  hyphens: none;
+  letter-spacing: 0;
+}

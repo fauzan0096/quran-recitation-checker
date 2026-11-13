@@ -1304,6 +1304,7 @@ function renderMushafPage() {
   page.className = 'mushaf-page';
   page.id = 'mushaf-page';
   page.dir = 'rtl';
+  page.classList.add(state.mushaf === 'indopak' ? 'mf-indopak' : 'mf-madani');
 
   const bar = mushafSelectionBar();
   if (bar) page.appendChild(bar);
@@ -1646,6 +1647,7 @@ function fitMadaniLines(text) {
     remembered.size
   ) {
     text.style.fontSize = `${remembered.size}px`;
+    spreadMushafLines(text);
     markTall(text.closest('.mushaf-page'), text, text.scrollHeight > text.clientHeight + 1);
     return;
   }
@@ -1678,10 +1680,31 @@ function fitMadaniLines(text) {
   const finalSize = Math.floor(size * 10) / 10;
   text.style.fontSize = `${finalSize}px`;
   text.classList.remove('is-measuring');
+  spreadMushafLines(text);
   // 15 printed lines can still be taller than the frame on a short screen: let the
   // page scroll rather than cut the last line off.
   markTall(text.closest('.mushaf-page'), text, text.scrollHeight > room + 1);
   state.mushafFit = { page: state.page, mushaf: state.mushaf, width, size: finalSize };
+}
+
+/**
+ * Fill every printed line edge to edge by widening only the spaces between
+ * words (word-spacing). The browser's own `justify` can stretch the gaps
+ * between the letters of a word on some phones, which breaks the joining
+ * (ال ك تاب); this never touches a letter.
+ */
+function spreadMushafLines(text) {
+  const range = document.createRange();
+  for (const line of text.querySelectorAll('.mline-in')) {
+    line.style.wordSpacing = '0px';
+    if (line.classList.contains('is-end')) continue;
+    const gaps = (line.textContent.match(/ /g) || []).length;
+    if (!gaps) continue;
+    range.selectNodeContents(line);
+    const natural = range.getBoundingClientRect().width;
+    const extra = (line.clientWidth - natural - 0.5) / gaps;
+    if (extra > 0) line.style.wordSpacing = `${extra.toFixed(2)}px`;
+  }
 }
 
 /** Fit the page again once the reader is really on screen (it was hidden before). */
