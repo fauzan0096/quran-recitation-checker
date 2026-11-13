@@ -111,7 +111,7 @@ addStrings('roman', {
     'App khuli ho ya background me ho — namaz ke waqt apni azaan ki recording khud bajegi, kuch dabana nahi padega. App poori band ho to usi minute notification aati hai; us par tap karein to azaan chalti hai.',
   'adhan.noFile':
     'Azaan ki recording abhi app me nahi hai. Neeche se apni mp3/mp4 chun lein — usi se azaan bajegi.',
-  'adhan.label': 'Muazzin',
+  'adhan.label': 'Azaan',
   'adhan.test': 'Azaan test',
   'adhan.on': 'Azaan chalu',
   'adhan.off': 'Azaan band',
@@ -307,7 +307,7 @@ addStrings('ur', {
     'ایپ کھلی ہو یا پس منظر میں ہو — نماز کے وقت اپنی اذان کی ریکارڈنگ خود بجے گی، کچھ دبانا نہیں پڑے گا۔ ایپ پوری بند ہو تو اسی منٹ اطلاع آتی ہے؛ اس پر ٹیپ کریں تو اذان چلتی ہے۔',
   'adhan.noFile':
     'اذان کی ریکارڈنگ ابھی ایپ میں نہیں ہے۔ نیچے سے اپنی mp3/mp4 چن لیں — اسی سے اذان بجے گی۔',
-  'adhan.label': 'مؤذن',
+  'adhan.label': 'اذان',
   'adhan.test': 'اذان ٹیسٹ',
   'adhan.on': 'اذان چالو',
   'adhan.off': 'اذان بند',
@@ -503,7 +503,7 @@ addStrings('en', {
     'With the app open — even in the background — your own azaan recording starts by itself at prayer time, nothing to tap. With the app fully closed a notification arrives at that minute; tap it and the azaan plays.',
   'adhan.noFile':
     'The azaan recording is not in the app yet. Pick your own mp3/mp4 below and that one will play.',
-  'adhan.label': 'Muazzin',
+  'adhan.label': 'Azaan',
   'adhan.test': 'Test azaan',
   'adhan.on': 'Azaan on',
   'adhan.off': 'Azaan off',

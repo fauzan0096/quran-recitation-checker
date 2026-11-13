@@ -1,25 +1,23 @@
-# Azaan recording
+# Azaan recordings
 
-The app plays **one** azaan, and it is our own:
+Two recordings, both by **Mohammad Mujeebullah Duste**:
 
 ```
-audio/adhan.m4a
+audio/adhan-1.m4a
+audio/adhan-2.m4a
 ```
 
-`adhan.js` points at it already, so the azaan works in the app, in the
-background, and from the prayer notification. No code change is needed.
+`adhan.js` points at them; the person picks "Adhan by Mohammad Mujeebullah Duste
+1" or "2" on Namaz → Azaan. They play in the app, in the background, and from the
+prayer notification.
 
 Notes
 
-- The file is m4a (AAC). Every Android phone and iPhone plays it. If a smaller
-  mp3 is made later, put it here as `audio/adhan.mp3` and change `url` (and
-  `type`) in `adhan.js`.
-- Keep the file reasonably small (1–2 MB is fine); nothing is downloaded until it
-  is needed.
-- Do **not** add it to the service worker `SHELL` list in `sw.js` — one missing
-  file would break the offline cache. The browser caches it after the first play.
-- If the file is ever missing the app stays silent: the prayer notification still
-  arrives, and the Azaan card says the recording is not in the app yet.
+- Both files are m4a (AAC), which every Android phone and iPhone plays.
+- Keep them reasonably small (1–4 MB is fine); nothing is downloaded until it is
+  needed.
+- Do **not** add them to the service worker `SHELL` list in `sw.js` — a large
+  audio file there only slows the install. The browser caches them after the
+  first play.
 - Anyone can also pick their own mp3/mp4 from their phone (Namaz → Azaan → own
   file); that stays on their device and is used first.
-

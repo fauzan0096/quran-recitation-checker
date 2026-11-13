@@ -1,14 +1,12 @@
 // © 2026 F A FS — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 
-// Azaan (adhan) — the app's own recording, played at the exact prayer time.
+// Azaan (adhan) — the app's own recordings, played at the exact prayer time.
 //
-// Only one sound is ever played: the owner's recording, which belongs in the
-// repository as `audio/adhan.mp3` and is pointed to by `url` below. Until that
-// file is in place `url` stays empty and the app plays nothing — the prayer
-// notification still arrives, and no borrowed muazzin is forced on anyone. A
-// person can also pick their own mp3/mp4 from the phone (kept in IndexedDB), and
-// that one is used first whenever it is there.
+// Two recordings by Mohammad Mujeebullah Duste are kept in the repository as
+// `audio/adhan-1.m4a` and `audio/adhan-2.m4a`; the person picks one on Namaz →
+// Azaan. A person can also pick their own mp3/mp4 from the phone (kept in
+// IndexedDB), and that one is used first whenever it is there.
 //
 // Timing: `arm()` sets a single timer for the exact second of the next prayer
 // (a 60-second poll was up to a minute late and kept running all day). `check()`
@@ -31,18 +29,21 @@ const WINDOW = 15;
 const ORDER = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'];
 
 export const ADHANS = {
-  own: {
-    name: 'Azaan',
-    // The owner's own recording, kept in the repo as `audio/adhan.m4a`. Nothing is
-    // borrowed from anyone else; if the file is ever missing, the app stays silent
-    // and says so instead of playing a muazzin nobody chose.
-    url: 'audio/adhan.m4a',
+  one: {
+    name: 'Adhan by Mohammad Mujeebullah Duste 1',
+    url: 'audio/adhan-1.m4a',
     type: 'm4a',
-    credit: '',
+    credit: 'Mohammad Mujeebullah Duste',
+  },
+  two: {
+    name: 'Adhan by Mohammad Mujeebullah Duste 2',
+    url: 'audio/adhan-2.m4a',
+    type: 'm4a',
+    credit: 'Mohammad Mujeebullah Duste',
   },
 };
 
-const DEFAULT = 'own';
+const DEFAULT = 'one';
 
 function load() {
   try {
