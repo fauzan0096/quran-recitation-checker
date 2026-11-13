@@ -51,7 +51,7 @@ Record and check your Quran recitation on your phone. Nothing is uploaded.
 
 ## Full description (max 4000)
 
-Ye poora text ek hi baar me paste kar dein — pehle Arabic, phir English (dono mila kar
+Ye poora text ek hi baar me paste kar dein — pehle Urdu, phir English (dono mila kar
 ~3,300 characters, limit 4,000).
 
 ```
