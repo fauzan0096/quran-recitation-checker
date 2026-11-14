@@ -3169,6 +3169,22 @@ function giftInfo(gift) {
 }
 
 let askedStorePrices = false;
+// The words the browser used for the last purchase failure, shown on the paywall.
+let lastPurchaseError = '';
+
+/**
+ * A purchase that did not finish: say what actually went wrong — Chrome's own
+ * error name and message — instead of a friendly line that hides the cause.
+ */
+function purchaseFailure(result) {
+  const name = result && result.name ? String(result.name) : '';
+  const message = result && result.message ? String(result.message) : '';
+  lastPurchaseError = [name, message].filter(Boolean).join(': ');
+  if (!lastPurchaseError) lastPurchaseError = String((result && result.reason) || '');
+  toast(lastPurchaseError || t('premium.purchaseFailed'));
+  renderPremium();
+  renderPremiumCard();
+}
 
 /** The paywall: region prices, the trial, the free limits and demo switches. */
 function renderPremium() {
@@ -3237,6 +3253,7 @@ function renderPremium() {
           const result = await billingBuy(id);
           card.disabled = false;
           if (result.ok) {
+            lastPurchaseError = '';
             toast(t('premium.activated'));
             renderPremium();
             renderPremiumCard();
@@ -3244,7 +3261,7 @@ function renderPremium() {
           } else if (result.reason === 'cancelled') {
             /* the person closed Play's sheet: say nothing */
           } else {
-            toast(t('premium.purchaseFailed'));
+            purchaseFailure(result);
           }
           return;
         }
@@ -3269,6 +3286,14 @@ function renderPremium() {
     hint.textContent = billingAvailable() ? t('premium.buyHint') : t('premium.notAvailable');
     root.appendChild(hint);
 
+    // Whatever went wrong last time, in the browser's own words, until it works.
+    if (lastPurchaseError) {
+      const errLine = document.createElement('p');
+      errLine.className = 'hint';
+      errLine.textContent = lastPurchaseError;
+      root.appendChild(errLine);
+    }
+
     // Play asks that the renewal terms are on screen before anyone subscribes.
     if (billingAvailable()) {
       const terms = document.createElement('p');
@@ -3285,6 +3310,7 @@ function renderPremium() {
       restore.addEventListener('click', async () => {
         const result = await billingRestore();
         if (result.ok) {
+          lastPurchaseError = '';
           toast(t('premium.restored'));
           renderPremium();
           renderPremiumCard();
@@ -3292,7 +3318,7 @@ function renderPremium() {
         } else if (result.reason === 'none') {
           toast(t('premium.restoreNone'));
         } else {
-          toast(t('premium.restoreError'));
+          purchaseFailure(result);
         }
       });
       root.appendChild(restore);

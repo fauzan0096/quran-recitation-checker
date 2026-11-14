@@ -439,6 +439,12 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   `cancel()` se band ho jati hai. Native shell ho to `window.BayyinBilling` ka
   bridge use hota hai. Server-side check ke liye `VERIFY_URL` khaali hai — abhi
   Play ki list hi check hai.
+- **Tap par sheet foran**: service aur `getDetails()` app khulte hi (aur paywall
+  khulte hi) le liye jate hain aur 5 minute cache rehte hain, is liye plan par tap
+  ke waqt sirf `PaymentRequest.show()` chalta hai — Chrome payment sheet sirf usi
+  waqt kholta hai jab tap abhi bhi "user gesture" gine. Kuch bhi ghalat ho to
+  paywall par **Chrome ka asli error** (`name: message`) likha aata hai, chhupa
+  hua "purchase failed" nahi.
 - **Test karna**: URL ke aakhir me `?demo=1` lagayein to paywall par demo buttons
   aa jate hain; normal app me wo kabhi nahi dikhte.
 - **Demo mode**: demo buttons ("Premium chalu", "Trial khatam") sirf `?demo=1` wale URL par

@@ -252,6 +252,10 @@ Wahi steps, bas:
    chahiye.
 6. **Cancel test**: Play Store → Payments & subscriptions → Subscriptions → cancel →
    app kholen → wapas free ho jana chahiye.
+7. Agar **"Purchase did not finish"** aata hai to paywall par ab Chrome ka **asli
+   error** likha aata hai (`NotSupportedError`, `SecurityError`, `NotAllowedError`,
+   `OperationError` ya jo bhi ho). Wo line jaisi hai waisi hi bhejein — usi se pata
+   chalta hai ke masla SKU ka hai, tap ka, ya acknowledge ka.
 
 ### 5.5.1 Agar kharidari ke baad Premium na khule
 

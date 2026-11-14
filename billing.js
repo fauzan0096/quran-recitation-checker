@@ -113,22 +113,43 @@ function rememberPrices(items) {
   saveStorePrices(map);
 }
 
-async function details(service) {
+// The service and the item details are read once, when the app opens, so a tap on
+// a plan goes straight to `PaymentRequest.show()`. Chrome opens the Play sheet
+// only while the tap still counts as a user gesture, so a fresh getDetails()
+// round trip on the click is exactly what loses it.
+const DETAIL_TTL = 5 * 60 * 1000;
+let detailCache = { at: 0, items: [] };
+
+async function details(service, force = false) {
+  if (!force && detailCache.items.length && Date.now() - detailCache.at < DETAIL_TTL) {
+    return detailCache.items;
+  }
   try {
     const list = await service.getDetails([SKU.monthly, SKU.yearly]);
     const items = Array.isArray(list) ? list : [];
+    if (items.length) detailCache = { at: Date.now(), items };
     rememberPrices(items);
     return items;
   } catch (error) {
-    return [];
+    return detailCache.items;
   }
 }
 
-/** Read Play's own prices for both plans (they are cached for the paywall). */
+/** Read Play's own prices for both plans (warmed at launch, cached for the paywall). */
 export async function refreshPrices() {
   const service = await goods();
   if (!service) return false;
-  return (await details(service)).length > 0;
+  return (await details(service, true)).length > 0;
+}
+
+/** A failure as the browser described it: `name` and `message` reach the screen. */
+function failure(reason, error) {
+  const out = { ok: false, reason };
+  if (error) {
+    out.name = (error && error.name) || '';
+    out.message = (error && error.message) || String(error);
+  }
+  return out;
 }
 
 async function purchases(service) {
@@ -155,12 +176,20 @@ function planOf(item) {
   return foundSku(item && item.itemId) === SKU.yearly ? 'yearly' : 'monthly';
 }
 
+/**
+ * Acknowledge the purchase so Play does not refund it. Chrome takes 'repeatable'
+ * for a subscription; 'onetime' is tried too, since that is what some versions
+ * of the API expect. An already-acknowledged token fails both, and that is fine.
+ */
 async function acknowledge(service, token) {
-  if (!token) return;
-  try {
-    await service.acknowledge(token, 'repeatable');
-  } catch (error) {
-    /* already acknowledged: Play will not refund */
+  if (!token || typeof service.acknowledge !== 'function') return;
+  for (const type of ['repeatable', 'onetime']) {
+    try {
+      await service.acknowledge(token, type);
+      return;
+    } catch (error) {
+      /* try the other type */
+    }
   }
 }
 
@@ -175,9 +204,14 @@ async function settle(service, sku, token) {
   const found = list.ok ? pick(list.items, sku) : null;
   const receipt = found ? found.purchaseToken : token;
 
-  if (!receipt) return { ok: false, reason: list.ok ? 'none' : 'error' };
+  if (!receipt) {
+    return failure(
+      list.ok ? 'noreceipt' : 'listfailed',
+      new Error(list.ok ? `Play lists no purchase for ${sku}` : 'listPurchases() failed')
+    );
+  }
   if (!(await verified(receipt, found ? found.itemId : sku))) {
-    return { ok: false, reason: 'unverified' };
+    return failure('unverified', new Error('Play did not confirm this purchase token'));
   }
 
   await acknowledge(service, receipt);
@@ -205,19 +239,21 @@ export async function buy(planId) {
   }
 
   const service = await goods();
-  if (!service) return { ok: false, reason: 'unavailable' };
+  if (!service) return failure('noservice', new Error('Digital Goods service is not available'));
 
   const items = await details(service);
   const item = items.find((entry) => foundSku(entry && entry.itemId) === sku);
-  if (!item) return { ok: false, reason: 'unavailable' };
+  if (!item) return failure('noproduct', new Error(`getDetails() returned no item for ${sku}`));
 
   const total = priceRecord(item);
-  if (!total) return { ok: false, reason: 'unavailable' };
-  if (typeof PaymentRequest !== 'function') return { ok: false, reason: 'unavailable' };
+  if (!total) return failure('noprice', new Error(`${sku} has no price from Play`));
+  if (typeof PaymentRequest !== 'function') {
+    return failure('nopaymentrequest', new Error('PaymentRequest is not available'));
+  }
 
-  let token = '';
+  let request;
   try {
-    const request = new PaymentRequest(
+    request = new PaymentRequest(
       [{ supportedMethods: DIGITAL_GOODS, data: { sku } }],
       {
         total: {
@@ -226,6 +262,12 @@ export async function buy(planId) {
         },
       }
     );
+  } catch (error) {
+    return failure('request', error);
+  }
+
+  let token = '';
+  try {
     const response = await request.show();
     token =
       response && response.details && response.details.purchaseToken
@@ -237,8 +279,8 @@ export async function buy(planId) {
       /* already completed */
     }
   } catch (error) {
-    if (error && error.name === 'AbortError') return { ok: false, reason: 'cancelled' };
-    return { ok: false, reason: (error && error.message) || 'error' };
+    if (error && error.name === 'AbortError') return failure('cancelled', error);
+    return failure('show', error);
   }
 
   return settle(service, sku, token);
@@ -261,18 +303,18 @@ export async function restore() {
   }
 
   const service = await goods();
-  if (!service) return { ok: false, reason: 'unavailable' };
+  if (!service) return failure('noservice', new Error('Digital Goods service is not available'));
 
   // Prices as Play has them now, even for someone who never bought anything.
-  await details(service);
+  await details(service, true);
 
   const list = await purchases(service);
-  if (!list.ok) return { ok: false, reason: 'error' };
+  if (!list.ok) return failure('listfailed', new Error('listPurchases() failed'));
 
   const found = pick(list.items, '');
   if (found) {
     if (!(await verified(found.purchaseToken, found.itemId))) {
-      return { ok: false, reason: 'unverified' };
+      return failure('unverified', new Error('Play did not confirm this purchase token'));
     }
     await acknowledge(service, found.purchaseToken);
     const plan = planOf(found);
