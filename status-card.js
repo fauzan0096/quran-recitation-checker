@@ -5,11 +5,11 @@
 
 const WIDTH = 1080;
 const HEIGHT = 1920;
-// Where a viewer of the status can get the app (GitHub Pages until Play is live).
-export const APP_URL = 'fauzan0096.github.io/quran-recitation-checker/';
+// Where a viewer of the status can get the app: the Play Store listing.
+export const APP_URL = 'play.google.com/store/apps/details?id=bayyin.app';
 export const PLAY_URL = `https://${APP_URL}`;
 /** Printed on the status image — short enough to read on a phone. */
-const PLAY_LINE = 'App: fauzan0096.github.io/quran-recitation-checker';
+const PLAY_LINE = 'App: play.google.com/store/apps/details?id=bayyin.app';
 const ARABIC_FONT = '"SF Arabic", "Geeza Pro", "Noto Naskh Arabic", "Amiri Quran", serif';
 const LATIN_FONT = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 
