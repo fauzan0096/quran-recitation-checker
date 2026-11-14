@@ -5,8 +5,8 @@
       "namespace": "android_app",
       "package_name": "bayyin.app",
       "sha256_cert_fingerprints": [
-        "REPLACE_WITH_PLAY_APP_SIGNING_SHA256",
-        "REPLACE_WITH_UPLOAD_KEY_SHA256"
+        "06:C0:AC:B5:F1:6D:56:91:9E:44:F0:AB:0F:E1:75:53:17:86:AD:7D:AC:C5:DB:AE:5F:AC:58:1C:B0:98:08:A5",
+        "76:48:0A:F9:4D:B2:E3:24:CE:BA:90:E1:63:A6:6B:2E:2F:3E:C4:57"
       ]
     }
   }
