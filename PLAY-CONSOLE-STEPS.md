@@ -5,6 +5,31 @@ Jo text chahiye wo `STORE-LISTING.md` me hai — wahan se copy-paste karein.
 
 ---
 
+## Naya Play Console — cheezein kahan hain
+
+Play ne UI badal diya hai; neeche wo jagah hai jahan aaj kal har cheez milti hai.
+(Sab se pehle: phone par **Chrome me ⋮ → Desktop site**, warna menu chhupa rehta hai.)
+
+| Kya chahiye | Naye console me kahan |
+| --- | --- |
+| Privacy policy, Ads, Content rating, Target audience, Data safety | left menu → **App content** |
+| App ka naam, description, screenshots, feature graphic | **Store presence → Main store listing** |
+| Category, tags, contact email | **Store presence → Store settings** |
+| Subscriptions (`premium_monthly`, `premium_yearly`) | **Monetize with Play → Products → Subscriptions** |
+| Closed testing track, release, testers, opt-in link | **Release → Testing → Closed testing** |
+| Production release / apply for production | **Release → Production** |
+| Upload kiye hue AAB | **Release → App bundle explorer** |
+| **App signing SHA-256** | **Settings (⚙️) → App integrity** (kuch consoles me **Release → App integrity**) |
+| Testers ki free kharidari (License testing) | **Settings → License testing** |
+| Payments profile (bank + PAN) | **Settings → Payments profile** |
+| Developer page (public) | **Grow → Developer page** (yahi na mile to search me "developer page") |
+| Account details / verification | **Settings → Account details** |
+
+**Sab se tez tareeqa:** Play Console ke upar **search (🔍)** me cheez ka naam likh dein —
+`App integrity`, `License testing`, `Subscriptions`, `Closed testing` — wo seedha khul jata hai.
+
+---
+
 ## 0. Sab se pehle: package name
 
 Play Console app ke naam ke neeche jo package dikhata hai wo **`bayyin.app`** hai (AAB isi
