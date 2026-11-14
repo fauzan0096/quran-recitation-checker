@@ -261,11 +261,16 @@ aap "apply to existing subscribers" chunein (Play usi waqt batata hai).
 
 ### 5.7 App ke andar kya dikhta hai
 
-- Price app khud dikhati hai: South Asia me fixed ₹99 tier, baqi mulkon me $3.33/$29.99 ka
-  local conversion (`premium.js`), aur **asal price Play ka payment sheet** dikhata hai.
+- Price app **Play se poochti hai** (`getDetails`) — jo card par likha hai wohi
+  payment sheet me aata hai. Browser me country → currency table (`premium.js`)
+  chalta hai: South Asia me fixed ₹99 tier, baqi mulkon me $3.33/$29.99 ka local
+  conversion.
 - Kharidari Play Billing (TWA me Digital Goods API) se hoti hai — `billing.js`.
-- `VERIFY_URL` abhi khali hai: release se pehle server verification lagana behtar hai
-  (PLAYSTORE.md step 6), warna token sirf phone par check hota hai.
+  Purchase ke baad app `listPurchases()` se confirm karti hai, aur har launch par
+  renewal / cancel / refund khud pakad leti hai.
+- `VERIFY_URL` abhi khali hai: abhi Play ki list hi jaanch hai. Chahein to release ke
+  baad server verification laga sakte hain (PLAYSTORE.md step 6) — app me aur kuch
+  badalna nahi padega.
 
 
 ---

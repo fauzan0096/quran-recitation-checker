@@ -201,17 +201,21 @@ subscription disclosure) → `STORE-LISTING.md`. Feature graphic aur screenshots
 - Play Console → Monetize → Products → **Subscriptions** → dono product banayein.
 - **Set prices per country** (auto-convert band kar ke manual: India, Pakistan,
   Bangladesh, Nepal, Sri Lanka ke amounts upar; baqi duniya $3.33 / $29.99).
-- App apne aap **har mulk ki apni currency** me price dikhati hai (`premium.js`:
-  country → currency table). South Asia ke 5 mulk fixed ₹99 tier par hain; baqi jagah
-  $3.33 / $29.99 ko local money me badal kar dikhaya jata hai. Jo asal me katega wo
-  **Play ka payment sheet** dikhata hai.
+- App **Play ka apna price** dikhati hai (`getDetails()` se, `tc.storePrices` me
+  30 din cache) — jo card par likha hai wohi payment sheet me aata hai. Browser me
+  (jahan kuch bikta nahi) `premium.js` ka country → currency table chalta hai:
+  South Asia ke 5 mulk fixed ₹99 tier par, baqi jagah $3.33 / $29.99 ka local
+  conversion.
+- Kharidari ke baad app Play ki apni list (`listPurchases()`) se purchase confirm
+  karti hai, aur har launch par renew / cancel / refund khud pakad leti hai.
 - Base plan par **free trial offer** banayein: **3 din**, naye subscribers ke liye.
 - Base plan ko **auto-renewing** rakhein; "Grace period" 3 din, "Account hold" on.
 
 ## 5. Billing — TWA me Digital Goods API
 
 TWA me native bridge nahi hota, is liye Chrome ka **Digital Goods API** use hota hai.
-`billing.js` me ye pehle se laga hua hai (`twaBuild()` detect karta hai):
+`billing.js` me ye pehle se laga hua hai (`isPlayBuild()` detect karta hai, jo TWA
+ek dafa dekhne ke baad yaad bhi rakhta hai):
 
 ```js
 const service = await window.getDigitalGoodsService('https://play.google.com/billing');
@@ -226,8 +230,11 @@ await service.acknowledge(res.details.purchaseToken, 'repeatable');
 
 - Ye sirf **Play se install ki gayi TWA** me chalta hai (browser me nahi).
 - `restore()` = `service.listPurchases()`; `manage()` = Play subscription page.
-- Purchase token **server se verify** hona chahiye — `billing.js` ka `VERIFY_URL` release se
-  pehle set karein (Step 6), warna koi bhi token se Premium le sakta hai.
+- Purchase ke baad app **Play ki apni list** (`listPurchases()`) se confirm karti hai —
+  sirf payment sheet ke jawab par Premium nahi khulta. Har launch par `restore()` chalta
+  hai, is liye renew bhi pakda jata hai aur cancel/refund par Premium khud band ho jata hai.
+- `VERIFY_URL` (server check) abhi khali hai. Chahein to Step 6 wala worker laga dein —
+  `token` ke sath Play ki list hi abhi jaanch hai.
 
 ### Agar kabhi native shell use karein (Capacitor)
 

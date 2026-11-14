@@ -263,8 +263,23 @@ function countryOf(tag) {
   return match ? match[1] : '';
 }
 
-/** The region the app is opened in, from the phone's language and time zone. */
+/**
+ * The region the app is opened in. The time zone is asked first, because it is
+ * where the phone actually is: an Indian phone whose language is set to plain
+ * English very often reports "en-US", and reading that as the United States is
+ * exactly how some people were shown a dollar price for a rupee plan. Only when
+ * the zone says nothing (a US zone, or one not in the list) does the language's
+ * country decide, and "US" is the last resort.
+ */
 export function region() {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
+    for (const [pattern, code] of ZONES) {
+      if (pattern.test(tz)) return code;
+    }
+  } catch (error) {
+    /* no Intl: fall through to the language */
+  }
   const tags = [];
   try {
     if (navigator.language) tags.push(navigator.language);
@@ -279,14 +294,6 @@ export function region() {
   for (const tag of tags) {
     const code = countryOf(tag);
     if (code && COUNTRY_CURRENCY[code]) return code;
-  }
-  try {
-    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || '';
-    for (const [pattern, code] of ZONES) {
-      if (pattern.test(tz)) return code;
-    }
-  } catch (error) {
-    /* fall through to the default */
   }
   return 'US';
 }
@@ -326,10 +333,63 @@ function money(amount, currency) {
   }
 }
 
-/** Local price of a plan for the country the phone is in. */
+// The price Play itself will charge, as `getDetails()` reported it (billing.js
+// saves it there). While it is known it is shown instead of a converted number,
+// so the paywall and the Play payment sheet always name the same money — the
+// table below is only the guess for a browser, where nothing can be charged.
+const STORE_PRICES = 'tc.storePrices';
+const STORE_PRICES_TTL = 30 * 86400000;
+
+/** billing.js calls this with { monthly: {currency, value}, yearly: {...} }. */
+export function saveStorePrices(map) {
+  if (!map) return;
+  let out = {};
+  try {
+    out = JSON.parse(read(STORE_PRICES, 'null')) || {};
+  } catch (error) {
+    out = {};
+  }
+  let saved = false;
+  for (const key of ['monthly', 'yearly']) {
+    const item = map[key];
+    if (!item) continue;
+    const currency = String(item.currency || '').toUpperCase();
+    const value = Number(item.value);
+    if (!currency || !isFinite(value) || value <= 0) continue;
+    out[key] = { currency, value };
+    saved = true;
+  }
+  if (!saved) return;
+  out.at = Date.now();
+  write(STORE_PRICES, JSON.stringify(out));
+}
+
+function storePrices() {
+  try {
+    const data = JSON.parse(read(STORE_PRICES, 'null'));
+    if (!data || !data.at || Date.now() - data.at > STORE_PRICES_TTL) return null;
+    return data;
+  } catch (error) {
+    return null;
+  }
+}
+
+/** Local price of a plan: Play's own price when the store has answered. */
 export function priceFor(planId) {
   const code = region();
   const key = planId === 'yearly' ? 'yearly' : 'monthly';
+
+  const fromStore = storePrices();
+  const quoted = fromStore && fromStore[key];
+  if (quoted) {
+    return {
+      region: code,
+      currency: quoted.currency,
+      amount: quoted.value,
+      label: money(quoted.value, quoted.currency),
+      store: true,
+    };
+  }
 
   const fixed = SOUTH_ASIA[code];
   if (fixed) {

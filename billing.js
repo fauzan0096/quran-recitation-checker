@@ -10,8 +10,19 @@
 //     that is the only billing Play allows inside a TWA.
 // A plain browser has neither, so `available()` is false there and the paywall says
 // subscriptions are sold in the Play app.
+//
+// Nothing unlocks Premium on the strength of the payment sheet's word alone: what
+// the page acts on is the list Play itself answers with for the account that paid
+// (`listPurchases()`). That is also what catches a subscription that lapsed, was
+// cancelled or refunded — the app follows the store down as well as up.
 
-import { activate } from './premium.js';
+import {
+  activate,
+  cancel as deactivate,
+  isPlayBuild,
+  premiumState,
+  saveStorePrices,
+} from './premium.js';
 
 const SKU = {
   monthly: 'premium_monthly',
@@ -21,25 +32,17 @@ const SKU = {
 const DIGITAL_GOODS = 'https://play.google.com/billing';
 const MANAGE_URL = 'https://play.google.com/store/account/subscriptions';
 
-// Verification endpoint (a small Cloudflare Worker is enough):
+// Optional second check, a small Cloudflare Worker that asks Google's Play
+// Developer API about the token:
 //   POST { token, sku } -> { ok: true }
-// Set this before a public release: a purchase must never unlock Premium from a
-// token the server has not checked.
+// It stays empty for now: Play's own list is the check. A tampered page is the
+// only thing a server would add, and it can be switched on later without the app
+// changing anywhere else.
 const VERIFY_URL = '';
 
 function bridge() {
   const api = window.BayyinBilling;
   return api && typeof api.purchase === 'function' ? api : null;
-}
-
-/** True when this page runs inside the Play-installed TWA (PWABuilder package). */
-function twaBuild() {
-  try {
-    if (typeof window.getDigitalGoodsService !== 'function') return false;
-    return /^android-app:\/\//i.test(document.referrer || '');
-  } catch (error) {
-    return false;
-  }
 }
 
 let goodsService = null;
@@ -55,12 +58,12 @@ async function goods() {
   return goodsService;
 }
 
-/** Ask the server about a purchase token. Without a server, testing only. */
+/**
+ * Ask a server about a purchase token, when one is configured. Without a server
+ * Play's own list is the check, so a token Play handed out counts.
+ */
 async function verified(token, sku) {
-  if (!VERIFY_URL) {
-    console.warn('Bayyin: VERIFY_URL khali hai — purchase server se verify nahi hui.');
-    return Boolean(token);
-  }
+  if (!VERIFY_URL) return Boolean(token);
   try {
     const res = await fetch(VERIFY_URL, {
       method: 'POST',
@@ -75,12 +78,112 @@ async function verified(token, sku) {
   }
 }
 
+// `isPlayBuild()` remembers the TWA once it has been seen. The referrer can be
+// lost on a later navigation inside the app, and without this the paywall then
+// told a Play-installed app that subscriptions were not available at all.
 export function available() {
-  return Boolean(bridge()) || twaBuild();
+  return Boolean(bridge()) || isPlayBuild();
 }
 
 export function manageAvailable() {
   return available();
+}
+
+/** { currency, value, amount } from a Digital Goods item, or null. */
+function priceRecord(item) {
+  const price = item && item.price;
+  if (!price) return null;
+  const currency = String(price.currency || '').toUpperCase();
+  const value = String(price.value === undefined || price.value === null ? '' : price.value);
+  const amount = Number(value);
+  if (!currency || !isFinite(amount) || amount <= 0) return null;
+  return { currency, value, amount };
+}
+
+/** Keep the prices Play quoted, so the paywall shows what it will charge. */
+function rememberPrices(items) {
+  const map = {};
+  for (const item of items || []) {
+    const sku = foundSku(item && item.itemId);
+    const record = priceRecord(item);
+    if (!record) continue;
+    if (sku === SKU.monthly) map.monthly = record;
+    else if (sku === SKU.yearly) map.yearly = record;
+  }
+  saveStorePrices(map);
+}
+
+async function details(service) {
+  try {
+    const list = await service.getDetails([SKU.monthly, SKU.yearly]);
+    const items = Array.isArray(list) ? list : [];
+    rememberPrices(items);
+    return items;
+  } catch (error) {
+    return [];
+  }
+}
+
+/** Read Play's own prices for both plans (they are cached for the paywall). */
+export async function refreshPrices() {
+  const service = await goods();
+  if (!service) return false;
+  return (await details(service)).length > 0;
+}
+
+async function purchases(service) {
+  try {
+    const list = await service.listPurchases();
+    return { ok: true, items: Array.isArray(list) ? list : [] };
+  } catch (error) {
+    return { ok: false, items: [] };
+  }
+}
+
+/** The purchase to act on: the plan asked for first, then any of the two. */
+function pick(items, sku) {
+  const wanted = [sku, SKU.monthly, SKU.yearly];
+  for (const id of wanted) {
+    if (!id) continue;
+    const found = (items || []).find((item) => foundSku(item && item.itemId) === id);
+    if (found) return found;
+  }
+  return null;
+}
+
+function planOf(item) {
+  return foundSku(item && item.itemId) === SKU.yearly ? 'yearly' : 'monthly';
+}
+
+async function acknowledge(service, token) {
+  if (!token) return;
+  try {
+    await service.acknowledge(token, 'repeatable');
+  } catch (error) {
+    /* already acknowledged: Play will not refund */
+  }
+}
+
+/**
+ * Turn what Play reports into the app's state. The store's list is the check: a
+ * purchase unlocks Premium only when Play names it for this account; a token
+ * Play's payment sheet handed back is accepted when the list has not caught up
+ * yet, since it is Play's own receipt for the same purchase.
+ */
+async function settle(service, sku, token) {
+  const list = await purchases(service);
+  const found = list.ok ? pick(list.items, sku) : null;
+  const receipt = found ? found.purchaseToken : token;
+
+  if (!receipt) return { ok: false, reason: list.ok ? 'none' : 'error' };
+  if (!(await verified(receipt, found ? found.itemId : sku))) {
+    return { ok: false, reason: 'unverified' };
+  }
+
+  await acknowledge(service, receipt);
+  const plan = found ? planOf(found) : sku === SKU.yearly ? 'yearly' : 'monthly';
+  activate(plan);
+  return { ok: true, plan };
 }
 
 export async function buy(planId) {
@@ -104,44 +207,41 @@ export async function buy(planId) {
   const service = await goods();
   if (!service) return { ok: false, reason: 'unavailable' };
 
-  try {
-    const details = await service.getDetails([sku]);
-    const item = details && details[0];
-    if (!item || !item.price) return { ok: false, reason: 'unavailable' };
+  const items = await details(service);
+  const item = items.find((entry) => foundSku(entry && entry.itemId) === sku);
+  if (!item) return { ok: false, reason: 'unavailable' };
 
+  const total = priceRecord(item);
+  if (!total) return { ok: false, reason: 'unavailable' };
+  if (typeof PaymentRequest !== 'function') return { ok: false, reason: 'unavailable' };
+
+  let token = '';
+  try {
     const request = new PaymentRequest(
       [{ supportedMethods: DIGITAL_GOODS, data: { sku } }],
       {
         total: {
           label: item.title || 'Bayyin Premium',
-          amount: { currency: item.price.currency, value: String(item.price.value) },
+          amount: { currency: total.currency, value: total.value },
         },
       }
     );
     const response = await request.show();
-    const token = response && response.details ? response.details.purchaseToken : '';
+    token =
+      response && response.details && response.details.purchaseToken
+        ? String(response.details.purchaseToken)
+        : '';
     try {
       await response.complete('success');
     } catch (error) {
       /* already completed */
     }
-    if (!token) return { ok: false, reason: 'error' };
-
-    if (!(await verified(token, sku))) return { ok: false, reason: 'unverified' };
-
-    try {
-      await service.acknowledge(token, 'repeatable');
-    } catch (error) {
-      /* already acknowledged: Play will not refund */
-    }
-
-    activate(planId);
-    return { ok: true, plan: planId };
   } catch (error) {
-    const reason =
-      error && error.name === 'AbortError' ? 'cancelled' : (error && error.message) || 'error';
-    return { ok: false, reason };
+    if (error && error.name === 'AbortError') return { ok: false, reason: 'cancelled' };
+    return { ok: false, reason: (error && error.message) || 'error' };
   }
+
+  return settle(service, sku, token);
 }
 
 export async function restore() {
@@ -163,21 +263,30 @@ export async function restore() {
   const service = await goods();
   if (!service) return { ok: false, reason: 'unavailable' };
 
-  try {
-    const list = await service.listPurchases();
-    const found = (list || []).find((item) =>
-      [SKU.monthly, SKU.yearly].includes(foundSku(item.itemId))
-    );
-    if (!found) return { ok: false, reason: 'none' };
+  // Prices as Play has them now, even for someone who never bought anything.
+  await details(service);
+
+  const list = await purchases(service);
+  if (!list.ok) return { ok: false, reason: 'error' };
+
+  const found = pick(list.items, '');
+  if (found) {
     if (!(await verified(found.purchaseToken, found.itemId))) {
       return { ok: false, reason: 'unverified' };
     }
-    const plan = foundSku(found.itemId) === SKU.yearly ? 'yearly' : 'monthly';
+    await acknowledge(service, found.purchaseToken);
+    const plan = planOf(found);
     activate(plan);
     return { ok: true, plan };
-  } catch (error) {
-    return { ok: false, reason: 'error' };
   }
+
+  // Play answers for the account that paid: nothing listed means the
+  // subscription lapsed, was cancelled or refunded, so Premium follows it down.
+  // A gift runs on its own clock and `cancel()` leaves it alone.
+  const state = premiumState();
+  if (state.planId && state.planId !== 'gift') deactivate();
+
+  return { ok: false, reason: 'none' };
 }
 
 /** A base plan id comes back as "premium_monthly" or "premium_monthly:monthly". */
@@ -195,13 +304,10 @@ export function manage() {
       return false;
     }
   }
-  if (twaBuild()) {
-    try {
-      window.open(MANAGE_URL, '_blank');
-      return true;
-    } catch (error) {
-      return false;
-    }
+  try {
+    window.open(MANAGE_URL, '_blank');
+    return true;
+  } catch (error) {
+    return false;
   }
-  return false;
 }

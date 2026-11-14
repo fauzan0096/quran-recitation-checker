@@ -44,6 +44,7 @@ import {
   buy as billingBuy,
   manage as billingManage,
   manageAvailable as billingManageAvailable,
+  refreshPrices as billingRefreshPrices,
   restore as billingRestore,
 } from './billing.js';
 import { download as backupDownload, restore as backupRestore, share as backupShare } from './backup.js';
@@ -345,9 +346,11 @@ function watchForUpdate() {
 function syncSubscription() {
   if (!billingAvailable()) return;
   billingRestore()
-    .then((result) => {
-      if (!result || !result.ok) return;
+    .then(() => {
+      // The card and the paywall follow whatever Play reported, including a
+      // subscription that lapsed and a price Play has changed since.
       renderPremiumCard();
+      paintPremiumTabs();
       if (els.viewPremium && !els.viewPremium.hidden) renderPremium();
     })
     .catch(() => {
@@ -3165,11 +3168,26 @@ function giftInfo(gift) {
   return box;
 }
 
+let askedStorePrices = false;
+
 /** The paywall: region prices, the trial, the free limits and demo switches. */
 function renderPremium() {
   const root = els.premiumRoot;
   if (!root) return;
   const s = premiumState();
+
+  // On a Play build the price on the card must be the one Play will charge, not
+  // a converted guess: ask the store once, then repaint with its answer.
+  if (billingAvailable() && !askedStorePrices) {
+    askedStorePrices = true;
+    billingRefreshPrices()
+      .then((ok) => {
+        if (ok && els.viewPremium && !els.viewPremium.hidden) renderPremium();
+      })
+      .catch(() => {
+        /* the converted price stays */
+      });
+  }
   root.innerHTML = '';
   root.className = 'premium';
 

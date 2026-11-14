@@ -418,20 +418,27 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   (`tc.premiumSince`), uske baad free hadd lag jati hai.
 - **Plans aur SKUs** (`premium.js` me `PLANS`): `premium_monthly` (30 din),
   `premium_yearly` (365 din).
-- **Price mulk ke hisaab se**: `region()` phone ke **time zone** se mulk nikalta
-  hai (Kolkata → IN, Karachi → PK, Dhaka → BD, Kathmandu → NP, Colombo → LK),
-  warna phone ki language ke region tag se; currency `Intl.NumberFormat` se banti
-  hai — **India, Pakistan, Bangladesh, Nepal aur Sri Lanka** me ₹99 jitna tier
-  (IN ₹99/₹799, PK 330/2640, BD 140/1120, NP 160/1280, LK 340/2720) aur **baqi
-  har mulk $3.33 / $29.99**. Paywall par mulk ka naam (`regionName`) aur local
-  price likha aata hai. Asli qeemat Play apne payment sheet me dikhata hai.
+- **Price**: Play build me paywall wohi price dikhata hai jo **Play khud lega** —
+  `getDetails()` ka `price`, `tc.storePrices` me 30 din cache. Browser me (jahan
+  kuch bikta hi nahi) `region()` phone ke **time zone** se mulk nikalta hai
+  (Kolkata → IN, Karachi → PK, Dhaka → BD, Kathmandu → NP, Colombo → LK), warna
+  phone ki language ke region tag se. **Time zone pehle** is liye dekha jata hai
+  ke India me bohat phone English (US) par set hote hain aur unhein dollar price
+  dikh rahi thi. Currency `Intl.NumberFormat` se banti hai — South Asia me
+  ₹99 tier (IN ₹99/₹799, PK 330/2640, BD 140/1120, NP 160/1280, LK 340/2720),
+  baqi mulkon me $3.33 / $29.99 ka local conversion. Paywall par mulk ka naam
+  (`regionName`) aur local price likha aata hai.
 - **Sab kuch device par**: `tc.premium`, `tc.premiumSince`, `tc.premiumExpires`,
   `tc.premiumPlan`, `tc.premiumChecks` — koi account, koi server, koi audio upload
   nahi. (Browser/OS ka data clear karna "restore purchase" se hoga.)
-- **Play Billing judne par**: verified purchase par sirf `activate('monthly' |
-  'yearly')` call karna hai; app khulte waqt `queryPurchasesAsync` mila purchase
-  par `setPremium(true)`; refund/cancel par `cancel()`. `billing.js` yahi bridge
-  use karta hai (`window.BayyinBilling`).
+- **Kharidari ki jaanch**: TWA me `billing.js` Digital Goods API se purchase karta
+  hai aur phir **Play ki apni list** (`listPurchases()`) se poochta hai — jo
+  purchase Play name kare, wahi Premium kholta hai. App har launch par
+  `restore()` chalati hai (`app.js` → `syncSubscription()`): renewal pakdi
+  jati hai, aur jo subscription Play ki list me nahi (lapse / cancel / refund) wo
+  `cancel()` se band ho jati hai. Native shell ho to `window.BayyinBilling` ka
+  bridge use hota hai. Server-side check ke liye `VERIFY_URL` khaali hai — abhi
+  Play ki list hi check hai.
 - **Test karna**: URL ke aakhir me `?demo=1` lagayein to paywall par demo buttons
   aa jate hain; normal app me wo kabhi nahi dikhte.
 - **Demo mode**: demo buttons ("Premium chalu", "Trial khatam") sirf `?demo=1` wale URL par
