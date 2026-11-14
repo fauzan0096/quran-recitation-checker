@@ -25,7 +25,7 @@ import {
 } from './premium.js';
 
 const SKU = {
-  monthly: 'premium_monthly',
+  monthly: 'bayyin_premium',
   yearly: 'premium_yearly',
 };
 

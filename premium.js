@@ -65,7 +65,7 @@ const PLAN_KEY = 'tc.premiumPlan';
 const CHECKS = 'tc.premiumChecks';
 
 export const PLANS = {
-  monthly: { id: 'monthly', sku: 'premium_monthly', days: 30 },
+  monthly: { id: 'monthly', sku: 'bayyin_premium', days: 30 },
   yearly: { id: 'yearly', sku: 'premium_yearly', days: 365 },
 };
 
