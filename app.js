@@ -3241,8 +3241,8 @@ function renderPremium() {
             renderPremium();
             renderPremiumCard();
             paintPremiumTabs();
-          } else if (result.reason === 'unavailable') {
-            toast(t('premium.notAvailable'));
+          } else if (result.reason === 'cancelled') {
+            /* the person closed Play's sheet: say nothing */
           } else {
             toast(t('premium.purchaseFailed'));
           }
@@ -3289,8 +3289,10 @@ function renderPremium() {
           renderPremium();
           renderPremiumCard();
           paintPremiumTabs();
-        } else {
+        } else if (result.reason === 'none') {
           toast(t('premium.restoreNone'));
+        } else {
+          toast(t('premium.restoreError'));
         }
       });
       root.appendChild(restore);

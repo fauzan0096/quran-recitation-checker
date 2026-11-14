@@ -253,6 +253,20 @@ Wahi steps, bas:
 6. **Cancel test**: Play Store → Payments & subscriptions → Subscriptions → cancel →
    app kholen → wapas free ho jana chahiye.
 
+### 5.5.1 Agar kharidari ke baad Premium na khule
+
+App purchase ko **Play ki apni list** (`listPurchases()`) se confirm karti hai, is liye:
+
+- **Play wala Google account wohi hona chahiye** jis se kharidari hui (Play Store →
+  profile). Doosre account par list khali aati hai.
+- Subscription Play Console me **Active** honi chahiye (Monetize → Products →
+  Subscriptions) — draft/inactive ho to card par "unavailable" aata hai.
+- App me **Aur → Bayyin Premium → Purchase restore karein** dabayein.
+- Phir bhi na ho to app recents se hata kar dobara kholein — har launch par restore chalta
+  hai.
+- Jo subscription Play ki list me nahi (cancel, refund ya lapse) wo app me **khud band**
+  ho jati hai. Gift code apni muddat tak chalta rehta hai.
+
 ### 5.6 Price baad me badalna
 
 Monetize → Products → Subscriptions → product → base plan → **Edit price** → naye

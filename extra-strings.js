@@ -13,6 +13,7 @@ addStrings('roman', {
   'premium.restore': 'Purchase restore karein',
   'premium.restored': 'Aap ka Premium wapas mil gaya.',
   'premium.restoreNone': 'Is account par koi purchase nahi mili.',
+  'premium.restoreError': 'Play Store se rabta nahi ho saka — internet check kar ke dobara koshish karein.',
   'premium.managePlay': 'Play Store me manage karein',
   'premium.buyHint': 'Payment Play Store apne payment sheet me lega — is app me kuch save nahi hota.',
   'premium.renewNote':
@@ -209,6 +210,7 @@ addStrings('ur', {
   'premium.restore': 'خریداری بحال کریں',
   'premium.restored': 'آپ کا پریمیم واپس مل گیا۔',
   'premium.restoreNone': 'اس اکاؤنٹ پر کوئی خریداری نہیں ملی۔',
+  'premium.restoreError': 'پلے اسٹور سے رابطہ نہیں ہو سکا — انٹرنیٹ چیک کر کے دوبارہ کوشش کریں۔',
   'premium.managePlay': 'پلے اسٹور میں مینیج کریں',
   'premium.buyHint': 'ادائیگی پلے اسٹور اپنے پیمنٹ شیٹ میں لے گا — اس ایپ میں کچھ محفوظ نہیں ہوتا۔',
   'premium.renewNote':
@@ -405,6 +407,7 @@ addStrings('en', {
   'premium.restore': 'Restore purchase',
   'premium.restored': 'Your Premium is back.',
   'premium.restoreNone': 'No purchase found on this account.',
+  'premium.restoreError': 'Could not reach Play Store — check your connection and try again.',
   'premium.managePlay': 'Manage in Play Store',
   'premium.buyHint': 'Play Store takes the payment on its own sheet — nothing is stored in this app.',
   'premium.renewNote':
