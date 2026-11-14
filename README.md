@@ -416,7 +416,7 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   chaaron Premium cards ek hi jagah hain, "Premium" badge ke saath.
 - **Trial**: pehli dafa app khulne par **3 din** poora Premium khula rehta hai
   (`tc.premiumSince`), uske baad free hadd lag jati hai.
-- **Plans aur SKUs** (`premium.js` me `PLANS`): `premium_monthly` (30 din),
+- **Plans aur SKUs** (`premium.js` me `PLANS`): `bayyin_premium` (30 din),
   `premium_yearly` (365 din).
 - **Price**: Play build me paywall wohi price dikhata hai jo **Play khud lega** —
   `getDetails()` ka `price`, `tc.storePrices` me 30 din cache. Browser me (jahan

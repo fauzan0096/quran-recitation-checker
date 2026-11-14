@@ -15,7 +15,7 @@ Play ne UI badal diya hai; neeche wo jagah hai jahan aaj kal har cheez milti hai
 | Privacy policy, Ads, Content rating, Target audience, Data safety | left menu → **App content** |
 | App ka naam, description, screenshots, feature graphic | **Store presence → Main store listing** |
 | Category, tags, contact email | **Store presence → Store settings** |
-| Subscriptions (`premium_monthly`, `premium_yearly`) | **Monetize with Play → Products → Subscriptions** |
+| Subscriptions (`bayyin_premium`, `premium_yearly`) | **Monetize with Play → Products → Subscriptions** |
 | Closed testing track, release, testers, opt-in link | **Release → Testing → Closed testing** |
 | Production release / apply for production | **Release → Production** |
 | Upload kiye hue AAB | **Release → App bundle explorer** |
@@ -210,7 +210,7 @@ subscription **publish/activate nahi hoti** (draft ban jati hai). Ek dafa ka kaa
 ### 5.2 Monthly subscription (ek ek step)
 
 1. Play Console → **Monetize → Products → Subscriptions → Create subscription**.
-2. **Product ID**: `premium_monthly` → **exact yahi** (app ke `billing.js` me yahi SKU
+2. **Product ID**: `bayyin_premium` → **exact yahi** (app ke `billing.js` me yahi SKU
    hai; baad me badla nahi ja sakta).
 3. **Name**: `Bayyin Premium (Monthly)`
    **Description**: `Hifz plan, Hifz Test, Murajaa aur Meri report — har mahine.`

@@ -20,13 +20,16 @@ import {
   activate,
   cancel as deactivate,
   isPlayBuild,
+  PLANS,
   premiumState,
   saveStorePrices,
 } from './premium.js';
 
+// The product ids live in one place only (`premium.js` → PLANS), so the paywall
+// and the store adapter can never end up naming different products.
 const SKU = {
-  monthly: 'bayyin_premium',
-  yearly: 'premium_yearly',
+  monthly: PLANS.monthly.sku,
+  yearly: PLANS.yearly.sku,
 };
 
 const DIGITAL_GOODS = 'https://play.google.com/billing';
@@ -331,7 +334,7 @@ export async function restore() {
   return { ok: false, reason: 'none' };
 }
 
-/** A base plan id comes back as "premium_monthly" or "premium_monthly:monthly". */
+/** A base plan id comes back as "bayyin_premium" or "bayyin_premium:monthly". */
 function foundSku(itemId) {
   return String(itemId || '').split(':')[0];
 }

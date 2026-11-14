@@ -34,7 +34,7 @@ store listing text aur billing bridge ka code.
 ## 0b. Play Console account ke faisle (jo ho gaye)
 
 - **Ads**: nahi. Play listing me "Contains ads: No".
-- **In-app purchase**: sirf **subscription** (`premium_monthly`, `premium_yearly`),
+- **In-app purchase**: sirf **subscription** (`bayyin_premium`, `premium_yearly`),
   koi one-time product nahi.
 - Account ban gaya; card add karke **$25** one-time fee deni hai, phir Play 1–2 din me
   verify karta hai. Payments profile (bank + PAN) subscription publish karne se pehle chahiye.
@@ -49,7 +49,7 @@ store listing text aur billing bridge ka code.
 | Play Billing (TWA: Digital Goods API) | `billing.js` |
 | Privacy policy (Play ko URL chahiye) | `privacy.html` |
 | Icons 512 / maskable | `icon-512.png`, `icon-maskable-512.png` |
-| Subscription SKUs | `premium_monthly`, `premium_yearly` |
+| Subscription SKUs | `bayyin_premium`, `premium_yearly` |
 | Gift codes (free Premium for chosen people) | `gift.js` |
 
 Play build par app ab khud:
@@ -195,7 +195,7 @@ subscription disclosure) → `STORE-LISTING.md`. Feature graphic aur screenshots
 
 | Product ID | Base plan | Price (IN) | PK | BD | NP | LK | Rest |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `premium_monthly` | `monthly` (P1M) | ₹99 | 330 | 140 | 160 | 340 | $3.33 |
+| `bayyin_premium` | `monthly` (P1M) | ₹99 | 330 | 140 | 160 | 340 | $3.33 |
 | `premium_yearly` | `yearly` (P1Y) | ₹799 | 2640 | 1120 | 1280 | 2720 | $29.99 |
 
 - Play Console → Monetize → Products → **Subscriptions** → dono product banayein.
@@ -219,9 +219,9 @@ ek dafa dekhne ke baad yaad bhi rakhta hai):
 
 ```js
 const service = await window.getDigitalGoodsService('https://play.google.com/billing');
-const [plan] = await service.getDetails(['premium_monthly']);
+const [plan] = await service.getDetails(['bayyin_premium']);
 const pay = new PaymentRequest(
-  [{ supportedMethods: 'https://play.google.com/billing', data: { sku: 'premium_monthly' } }],
+  [{ supportedMethods: 'https://play.google.com/billing', data: { sku: 'bayyin_premium' } }],
   { total: { label: plan.title, amount: { currency: plan.price.currency, value: plan.price.value } } }
 );
 const res = await pay.show();
