@@ -383,11 +383,21 @@ export function priceFor(planId) {
   const fromStore = storePrices();
   const quoted = fromStore && fromStore[key];
   if (quoted) {
+    // Play answers in the money of the account, not of the phone: the same app
+    // showed dollars on one phone and riyals on the next. Show the phone's own
+    // money, converting Play's amount with the same rates.
+    const local = COUNTRY_CURRENCY[code] || BASE.currency;
+    let currency = quoted.currency;
+    let amount = quoted.value;
+    if (currency !== local && RATES[currency] && RATES[local]) {
+      amount = niceAmount((amount * RATES[local]) / RATES[currency]);
+      currency = local;
+    }
     return {
       region: code,
-      currency: quoted.currency,
-      amount: quoted.value,
-      label: money(quoted.value, quoted.currency),
+      currency,
+      amount,
+      label: money(amount, currency),
       store: true,
     };
   }

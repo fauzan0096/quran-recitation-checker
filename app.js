@@ -243,8 +243,6 @@ async function init() {
   fillSurahs();
   fillModels();
   fillQaris();
-  fillAdhans();
-  mountReminderCardUI();
   restoreSelection();
   wireEvents();
   setGlobalStatus('');
@@ -313,40 +311,71 @@ async function init() {
   maybeWelcome();
   watchBackSwipe();
   loadQuranInBackground();
-  startReminderLoop();
-  startDailyReminder();
   handleLaunch();
-  autoLoadModel();
-  syncSubscription();
-  watchForUpdate();
+
+  // Everything that is not needed for the first paint waits for a free moment:
+  // the first screen was being held up by work nobody can see yet.
+  const later = (fn) => {
+    if ('requestIdleCallback' in window) window.requestIdleCallback(() => fn(), { timeout: 2000 });
+    else window.setTimeout(fn, 250);
+  };
+  later(() => {
+    watchForUpdate();
+    fillAdhans();
+    mountReminderCardUI();
+    startReminderLoop();
+    startDailyReminder();
+    autoLoadModel();
+    syncSubscription();
+  });
 }
 
 /**
- * A new service worker means new code on the phone. Take it once, quietly, so a
- * fix is not stuck behind whatever the old worker had cached.
+ * A new service worker means new code on the phone. This takes it at once —
+ * at launch, when the app comes back to the screen, and whenever the browser
+ * offers one — so a fix is never stuck behind whatever the old worker cached.
  */
-let updateReloaded = false;
-
 function watchForUpdate() {
   if (!('serviceWorker' in navigator)) return;
   const hadController = Boolean(navigator.serviceWorker.controller);
+  let reloaded = false;
+
+  const reloadNow = () => {
+    if (reloaded) return;
+    reloaded = true;
+    window.location.reload();
+  };
 
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     // The very first install also "changes" the controller: that is not an
     // update and must not reload the page.
-    if (!hadController || updateReloaded) return;
-    if (state.recording) return;
-    if (!navigator.onLine) return;
-    updateReloaded = true;
-    window.location.reload();
+    if (!hadController || reloaded) return;
+    if (state.recording) {
+      window.bayyinReloadPending = reloadNow;
+      return;
+    }
+    reloadNow();
   });
 
-  navigator.serviceWorker
-    .getRegistration()
-    .then((registration) => registration && registration.update())
-    .catch(() => {
-      /* offline: try again next launch */
-    });
+  const check = () => {
+    navigator.serviceWorker
+      .getRegistration()
+      .then((registration) => {
+        if (!registration) return null;
+        // A worker that is waiting never takes over on its own.
+        if (registration.waiting) registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+        return registration.update();
+      })
+      .catch(() => {
+        /* offline: try again when the app is back on screen */
+      });
+  };
+
+  check();
+  window.addEventListener('load', check);
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') check();
+  });
 }
 
 /**
@@ -3541,6 +3570,29 @@ function renderPremium() {
     manage.textContent = t('premium.managePlay');
     manage.addEventListener('click', () => billingManage());
     root.appendChild(manage);
+
+    // Play holds the subscription: cancelling is done on Play's own page.
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn ghost small';
+    cancel.textContent = t('premium.cancelPlan');
+    cancel.addEventListener('click', () => billingManage());
+    root.appendChild(cancel);
+  } else if (s.phase === 'paid') {
+    // No store involved (a gift, or a phone unlocked by the owner): Premium can
+    // be turned off right here.
+    const off = document.createElement('button');
+    off.type = 'button';
+    off.className = 'btn ghost small';
+    off.textContent = t('premium.cancelPlan');
+    off.addEventListener('click', () => {
+      cancelPlan();
+      toast(t('premium.cancelledLocal'));
+      renderPremium();
+      renderPremiumCard();
+      paintPremiumTabs();
+    });
+    root.appendChild(off);
   } else if (DEMO_UI) {
     const manage = document.createElement('button');
     manage.type = 'button';
