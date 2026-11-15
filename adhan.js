@@ -18,7 +18,6 @@
 // the whole session — that element is the one that plays at prayer time.
 
 import { prayerTimes } from './prayer.js';
-import { t } from './i18n.js';
 
 const KEY = 'tc.adhan';
 const DAY_KEY = 'tc.adhanPlayed';
@@ -45,14 +44,11 @@ export const ADHANS = {
 };
 
 const DEFAULT = 'one';
-// The person's own recording (a file they picked) is a choice of its own, so
-// picking recording 1 or 2 really plays 1 or 2 and is never silently replaced.
-const OWN = 'own';
 
 function load() {
   try {
     const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
-    if (raw && typeof raw === 'object' && (ADHANS[raw.id] || raw.id === OWN)) {
+    if (raw && typeof raw === 'object' && ADHANS[raw.id]) {
       return { on: Boolean(raw.on), id: raw.id };
     }
   } catch (error) {
@@ -83,12 +79,9 @@ export function setOn(on) {
 }
 
 export function setId(id) {
-  const next = ADHANS[id] || id === OWN ? id : DEFAULT;
-  save({ ...load(), id: next });
-  // Switching stops whatever was playing, so the new choice is what is heard.
-  stop();
+  save({ ...load(), id: ADHANS[id] ? id : DEFAULT });
   audioSrc = '';
-  prime(true);
+  prime();
 }
 
 export function list() {
@@ -101,9 +94,6 @@ export function list() {
 
 export function current() {
   const s = load();
-  if (s.id === OWN) {
-    return { name: t('adhan.ownFile'), url: localUrl || '', type: 'm4a', credit: '' };
-  }
   return ADHANS[s.id] || ADHANS[DEFAULT];
 }
 
@@ -185,8 +175,6 @@ export async function clearLocalFile() {
   localUrl = '';
   localReady = null;
   audioSrc = '';
-  // With the file gone, "own" is no longer a choice: go back to a recording.
-  if (load().id === OWN) save({ ...load(), id: DEFAULT });
 }
 
 export async function hasLocalFile() {
@@ -198,6 +186,7 @@ export async function hasLocalFile() {
 // its own "user touched the page" permission, a reused one does not.
 let audio = null;
 let audioSrc = '';
+let unlocking = false;
 
 function element() {
   if (audio) return audio;
@@ -215,27 +204,8 @@ function element() {
     } catch (error) {
       /* not loaded */
     }
-    ping();
   });
-  audio.addEventListener('playing', ping);
-  audio.addEventListener('pause', ping);
   return audio;
-}
-
-// The Azaan card repaints itself when the sound starts or stops, so its button
-// says "Azaan test" or "Stop" truthfully.
-let changeListener = null;
-
-export function onChange(handler) {
-  changeListener = typeof handler === 'function' ? handler : null;
-}
-
-function ping() {
-  try {
-    if (changeListener) changeListener();
-  } catch (error) {
-    /* a broken listener must not stop the azaan */
-  }
 }
 
 /** A 10 ms silent WAV, used to open the browser's audio door on the first tap. */
@@ -267,17 +237,10 @@ function silentSource() {
   }
 }
 
-/**
- * Call from the first tap or key press: browsers allow sound only after one.
- *
- * The silent tick goes through its own small element. It used to borrow the
- * azaan's element, which meant the very tap that pressed "Azaan test" first put
- * a 10 ms WAV on it and then asked the same element to load and play a 3 MB
- * recording — a race the azaan lost on many phones.
- */
-let unlocker = null;
-
+/** Call from the first tap or key press: browsers allow sound only after one. */
 export function unlock() {
+  const el = element();
+  if (!el) return false;
   if (playing()) return true; // already sound on this page: nothing to unlock
 
   // Warm the person's own file (IndexedDB) now, so a later tap can start it
@@ -287,11 +250,29 @@ export function unlock() {
   try {
     const silent = silentSource();
     if (!silent) return false;
-    if (!unlocker) unlocker = new Audio();
-    unlocker.muted = true;
-    unlocker.src = silent;
-    const started = unlocker.play();
+    if (audioSrc && !el.paused) return true;
+    el.muted = true;
+    const previous = audioSrc;
+    el.src = silent;
+    unlocking = true;
+    const started = el.play();
     if (started && typeof started.catch === 'function') started.catch(() => {});
+    // The silent file is 10 ms long; put the real one back right away so the
+    // first azaan is not waiting for a download. `play()` cancels this first,
+    // so a test tap on the same gesture is never cut off.
+    window.setTimeout(() => {
+      if (!unlocking) return;
+      unlocking = false;
+      try {
+        el.pause();
+        el.muted = false;
+        audioSrc = previous;
+        if (previous) el.src = previous;
+        el.load();
+      } catch (error) {
+        /* ignore */
+      }
+    }, 60);
     return true;
   } catch (error) {
     return false;
@@ -299,14 +280,14 @@ export function unlock() {
 }
 
 /** Start downloading the chosen recording, so prayer time is instant. */
-export function prime(force = false) {
+export function prime() {
   const s = load();
-  if (!s.on && !force) return;
+  if (!s.on) return;
   const el = element();
   if (!el) return;
   readLocalFile()
-    .then(() => {
-      const url = current().url;
+    .then((local) => {
+      const url = local || current().url;
       if (!url || audioSrc === url) return;
       audioSrc = url;
       try {
@@ -327,103 +308,85 @@ export function stop() {
   } catch (error) {
     /* already gone */
   }
-  ping();
 }
 
-/**
- * `el.play()` that always settles. A media element can sit forever waiting for a
- * file that never arrives, with no 'error' and no 'playing' at all — that is what
- * left the azaan test spinning with nothing to say. This resolves when sound has
- * actually started and rejects on 'error' or after `timeout`, so the next source
- * (or the message under the button) is reached.
- */
-function playOnce(el, timeout = 8000) {
-  return new Promise((resolve, reject) => {
-    let done = false;
-    const finish = (ok, error) => {
-      if (done) return;
-      done = true;
-      window.clearTimeout(timer);
-      el.removeEventListener('playing', onPlaying);
-      el.removeEventListener('error', onError);
-      if (ok) resolve(true);
-      else reject(error || new Error('audio did not start'));
-    };
-    const onPlaying = () => finish(true);
-    const onError = () => finish(false, el.error || new Error('audio error'));
-    const timer = window.setTimeout(() => finish(false, new Error('audio timeout')), timeout);
+/** Play the chosen azaan; resolves false when the browser refuses the sound. */
+export function play() {
+  const el = element();
+  if (!el) return Promise.resolve(false);
+  unlocking = false;
 
-    el.addEventListener('playing', onPlaying);
-    el.addEventListener('error', onError);
+  // Nothing is awaited before the first play(): iOS only allows sound inside the
+  // tap itself, and an `await` (the local file from IndexedDB) spends that
+  // permission. The person's own file is used from the value already read at
+  // startup (`localUrl`), so the very first el.play() stays in the gesture.
+  const list = [];
+  if (localUrl) list.push(localUrl);
+  const first = current().url;
+  if (first) list.push(first);
+  list.push(...fallbackUrls(first));
+
+  const attempt = (index) => {
+    if (index >= list.length) return Promise.resolve(false);
+    const url = list[index];
+    audioSrc = url;
+    try {
+      el.src = url;
+    } catch (error) {
+      return attempt(index + 1);
+    }
+    try {
+      el.currentTime = 0;
+    } catch (error) {
+      /* not loaded yet: it starts from the beginning anyway */
+    }
+    el.muted = false;
+    el.volume = 1;
+
+    // Make it a real media session, so the phone keeps the azaan going when the
+    // screen locks or the app is in the background.
+    try {
+      if ('mediaSession' in navigator && typeof MediaMetadata !== 'undefined') {
+        navigator.mediaSession.metadata = new MediaMetadata({
+          title: 'Azaan',
+          artist: 'Bayyin (بيّن)',
+        });
+      }
+    } catch (error) {
+      /* not supported */
+    }
 
     let started;
     try {
       started = el.play();
     } catch (error) {
-      finish(false, error);
-      return;
+      return attempt(index + 1);
     }
-    if (!started || typeof started.then !== 'function') {
-      finish(true);
-      return;
-    }
-    started.then(
-      () => {
-        if (!el.paused) finish(true);
-      },
-      (error) => finish(false, error)
+    if (!started || typeof started.then !== 'function') return Promise.resolve(true);
+
+    return started.then(
+      () => true,
+      (error) => {
+        // "Not allowed" is the browser blocking sound (no tap yet), not a bad
+        // file: another file will not help.
+        if (error && (error.name === 'NotAllowedError' || error.name === 'AbortError')) {
+          return false;
+        }
+        return attempt(index + 1);
+      }
     );
-  });
+  };
+
+  return attempt(0);
 }
 
-/**
- * Play the chosen azaan; resolves false when the browser refuses the sound.
- *
- * What is selected is what plays. There used to be a fall-back to the other
- * recording when one file failed to load, and that is exactly how choosing
- * "Adhan 2" ended up playing "Adhan 1" on a phone. A failure is reported now
- * instead of being covered up with the wrong azaan.
- */
-export function play() {
-  const el = element();
-  if (!el) return Promise.resolve(false);
-
-  const url = current().url;
-  if (!url) return Promise.resolve(false);
-
-  audioSrc = url;
-  try {
-    el.src = url;
-  } catch (error) {
-    return Promise.resolve(false);
-  }
-  try {
-    el.currentTime = 0;
-  } catch (error) {
-    /* not loaded yet: it starts from the beginning anyway */
-  }
-  el.muted = false;
-  el.volume = 1;
-
-  // Make it a real media session, so the phone keeps the azaan going when the
-  // screen locks or the app is in the background.
-  try {
-    if ('mediaSession' in navigator && typeof MediaMetadata !== 'undefined') {
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: current().name || 'Azaan',
-        artist: 'Bayyin (بيّن)',
-      });
-    }
-  } catch (error) {
-    /* not supported */
-  }
-
-  // A 3 MB recording on a slow network can take a while to start; wait long
-  // enough for it, but never forever.
-  return playOnce(el, 20000).then(
-    () => true,
-    () => false
-  );
+/** The other recordings, mp3/wav first (ogg does not play on iPhone). */
+function fallbackUrls(first) {
+  const order = { mp3: 0, wav: 1, ogg: 2, oga: 3 };
+  return Object.values(ADHANS)
+    .filter((item) => item.url && item.url !== first)
+    .sort((a, b) => (order[a.type] ?? 9) - (order[b.type] ?? 9))
+    .map((item) => item.url);
 }
 
 export function playing() {
@@ -473,12 +436,23 @@ export function check(lat, lon, hanafi) {
     if (gap < 0 || gap > WINDOW) continue;
     if (played[name]) continue;
 
-    markPlayed(today, { ...played, [name]: true });
-    play();
+    // Mark the prayer as played only when the sound really started. Before, a
+    // blocked play() (no tap yet, phone just woke up) was still marked as done
+    // and the azaan never got a second try. Now it is retried on the next
+    // tick, for as long as the prayer is inside the WINDOW.
+    const key = `${today}-${name}`;
+    if (inflight[key]) continue;
+    inflight[key] = true;
+    play().then((ok) => {
+      if (ok) markPlayed(today, { ...playedToday(today), [name]: true });
+      else inflight[key] = false;
+    });
     return name;
   }
   return '';
 }
+
+const inflight = {};
 
 // ------------------------------------------------------------------ timer
 let timer = null;
