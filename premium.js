@@ -69,19 +69,20 @@ export const PLANS = {
   yearly: { id: 'yearly', sku: 'premium_yearly', days: 365 },
 };
 
-// Two price points. The South Asian row is the ₹99 tier, set by hand in Play
-// Console. Everywhere else the $3.33 / $29.99 tier is converted into the money of
+// Two price points. The South Asian row is set by hand in Play Console: the
+// monthly price is the ₹299 tier, the yearly one is about 25% below twelve
+// months. Everywhere else the $6.66 / $59.99 tier is converted into the money of
 // the country the phone is in, so nobody is shown dollars in a country that does
 // not use them. Play's own payment sheet always shows the exact price it charges.
 const SOUTH_ASIA = {
-  IN: { currency: 'INR', monthly: 99, yearly: 799 },
-  PK: { currency: 'PKR', monthly: 330, yearly: 2640 },
-  BD: { currency: 'BDT', monthly: 140, yearly: 1120 },
-  NP: { currency: 'NPR', monthly: 160, yearly: 1280 },
-  LK: { currency: 'LKR', monthly: 340, yearly: 2720 },
+  IN: { currency: 'INR', monthly: 299, yearly: 2699 },
+  PK: { currency: 'PKR', monthly: 899, yearly: 8099 },
+  BD: { currency: 'BDT', monthly: 419, yearly: 3779 },
+  NP: { currency: 'NPR', monthly: 479, yearly: 4319 },
+  LK: { currency: 'LKR', monthly: 1079, yearly: 9759 },
 };
 
-const BASE = { currency: 'USD', monthly: 3.33, yearly: 29.99 };
+const BASE = { currency: 'USD', monthly: 6.66, yearly: 59.99 };
 
 // Country → currency (ISO 4217), so the paywall speaks the money of the place.
 const COUNTRY_CURRENCY = {
@@ -403,11 +404,50 @@ export function priceFor(planId) {
   return { region: code, currency, amount, label: money(amount, currency) };
 }
 
+// Launch offer on the monthly plan. It must match the introductory offer set in
+// Play Console (price, how many months it lasts, last day), because Play's own
+// payment sheet is what charges it. Turn it off with `on: false` when it ends.
+export const LAUNCH_OFFER = {
+  on: true,
+  periods: 1, // months at the offer price, then the regular price
+  endsAt: '', // last day, 'YYYY-MM-DD'; '' = no end date stated in the app
+  usd: 3.33,
+  prices: { IN: 99, PK: 299, BD: 139, NP: 159, LK: 359 },
+};
+
+/** The offer for a plan, or null when there is none (or it has ended). */
+export function launchOffer(planId) {
+  if (!LAUNCH_OFFER.on || planId !== 'monthly') return null;
+  if (LAUNCH_OFFER.endsAt) {
+    const end = new Date(`${LAUNCH_OFFER.endsAt}T23:59:59`);
+    if (isFinite(end.getTime()) && Date.now() > end.getTime()) return null;
+  }
+  const regular = priceFor('monthly');
+  const fixed = SOUTH_ASIA[regular.region];
+  let amount;
+  if (fixed && fixed.currency === regular.currency && LAUNCH_OFFER.prices[regular.region]) {
+    amount = LAUNCH_OFFER.prices[regular.region];
+  } else if (regular.store) {
+    amount = niceAmount((regular.amount * LAUNCH_OFFER.usd) / BASE.monthly);
+  } else {
+    amount = niceAmount(LAUNCH_OFFER.usd * (RATES[regular.currency] || 1));
+  }
+  if (!(amount > 0) || amount >= regular.amount) return null;
+  return {
+    amount,
+    currency: regular.currency,
+    label: money(amount, regular.currency),
+    periods: LAUNCH_OFFER.periods,
+    endsAt: LAUNCH_OFFER.endsAt,
+  };
+}
+
 export function allPrices() {
   return {
     region: region(),
     monthly: priceFor('monthly'),
     yearly: priceFor('yearly'),
+    monthlyOffer: launchOffer('monthly'),
   };
 }
 
