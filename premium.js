@@ -406,16 +406,26 @@ export function priceFor(planId) {
 
 // Launch offer on the monthly plan. It must match the introductory offer set in
 // Play Console (price, how many months it lasts, last day), because Play's own
-// payment sheet is what charges it. Turn it off with `on: false` when it ends.
+// payment sheet is what charges it. Only the countries listed here show an
+// offer: anywhere else Play charges the regular price, so nothing is invented.
+// Turn the whole thing off with `on: false` when it ends.
 export const LAUNCH_OFFER = {
   on: true,
   periods: 1, // months at the offer price, then the regular price
   endsAt: '', // last day, 'YYYY-MM-DD'; '' = no end date stated in the app
-  usd: 3.33,
+  usd: 3.33, // for reference only; the per-country prices below are what show
   prices: { IN: 99, PK: 299, BD: 139, NP: 159, LK: 359 },
 };
 
-/** The offer for a plan, or null when there is none (or it has ended). */
+/**
+ * The offer for a plan, or null when there is none (or it has ended).
+ *
+ * The price is taken from the table only. It used to be worked out as "half of
+ * whatever Play charges", which invented an offer in countries where Play
+ * charges the regular price — the Saudi card showed a first month of SAR 7 that
+ * the store was never going to take. A country that is not listed here simply
+ * has no offer, and Play's own price is the only one shown.
+ */
 export function launchOffer(planId) {
   if (!LAUNCH_OFFER.on || planId !== 'monthly') return null;
   if (LAUNCH_OFFER.endsAt) {
@@ -423,16 +433,8 @@ export function launchOffer(planId) {
     if (isFinite(end.getTime()) && Date.now() > end.getTime()) return null;
   }
   const regular = priceFor('monthly');
-  const fixed = SOUTH_ASIA[regular.region];
-  let amount;
-  if (fixed && fixed.currency === regular.currency && LAUNCH_OFFER.prices[regular.region]) {
-    amount = LAUNCH_OFFER.prices[regular.region];
-  } else if (regular.store) {
-    amount = niceAmount((regular.amount * LAUNCH_OFFER.usd) / BASE.monthly);
-  } else {
-    amount = niceAmount(LAUNCH_OFFER.usd * (RATES[regular.currency] || 1));
-  }
-  if (!(amount > 0) || amount >= regular.amount) return null;
+  const amount = LAUNCH_OFFER.prices[regular.region];
+  if (!amount || !(amount > 0) || amount >= regular.amount) return null;
   return {
     amount,
     currency: regular.currency,
