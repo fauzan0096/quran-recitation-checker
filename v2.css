@@ -2589,3 +2589,10 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.mf-indopak .mush
 }
 .startup-error h2 { margin: 0; }
 .startup-error p { margin: 0; color: var(--muted); max-width: 30ch; line-height: 1.6; }
+
+.startup-error-detail {
+  font-size: 11px;
+  color: #8a5a28;
+  word-break: break-word;
+  max-width: 34ch;
+}

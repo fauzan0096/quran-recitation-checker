@@ -4207,13 +4207,16 @@ function failStartup(error) {
     const title = document.createElement('h2');
     title.textContent = 'بيّن — Bayyin';
     const text = document.createElement('p');
-    text.textContent = 'App shuru nahi ho saki. Ek dafa janb kar ke dobara kholen.';
+    text.textContent = 'App shuru nahi ho saki. Ek dafa band kar ke dobara kholen.';
+    const detail = document.createElement('p');
+    detail.className = 'startup-error-detail';
+    detail.textContent = error && error.message ? String(error.message) : String(error || '');
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'btn primary';
     button.textContent = 'Dobara koshish';
     button.addEventListener('click', () => window.location.reload());
-    box.append(title, text, button);
+    box.append(title, text, detail, button);
     document.body.appendChild(box);
   } catch (inner) {
     /* nothing more can be done here */
