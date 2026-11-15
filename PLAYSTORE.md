@@ -307,3 +307,28 @@ Play se aane wale token ko yahan verify karein:
 
 Ye mil jayein to main `assetlinks.json`, wrapper ka billing bridge skeleton aur
 verification Worker ka code repo me daal deta hoon.
+
+
+
+## 9. Launch offer ke liye native wrapper (Capacitor + Play Billing)
+
+TWA (Digital Goods API) offer token nahi de sakti, is liye Play ki sheet base plan
+khol deti hai. Offer ko pakka chalane ke liye app ko **native wrapper** me le
+jayein — poora plan aur ready code yahan hai:
+
+- **`native/README.md`** — Capacitor setup, billing dependency, plugin register,
+  signing (wahi key jo `bayyin.app` ko sign karti hai).
+- **`native/BayyinBillingPlugin.kt`** — reference plugin: `offers()` se offer
+  token, `purchase()` me `setOfferToken()`, acknowledge, restore, manage.
+- **`native/capacitor-bridge.js`** (aur root `capacitor-bridge.js`) — plugin ko
+  `window.BayyinBilling` bana deta hai; `billing.js` already usi bridge ko
+  pehle use karta hai. Browser/TWA me ye file kuch nahi karti.
+
+**Play policy ka khatra:** sirf website load karne wali app "minimum
+functionality" par reject ho sakti hai. Native billing, notifications aur share
+target rakhne se ye kam hota hai, magar risk rehta hai — production me bhejne se
+pehle closed testing me review karwayein.
+
+Offer id `bayyin-launch`, 3 months, ₹99 / $3.33 — Console me **New customer
+acquisition → Never had this subscription** ke sath Active aur published hona
+chahiye.

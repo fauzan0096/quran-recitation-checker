@@ -1,6 +1,10 @@
 // © 2026 F A FS — Bayyin (بيّن). All rights reserved. Copying, redistribution
 // or modification without written permission is not permitted (see LICENSE).
 
+// In the native wrapper (Capacitor) this points the Play Billing bridge at the
+// plugin; in a browser and in the TWA it does nothing at all.
+import './capacitor-bridge.js';
+
 // Bayyin (بيّن) — Quran reader with recitation checking.
 //
 // Surah tab: every aya its own card with a Record button.

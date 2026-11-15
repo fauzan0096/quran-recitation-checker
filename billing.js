@@ -53,6 +53,37 @@ function bridge() {
   return api && typeof api.purchase === 'function' ? api : null;
 }
 
+/**
+ * The Play offer token for `bayyin-launch`, asked from a native bridge.
+ *
+ * The bridge may expose `offers(sku)` returning a JSON list (or a promise of
+ * one): [{ offerId | id, offerToken | token }]. An empty string means "no offer
+ * known", and the purchase then goes through as the base plan.
+ */
+async function offerTokenFromBridge(api, sku) {
+  if (typeof api.offers !== 'function') return '';
+  let list = null;
+  try {
+    list = await api.offers(sku);
+  } catch (error) {
+    return '';
+  }
+  if (typeof list === 'string') {
+    try {
+      list = JSON.parse(list);
+    } catch (error) {
+      return '';
+    }
+  }
+  if (!Array.isArray(list)) return '';
+  const wanted = list.find(
+    (entry) => entry && (entry.offerId === OFFER_ID || entry.id === OFFER_ID)
+  );
+  const chosen = wanted || (list.length === 1 ? list[0] : null);
+  if (!chosen) return '';
+  return String(chosen.offerToken || chosen.token || '');
+}
+
 let goodsService = null;
 
 async function goods() {
@@ -235,15 +266,16 @@ export async function buy(planId) {
   const api = bridge();
   if (api) {
     try {
-      // The native bridge gets the offer id as a second argument, so a build
-      // that supports subscription offers can pick `bayyin-launch`.
-      const result = await api.purchase(sku, OFFER_ID);
+      // The native bridge can list the offers of a subscription (the Digital
+      // Goods API cannot). The token of `bayyin-launch` is what makes Play show
+      // the offer in its sheet; without it Play sells the base plan.
+      const token = await offerTokenFromBridge(api, sku);
+      const result = await api.purchase(sku, token);
       if (result && result.ok) {
         activate(planId);
         return { ok: true, plan: planId };
       }
-      return { ok: false, reason: (result && result.error) || 'cancelled' };
-    } catch (error) {
+      return { ok: false, reason: (result && result.error) || 'cancelled' };    } catch (error) {
       return { ok: false, reason: error && error.message ? error.message : 'error' };
     }
   }
