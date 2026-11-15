@@ -587,6 +587,20 @@ aur us ke baad hi **high accuracy**. Jo bhi na chale to neeche latitude/longitud
 ka dabba khud khul jata hai. Play/TWA app me is ke liye Android manifest me
 `ACCESS_FINE_LOCATION` chahiye — Play Console steps me likha hai.
 
+## Screens, back button aur reload
+
+- Har screen ek asli history entry hai, aur us entry me apna **trail** bhi hai
+  (`app.js` → `pushState({ bayyin: true, view, trail })`). Back button (aur iPhone
+  ka left-edge swipe) ek hi daba kar pichhli screen par le jata hai; pehle page par
+  wo app se bahar chala jata hai — do-teen bar dabane ki zaroorat nahi.
+- Jo screen chhodi thi wo `tc.view` me yaad rehti hai: pull-down reload,
+  service-worker update ya crash ke baad app **usi screen** par wapas khulti hai,
+  pehle page par nahi. Roz ki Naiki sirf pehli dafa reader par overlap karti hai.
+- Wapas "◀ Wapas" buttons bhi wahi `history.back()` chalate hain, is liye in-app
+  back aur phone ka back kabhi alag nahi hote.
+- Galti se pull-to-refresh se page reload na ho, `v2.css` me
+  `overscroll-behavior-y: contain` laga hua hai.
+
 ## Backup — `backup.js`
 
 Settings → **Backup**: ek JSON file me saara `tc.*` data (progress, report, settings,

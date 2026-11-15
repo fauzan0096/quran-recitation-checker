@@ -36,6 +36,13 @@ a,
   -webkit-tap-highlight-color: transparent;
 }
 
+/* Pulling down should scroll, never reload the page: an accidental pull used to
+   restart the app at its first page and lose the screen the person was on. */
+html,
+body {
+  overscroll-behavior-y: contain;
+}
+
 :root {
   --arabic: 'Amiri Quran', 'SF Arabic', 'Geeza Pro', 'Noto Naskh Arabic', 'Scheherazade New',
     'Traditional Arabic', serif;
