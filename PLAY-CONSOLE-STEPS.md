@@ -291,6 +291,20 @@ aap "apply to existing subscribers" chunein (Play usi waqt batata hai).
   badalna nahi padega.
 
 
+### 5.8 TWA me location (Namaz ke auqaat aur Qibla)
+
+- Play wali app me location tab hi chalti hai jab Android manifest me
+  `ACCESS_FINE_LOCATION` ho. Warna Chrome bina poochhe "denied" de deta hai — aur
+  app me sirf "location nahi mili" dikhta hai.
+- **PWABuilder** me package banate waqt location wala option on rakhein. Option na
+  mile to TWA package ke `app/src/main/AndroidManifest.xml` me ye line daal kar
+  AAB banayein:
+  `<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />`
+- Uske baad phone me **Settings → Apps → Bayyin → Permissions → Location → Allow**.
+- Preview/browser me bhi location block ho sakti hai (iframe me
+  `allow="geolocation"` ke baghair). Wahan app khud neeche latitude/longitude ka
+  dabba khol deta hai, is liye auqaat phir bhi set ho jate hain.
+
 ---
 
 ## 6. Testing → Internal testing

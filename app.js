@@ -71,6 +71,8 @@ import {
   state as adhanState,
   setOn as setAdhanOn,
   play as playAdhan,
+  playing as isAdhanPlaying,
+  onChange as onAdhanChange,
   stop as stopAdhan,
   check as checkAdhan,
   prime as primeAdhan,
@@ -662,11 +664,24 @@ function fillAdhans() {
   }
   if (els.adhanTest) {
     els.adhanTest.addEventListener('click', async () => {
+      // A second tap stops it; the button says which one it will do.
+      if (isAdhanPlaying()) {
+        stopAdhan();
+        paintAdhan();
+        return;
+      }
+      els.adhanTest.disabled = true;
       primeAdhan();
-      const ok = await playAdhan();
+      let ok = false;
+      try {
+        ok = await playAdhan();
+      } finally {
+        els.adhanTest.disabled = false;
+      }
       if (!els.adhanCredit) return;
       if (ok) {
         els.adhanCredit.textContent = currentAdhan().credit || '';
+        paintAdhan();
         return;
       }
       const own = await hasAdhanFile().catch(() => false);
@@ -695,6 +710,7 @@ function fillAdhans() {
     });
   }
 
+  onAdhanChange(paintAdhan);
   paintAdhan();
   primeAdhan();
   armAdhanNow();
@@ -775,6 +791,9 @@ function paintAdhan() {
     els.adhanToggle.className = `btn small ${on ? 'ghost' : 'primary'}`;
   }
   if (els.adhanCredit) els.adhanCredit.textContent = currentAdhan().credit;
+  if (els.adhanTest) {
+    els.adhanTest.textContent = isAdhanPlaying() ? t('adhan.stop') : t('adhan.test');
+  }
 
   hasAdhanFile()
     .then((has) => {

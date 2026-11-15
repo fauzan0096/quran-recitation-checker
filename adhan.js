@@ -204,8 +204,27 @@ function element() {
     } catch (error) {
       /* not loaded */
     }
+    ping();
   });
+  audio.addEventListener('playing', ping);
+  audio.addEventListener('pause', ping);
   return audio;
+}
+
+// The Azaan card repaints itself when the sound starts or stops, so its button
+// says "Azaan test" or "Stop" truthfully.
+let changeListener = null;
+
+export function onChange(handler) {
+  changeListener = typeof handler === 'function' ? handler : null;
+}
+
+function ping() {
+  try {
+    if (changeListener) changeListener();
+  } catch (error) {
+    /* a broken listener must not stop the azaan */
+  }
 }
 
 /** A 10 ms silent WAV, used to open the browser's audio door on the first tap. */
@@ -308,6 +327,53 @@ export function stop() {
   } catch (error) {
     /* already gone */
   }
+  ping();
+}
+
+/**
+ * `el.play()` that always settles. A media element can sit forever waiting for a
+ * file that never arrives, with no 'error' and no 'playing' at all — that is what
+ * left the azaan test spinning with nothing to say. This resolves when sound has
+ * actually started and rejects on 'error' or after `timeout`, so the next source
+ * (or the message under the button) is reached.
+ */
+function playOnce(el, timeout = 8000) {
+  return new Promise((resolve, reject) => {
+    let done = false;
+    const finish = (ok, error) => {
+      if (done) return;
+      done = true;
+      window.clearTimeout(timer);
+      el.removeEventListener('playing', onPlaying);
+      el.removeEventListener('error', onError);
+      if (ok) resolve(true);
+      else reject(error || new Error('audio did not start'));
+    };
+    const onPlaying = () => finish(true);
+    const onError = () => finish(false, el.error || new Error('audio error'));
+    const timer = window.setTimeout(() => finish(false, new Error('audio timeout')), timeout);
+
+    el.addEventListener('playing', onPlaying);
+    el.addEventListener('error', onError);
+
+    let started;
+    try {
+      started = el.play();
+    } catch (error) {
+      finish(false, error);
+      return;
+    }
+    if (!started || typeof started.then !== 'function') {
+      finish(true);
+      return;
+    }
+    started.then(
+      () => {
+        if (!el.paused) finish(true);
+      },
+      (error) => finish(false, error)
+    );
+  });
 }
 
 /** Play the chosen azaan; resolves false when the browser refuses the sound. */
@@ -356,15 +422,7 @@ export function play() {
       /* not supported */
     }
 
-    let started;
-    try {
-      started = el.play();
-    } catch (error) {
-      return attempt(index + 1);
-    }
-    if (!started || typeof started.then !== 'function') return Promise.resolve(true);
-
-    return started.then(
+    return playOnce(el).then(
       () => true,
       (error) => {
         // "Not allowed" is the browser blocking sound (no tap yet), not a bad

@@ -9,6 +9,7 @@
 // Location comes from the browser's geolocation and is stored only on device.
 
 import { t } from './i18n.js';
+import { locate } from './geo.js';
 
 const STORE = 'tc.prayer';
 const DEG = Math.PI / 180;
@@ -227,12 +228,11 @@ export function mountPrayer(root) {
       root.appendChild(el('p', 'hint', t('prayer.needPlace')));
       const status = el('p', 'hint');
       status.id = 'prayer-status';
-      const locate = el('button', 'btn primary', t('prayer.locate'));
-      locate.type = 'button';
-      locate.addEventListener('click', () => locateMe(build, status));
-      root.appendChild(locate);
-      root.appendChild(status);
-      root.appendChild(manualForm(state, build));
+      const manual = manualForm(state, build);
+      const locateButton = el('button', 'btn primary', t('prayer.locate'));
+      locateButton.type = 'button';
+      locateButton.addEventListener('click', () => locateMe(build, status, manual));
+      root.append(locateButton, status, manual);
       return;
     }
 
@@ -266,16 +266,18 @@ export function mountPrayer(root) {
 
     const tools = el('div', 'prayer-tools');
 
-    const refresh = el('button', 'btn ghost small', t('prayer.locateAgain'));
-    refresh.type = 'button';
     const status = el('p', 'hint');
     status.id = 'prayer-status';
-    refresh.addEventListener('click', () => locateMe(build, status));
+    const manual = manualForm(state, build);
+
+    const refresh = el('button', 'btn ghost small', t('prayer.locateAgain'));
+    refresh.type = 'button';
+    refresh.addEventListener('click', () => locateMe(build, status, manual));
     tools.appendChild(refresh);
 
     root.appendChild(tools);
     root.appendChild(status);
-    root.appendChild(manualForm(state, build));
+    root.appendChild(manual);
   }
 
   build();
@@ -368,38 +370,33 @@ function manualForm(state, after) {
   return box;
 }
 
-function locateMe(after, status) {
+async function locateMe(after, status, manual) {
   const say = (text) => {
     if (status) status.textContent = text;
   };
 
-  if (!navigator.geolocation) {
-    say(t('prayer.noGeo'));
-    return;
-  }
-
   say(t('prayer.locating'));
 
-  const done = (position) => {
-    const state = read();
-    state.lat = position.coords.latitude;
-    state.lon = position.coords.longitude;
-    write(state);
+  try {
+    const spot = await locate();
+    const next = read();
+    next.lat = spot.lat;
+    next.lon = spot.lon;
+    write(next);
+    if (manual) manual.open = false;
     after();
-  };
-
-  const failed = (error) => {
-    const messages = {
-      1: 'prayer.geoDenied',
-      2: 'prayer.geoUnavailable',
-      3: 'prayer.geoTimeout',
+    return;
+  } catch (error) {
+    const keys = {
+      denied: 'prayer.geoDenied',
+      unavailable: 'prayer.geoUnavailable',
+      timeout: 'prayer.geoTimeout',
+      unsupported: 'prayer.noGeo',
     };
-    say(t(messages[error && error.code] || 'prayer.geoFailed'));
-  };
+    say(t(keys[(error && error.code) || ''] || 'prayer.geoFailed'));
+  }
 
-  navigator.geolocation.getCurrentPosition(done, failed, {
-    enableHighAccuracy: true,
-    timeout: 15000,
-    maximumAge: 300000,
-  });
+  // Nothing worked: open the place boxes, so the person is one step from a
+  // working timetable instead of a dead end.
+  if (manual) manual.open = true;
 }

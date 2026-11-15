@@ -5,6 +5,7 @@
 
 import { t } from './i18n.js';
 import { qiblaBearing, distanceToKaaba } from './hijri.js';
+import { locate } from './geo.js';
 
 const COMPASS_POINTS = [
   [0, 'N'],
@@ -146,6 +147,7 @@ export function mountQibla(root) {
       ) {
         const answer = await DeviceOrientationEvent.requestPermission();
         if (answer !== 'granted') {
+          started = false;
           status = 'denied';
           message = t('qibla.denied');
           build();
@@ -153,35 +155,26 @@ export function mountQibla(root) {
         }
       }
     } catch (error) {
+      started = false;
       status = 'denied';
       message = t('qibla.denied');
       build();
       return;
     }
 
-    if (!navigator.geolocation) {
-      status = 'error';
-      message = t('qibla.noGeo');
+    try {
+      const spot = await locate();
+      bearing = qiblaBearing(spot.lat, spot.lon);
+      distance = distanceToKaaba(spot.lat, spot.lon);
+      status = 'live';
       build();
-      return;
+      listen();
+    } catch (error) {
+      started = false;
+      status = 'error';
+      message = t((error && error.code) === 'denied' ? 'qibla.denied' : 'qibla.noGeo');
+      build();
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        bearing = qiblaBearing(latitude, longitude);
-        distance = distanceToKaaba(latitude, longitude);
-        status = 'live';
-        build();
-        listen();
-      },
-      () => {
-        status = 'error';
-        message = t('qibla.noGeo');
-        build();
-      },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 }
-    );
   }
 
   function listen() {

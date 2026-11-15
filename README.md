@@ -580,6 +580,13 @@ More → **Namaz ke auqaat**. Auqaat phone par hisaab hote hain (NOAA solar equa
 Fajr 18°, Isha 17°, Asr Hanafi 2 sāya / Shafi 1 sāya). Jagah geolocation se ya khud
 latitude/longitude daal kar; sirf `tc.prayer` me save hoti hai. Network ki zaroorat nahi.
 
+Jagah `geo.js` se aati hai, jise auqaat aur Qibla dono use karte hain: pehle
+permission ki halat dekhi jati hai (mana ho to 15 second intezar ke bajaye foran
+bataya jata hai), phir **network wali tez location** (bina GPS, ghar ke andar bhi),
+aur us ke baad hi **high accuracy**. Jo bhi na chale to neeche latitude/longitude
+ka dabba khud khul jata hai. Play/TWA app me is ke liye Android manifest me
+`ACCESS_FINE_LOCATION` chahiye — Play Console steps me likha hai.
+
 ## Backup — `backup.js`
 
 Settings → **Backup**: ek JSON file me saara `tc.*` data (progress, report, settings,
