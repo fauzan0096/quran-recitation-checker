@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v108';
+const CACHE = 'bayyin-v115';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -50,6 +50,8 @@ const SHELL = [
   'extra-strings.js',
   'billing.js',
   'backup.js',
+  'geo.js',
+  'cities.js',
   'prayer.js',
   'qibla.js',
   'calendar.js',
@@ -79,6 +81,23 @@ const SHELL = [
 ];
 
 const IMMUTABLE = /\.(?:png|ico|woff2|ttf|xml|txt|json)$/i;
+
+// Shown only when the page itself is not in the cache yet — a first visit that
+// never reached the internet. Everything the person can see is on the phone
+// after one online open.
+const OFFLINE_PAGE = `<!doctype html>
+<html lang="ur"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>بيّن — Bayyin</title>
+<style>
+body{margin:0;min-height:100svh;display:grid;place-content:center;padding:28px;text-align:center;background:#f7f1e6;color:#4b1b21;font-family:-apple-system,system-ui,'Segoe UI',Roboto,sans-serif}
+h1{margin:0 0 10px;font-size:30px}p{margin:0 0 6px;color:#6b4a2a;line-height:1.55}small{color:#8a6a45}
+</style></head><body><main>
+<h1>بيّن — Bayyin</h1>
+<p>App ko ek dafa internet ke sath khol lein.</p>
+<p>Us ke baad poora Quran, duaein, tasbeeh aur auqaat <strong>bina internet</strong> chalte hain.</p>
+<small>Please open the app once with internet. After that it works offline.</small>
+</main></body></html>`;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -132,27 +151,43 @@ self.addEventListener('fetch', (event) => {
   }
   if (url.origin !== self.location.origin) return;
 
-  // Opening the app: ask the network first, so a fix reaches the phone on the
-  // very next open instead of after another launch. Offline it falls back to the
-  // cached page, so nothing is lost.
+  // Sound and video are left to the browser. A media element asks for its file
+  // in byte ranges, and a worker answering those from a whole-file cache entry
+  // is exactly what made the azaan stall with no sound and no error.
+  if (request.destination === 'audio' || request.destination === 'video') return;
+  if (request.headers.has('range')) return;
+
+  // Opening the app: the cached page is shown at once — with no network at all,
+  // and without waiting for a slow one — and a fresh copy is fetched quietly for
+  // the next open. A new deploy still arrives with its own worker (a new CACHE
+  // fills in install), so this cannot stick the app on an old version.
   if (request.mode === 'navigate') {
     event.respondWith(
       (async () => {
         const cache = await caches.open(CACHE);
         const cacheKey = new Request(`${url.origin}${url.pathname}`);
-        try {
-          const fresh = await fetch(request);
-          if (fresh && fresh.ok && fresh.type === 'basic') {
-            cache.put(cacheKey, fresh.clone()).catch(() => {});
-          }
-          return fresh;
-        } catch (error) {
-          const hit = await cache.match(cacheKey);
-          if (hit) return hit;
-          const shell = await cache.match('index.html');
-          if (shell) return shell;
-          return Response.error();
+        const hit = (await cache.match(cacheKey)) || (await cache.match('index.html'));
+
+        const refresh = fetch(request)
+          .then((fresh) => {
+            if (fresh && fresh.ok && fresh.type === 'basic') {
+              cache.put(cacheKey, fresh.clone()).catch(() => {});
+              return fresh;
+            }
+            return null;
+          })
+          .catch(() => null);
+
+        if (hit) {
+          event.waitUntil(refresh);
+          return hit;
         }
+        const fresh = await refresh;
+        if (fresh) return fresh;
+        return new Response(OFFLINE_PAGE, {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' },
+        });
       })()
     );
     return;
@@ -166,8 +201,8 @@ self.addEventListener('fetch', (event) => {
 
       // Code: serve from the cache at once (that is what makes the app open
       // fast and work offline) and refresh it quietly in the background. A new
-      // deploy still reaches the phone: the page itself is network-first, and a
-      // new worker reloads it (see install.js / watchForUpdate).
+      // deploy still reaches the phone: a new worker fills a new cache at
+      // install and reloads the page (see install.js / watchForUpdate).
       if (!IMMUTABLE.test(url.pathname)) {
         const hit2 = await cache.match(cacheKey);
         const refresh = fetch(request)
