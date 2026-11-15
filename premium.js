@@ -420,7 +420,10 @@ export function priceFor(planId) {
 // country uses the $3.33 price converted into its own money.
 // Turn the whole thing off with `on: false` when it ends.
 export const LAUNCH_OFFER = {
-  on: true,
+  // Off on purpose: the launch price is the base plan's own price in Play now
+  // (₹99 / $3.33), and the card shows a crossed-out regular price beside it.
+  // Nothing here pretends to be a Play offer that the payment sheet must match.
+  on: false,
   periods: 3, // months at the offer price, then the regular price
   endsAt: '', // last day, 'YYYY-MM-DD'; '' = no end date stated in the app
   usd: 3.33, // the offer price for every country not listed in `prices`
@@ -457,11 +460,41 @@ export function launchOffer(planId) {
   };
 }
 
+/**
+ * The "regular" price shown crossed out beside a cheaper one.
+ *
+ * Display only: Play charges whatever the base plan costs, and the card shows
+ * that same amount as the price. This number is only drawn when it is really
+ * higher than what Play charges — a crossed-out price that was never charged
+ * would be misleading.
+ */
+export const REGULAR_PRICES = {
+  IN: 299,
+  PK: 899,
+  BD: 419,
+  NP: 479,
+  LK: 1079,
+};
+
+const REGULAR_USD = 6.66;
+
+function wasPrice(now) {
+  if (!now || !(now.amount > 0)) return null;
+  const fixed = REGULAR_PRICES[now.region];
+  const amount = fixed
+    ? fixed
+    : niceAmount(REGULAR_USD * (RATES[now.currency] || 1));
+  if (!(amount > now.amount)) return null;
+  return { currency: now.currency, amount, label: money(amount, now.currency) };
+}
+
 export function allPrices() {
+  const monthly = priceFor('monthly');
   return {
     region: region(),
-    monthly: priceFor('monthly'),
+    monthly,
     yearly: priceFor('yearly'),
+    monthlyWas: wasPrice(monthly),
     monthlyOffer: launchOffer('monthly'),
   };
 }

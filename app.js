@@ -3455,28 +3455,34 @@ function renderPremium() {
       const amount = document.createElement('strong');
       amount.className = 'premium-plan-price';
       const offer = id === 'monthly' ? s.prices.monthlyOffer : null;
-      if (offer) {
-        // The real price is crossed out small on top; the offer price is the big
-        // line under it (see .premium-plan-price in v2.css).
-        const was = document.createElement('s');
-        was.className = 'was';
-        was.textContent = price.label;
+      const was = id === 'monthly' ? s.prices.monthlyWas : null;
+      const nowLabel = offer ? offer.label : price.label;
+      const wasLabel = offer ? price.label : was ? was.label : '';
+      if (wasLabel && wasLabel !== nowLabel) {
+        // The regular price crossed out small on top, the price Play charges big
+        // under it (see .premium-plan-price in v2.css).
+        const old = document.createElement('s');
+        old.className = 'was';
+        old.textContent = wasLabel;
         const now = document.createElement('span');
         now.className = 'now';
-        now.textContent = offer.label;
+        now.textContent = nowLabel;
         amount.classList.add('is-offer');
-        amount.append(was, now);
+        amount.append(old, now);
       } else {
         amount.textContent = price.label;
       }
 
       const note = document.createElement('span');
       note.className = 'premium-plan-note';
-      note.textContent = id === 'yearly' ? t('premium.yearlyNote') : t('premium.monthlyNote');
       if (offer) {
         let text = t('premium.offerNote', { offer: offer.label, n: offer.periods, regular: price.label });
         if (offer.endsAt) text += ` ${t('premium.offerUntil', { date: offer.endsAt })}`;
         note.textContent = text;
+      } else if (wasLabel) {
+        note.textContent = t('premium.priceNote', { was: wasLabel, now: nowLabel });
+      } else {
+        note.textContent = id === 'yearly' ? t('premium.yearlyNote') : t('premium.monthlyNote');
       }
 
       if (id === 'yearly') {

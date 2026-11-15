@@ -428,13 +428,14 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   ₹299 tier (IN ₹299/₹2699, PK 899/8099, BD 419/3779, NP 479/4319, LK 1079/9759),
   baqi mulkon me $6.66 / $59.99 ka local conversion. Paywall par mulk ka naam
   (`regionName`) aur local price likha aata hai.
-- **Launch offer** (`premium.js` → `LAUNCH_OFFER`): monthly ke **pehle 3 mahine**
-  sasta — **har mulk me**. South Asia me apne numbers (IN ₹99, PK 299, BD 139,
-  NP 159, LK 359), baqi har mulk me **$3.33** ka local conversion (Saudi ~SAR 12,
-  UAE ~AED 12, Euro ~€3.06). Play ka `getDetails()` intro price nahi deta, is liye
-  ye numbers app khud likhti hai — **Play Console ke introductory offer se bilkul
-  match** hone chahiye (3 mahine, wahi price), warna payment sheet kuch aur dikha
-  dega. Offer `endsAt` se band hota hai, `on: false` se poora.
+- **Price aur "regular" price** (`premium.js`): card par **Play jo leta hai wohi**
+  bara number hota hai, aur uske upar chhota **kata hua regular price**
+  (`REGULAR_PRICES`: IN ₹299, PK 899, BD 419, NP 479, LK 1079, baqi mulkon me
+  $6.66 ka local conversion). Kata hua number **sirf tab** dikhta hai jab wo asli
+  price se zyada ho — warna nahi. Ye **sirf dikhawa** hai: asli paisa Play ka base
+  plan price hai (jaise ₹99 / $3.33), jo Play ki sheet me hi dikhta aur katta hai.
+  `LAUNCH_OFFER` ab band hai (`on: false`) kyunki offer Play ki sheet me TWA se
+  pakka nahi chal sakta (offer token Digital Goods API me nahi milta).
 - **Sab kuch device par**: `tc.premium`, `tc.premiumSince`, `tc.premiumExpires`,
   `tc.premiumPlan`, `tc.premiumChecks` — koi account, koi server, koi audio upload
   nahi. (Browser/OS ka data clear karna "restore purchase" se hoga.)

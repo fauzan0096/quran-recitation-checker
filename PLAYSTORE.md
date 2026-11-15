@@ -198,11 +198,13 @@ subscription disclosure) → `STORE-LISTING.md`. Feature graphic aur screenshots
 | `bayyin_premium` | `monthly` (P1M) | ₹299 | 899 | 419 | 479 | 1079 | $6.66 |
 | `premium_yearly` | `yearly` (P1Y) | ₹2699 | 8099 | 3779 | 4319 | 9759 | $59.99 |
 
-Launch offer (monthly ke pehle **3 mahine**) — **har mulk me**: South Asia me apne
-numbers (IN ₹99, PK 299, BD 139, NP 159, LK 359) aur baqi har mulk me **$3.33** ka
-local conversion (Saudi ~SAR 12, UAE ~AED 12, Euro ~€3.06). Play Console me
-**introductory offer bilkul wahi** banayein — 3 mahine, usi price par — warna app
-kuch dikhayegi aur Play kuch katega.
+Launch price (ab ka rasta, TWA ke sath): monthly **base plan ka price hi ₹99**
+(Pakistan 299, Bangladesh 139, Nepal 159, Sri Lanka 359, baqi mulk $3.33 ke
+barabar) — Play ki sheet me pakka yahi aayega, koi offer token nahi chahiye.
+App card par iske upar **regular price** (₹299 / $6.66 equivalent) chhota aur
+**kata hua** dikhati hai; asli charge Play ka base plan price (₹99) hi hai, aur
+ye bas dikhawa hai. Play Console me monthly base plan ka price ₹99 karke
+**Publish** karein, aur purana introductory offer **Deactivate** kar dein.
 
 - Play Console → Monetize → Products → **Subscriptions** → dono product banayein.
 - **Set prices per country** (auto-convert band kar ke manual: India, Pakistan,
