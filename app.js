@@ -3614,6 +3614,31 @@ function renderPremium() {
       note.textContent = t('premium.notAvailable');
       root.appendChild(note);
     }
+  } else if (s.gift && s.gift.active) {
+    // A gift code (or a phone the owner unlocked with the owner phrase): Premium
+    // lives on this phone only, so it can be switched off right here — there is
+    // no Play subscription to cancel.
+    const off = document.createElement('button');
+    off.type = 'button';
+    off.className = 'btn ghost';
+    off.textContent = t('premium.cancelPlan');
+    off.addEventListener('click', () => {
+      cancelPlan();
+      toast(t('premium.cancelledLocal'));
+      renderPremium();
+      renderPremiumCard();
+      paintPremiumTabs();
+    });
+    root.appendChild(off);
+
+    if (billingManageAvailable()) {
+      const manage = document.createElement('button');
+      manage.type = 'button';
+      manage.className = 'btn ghost small';
+      manage.textContent = t('premium.managePlay');
+      manage.addEventListener('click', () => billingManage());
+      root.appendChild(manage);
+    }
   } else if (billingManageAvailable()) {
     const manage = document.createElement('button');
     manage.type = 'button';
