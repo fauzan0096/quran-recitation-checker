@@ -235,7 +235,9 @@ export async function buy(planId) {
   const api = bridge();
   if (api) {
     try {
-      const result = await api.purchase(sku);
+      // The native bridge gets the offer id as a second argument, so a build
+      // that supports subscription offers can pick `bayyin-launch`.
+      const result = await api.purchase(sku, OFFER_ID);
       if (result && result.ok) {
         activate(planId);
         return { ok: true, plan: planId };
@@ -259,12 +261,13 @@ export async function buy(planId) {
     return failure('nopaymentrequest', new Error('PaymentRequest is not available'));
   }
 
-  // A subscription offer (the launch offer) is only shown by Play when its
-  // offer token is handed to the payment sheet. The Digital Goods API does not
-  // expose offers today, so this is empty and Play shows the base plan; if the
-  // API ever returns one (or a native bridge passes it), it is used.
+  // A subscription offer (the launch offer, `bayyin-launch`) is only shown by
+  // Play when its offer token is handed to the payment sheet. The Digital Goods
+  // API does not expose offers today, so the token is empty and Play shows the
+  // base plan; the offer id goes along too, for a bridge or a newer API that
+  // reads it.
   const offer = offerTokenOf(item);
-  const data = offer ? { sku, offerToken: offer } : { sku };
+  const data = offer ? { sku, offerToken: offer, offerId: OFFER_ID } : { sku, offerId: OFFER_ID };
 
   let request;
   try {

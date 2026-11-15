@@ -225,10 +225,12 @@ subscription **publish/activate nahi hoti** (draft ban jati hai). Ek dafa ka kaa
    ek dafa per user — price ₹99 (baqi mulkon me $3.33 ke barabar).
    - **Offer type: "Auto-applying" rakhein.** Auto offer har naye subscriber ko
      khud Play ki sheet me dikhti hai, bina app me kuch pass kiye.
-   - "Developer-determined" chunein to Play us offer ko **khud nahi dikhata**;
-     uske liye purchase karte waqt **offer token** pass karna padta hai, aur wo
-     token sirf **native Billing library** se milta hai — TWA (Digital Goods API)
-     me offer ka token milta hi nahi, is liye wahan auto offer hi chalta hai.
+   - "Developer-determined" (offer ID `bayyin-launch`) ka offer Play khud nahi
+     dikhata; uske liye purchase karte waqt **offer token** pass karna padta hai.
+     App ab offer id aur (jab API de) token dono bhejti hai, lekin **TWA
+     (Digital Goods API) me token milta hi nahi** — is liye Play wali app me
+     **Auto-applying** offer hi asal me chalta hai. Developer-determined rakhna
+     ho to native Billing library wali build chahiye.
    - Offer ko **Activate** karein aur changes **Publish** karein; warna test
      purchases me offer nazar nahi aata.
 7. **Activate base plan** → phir upar **Activate subscription** dabayein.

@@ -383,14 +383,20 @@ export function priceFor(planId) {
   const fromStore = storePrices();
   const quoted = fromStore && fromStore[key];
   if (quoted) {
-    // Shown exactly as Play quoted it — same money, same amount. Any conversion
-    // here made one phone say riyals and another dollars, and a price that is
-    // not what the store charges is a price nobody can trust.
+    // Play answers in the money of the Play account. The card shows the price of
+    // the place the phone is in, so both phones in a house read the same money.
+    const local = COUNTRY_CURRENCY[code] || BASE.currency;
+    let currency = quoted.currency;
+    let amount = quoted.value;
+    if (currency !== local && RATES[currency] && RATES[local]) {
+      amount = niceAmount((amount * RATES[local]) / RATES[currency]);
+      currency = local;
+    }
     return {
       region: code,
-      currency: quoted.currency,
-      amount: quoted.value,
-      label: money(quoted.value, quoted.currency),
+      currency,
+      amount,
+      label: money(amount, currency),
       store: true,
     };
   }
