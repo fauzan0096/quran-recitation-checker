@@ -32,6 +32,11 @@ const SKU = {
   yearly: PLANS.yearly.sku,
 };
 
+// The developer-determined offer created in Play Console. Its *token* (not this
+// id) is what a purchase sheet needs, and only a native Billing library can get
+// one; see offerTokenOf() and the note in PLAY-CONSOLE-STEPS.md.
+const OFFER_ID = 'bayyin-launch';
+
 const DIGITAL_GOODS = 'https://play.google.com/billing';
 const MANAGE_URL = 'https://play.google.com/store/account/subscriptions';
 
@@ -254,10 +259,17 @@ export async function buy(planId) {
     return failure('nopaymentrequest', new Error('PaymentRequest is not available'));
   }
 
+  // A subscription offer (the launch offer) is only shown by Play when its
+  // offer token is handed to the payment sheet. The Digital Goods API does not
+  // expose offers today, so this is empty and Play shows the base plan; if the
+  // API ever returns one (or a native bridge passes it), it is used.
+  const offer = offerTokenOf(item);
+  const data = offer ? { sku, offerToken: offer } : { sku };
+
   let request;
   try {
     request = new PaymentRequest(
-      [{ supportedMethods: DIGITAL_GOODS, data: { sku } }],
+      [{ supportedMethods: DIGITAL_GOODS, data }],
       {
         total: {
           label: item.title || 'Bayyin Premium',
@@ -332,6 +344,26 @@ export async function restore() {
   if (state.planId && state.planId !== 'gift') deactivate();
 
   return { ok: false, reason: 'none' };
+}
+
+/**
+ * The offer token for a subscription-offer id, when the store hands one out.
+ * `bayyin-launch` (the developer-determined offer) is an *id*, not a token: the
+ * token is the long value Play generates, and only that opens the offer in the
+ * purchase sheet.
+ */
+function offerTokenOf(item) {
+  if (!item) return '';
+  const direct = item.offerToken || item.selectedOfferToken || '';
+  if (direct) return String(direct);
+
+  const offers = Array.isArray(item.offers) ? item.offers : [];
+  if (!offers.length) return '';
+  const wanted = offers.find(
+    (entry) => entry && (entry.offerId === OFFER_ID || entry.id === OFFER_ID)
+  );
+  const chosen = wanted || offers[0];
+  return String(chosen.offerToken || chosen.token || '');
 }
 
 /** A base plan id comes back as "bayyin_premium" or "bayyin_premium:monthly". */

@@ -218,11 +218,19 @@ subscription **publish/activate nahi hoti** (draft ban jati hai). Ek dafa ka kaa
    - Base plan ID: `monthly` (default)
    - Billing period: **1 month**, **Auto-renewing**
    - Renewal type: charge full price (default)
-5. **Set price** → India: **₹99**. Baqi mulkon ke liye:
+5. **Set price** → India: **₹299**. Baqi mulkon ke liye:
    - chahein to "Set prices automatically" (Play khud convert karega), ya
-   - manual: Pakistan 330 PKR, Bangladesh 140 BDT, Nepal 160 NPR, Sri Lanka 340 LKR.
-6. **Free trial offer** (base plan ke andar): **3 days**, "New subscribers only",
-   ek dafa per user.
+   - manual: Pakistan 899 PKR, Bangladesh 419 BDT, Nepal 479 NPR, Sri Lanka 1079 LKR.
+6. **Introductory offer** (base plan ke andar): **3 months**, "New subscribers only",
+   ek dafa per user — price ₹99 (baqi mulkon me $3.33 ke barabar).
+   - **Offer type: "Auto-applying" rakhein.** Auto offer har naye subscriber ko
+     khud Play ki sheet me dikhti hai, bina app me kuch pass kiye.
+   - "Developer-determined" chunein to Play us offer ko **khud nahi dikhata**;
+     uske liye purchase karte waqt **offer token** pass karna padta hai, aur wo
+     token sirf **native Billing library** se milta hai — TWA (Digital Goods API)
+     me offer ka token milta hi nahi, is liye wahan auto offer hi chalta hai.
+   - Offer ko **Activate** karein aur changes **Publish** karein; warna test
+     purchases me offer nazar nahi aata.
 7. **Activate base plan** → phir upar **Activate subscription** dabayein.
    (Draft rehne par testers ko price nahi milegi.)
 
@@ -231,7 +239,7 @@ subscription **publish/activate nahi hoti** (draft ban jati hai). Ek dafa ka kaa
 Wahi steps, bas:
 - Product ID: `premium_yearly`
 - Base plan: `yearly`, **1 year**, auto-renewing
-- India: **₹799** (PK 2640 / BD 1120 / NP 1280 / LK 2720)
+- India: **₹2699** (PK 8099 / BD 3779 / NP 4319 / LK 9759)
 - 3 din ka free trial
 
 ### 5.4 Testers ke liye free kharidari
