@@ -4194,9 +4194,32 @@ function toast(message) {
 // down this file (the Premium tabs, the azaan timer key). Calling it above them
 // throws "Cannot access before initialization" and leaves the splash on screen
 // forever — which is exactly what a boot at the top of the file did.
-try {
-  init();
-} catch (error) {
+/**
+ * A startup that fails must say so. The old try/catch only caught a synchronous
+ * error; an async one left a blank screen with no way out.
+ */
+function failStartup(error) {
   logError(`init: ${error && error.message ? error.message : error}`);
   hideSplash();
+  try {
+    const box = document.createElement('div');
+    box.className = 'startup-error';
+    const title = document.createElement('h2');
+    title.textContent = 'بيّن — Bayyin';
+    const text = document.createElement('p');
+    text.textContent = 'App shuru nahi ho saki. Ek dafa janb kar ke dobara kholen.';
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'btn primary';
+    button.textContent = 'Dobara koshish';
+    button.addEventListener('click', () => window.location.reload());
+    box.append(title, text, button);
+    document.body.appendChild(box);
+  } catch (inner) {
+    /* nothing more can be done here */
+  }
 }
+
+Promise.resolve()
+  .then(() => init())
+  .catch(failStartup);

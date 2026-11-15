@@ -375,7 +375,7 @@ function storePrices() {
   }
 }
 
-/** Local price of a plan: Play's own price when the store has answered. */
+/** Local price of a plan: Play's own price whenever the store has answered. */
 export function priceFor(planId) {
   const code = region();
   const key = planId === 'yearly' ? 'yearly' : 'monthly';
@@ -383,21 +383,14 @@ export function priceFor(planId) {
   const fromStore = storePrices();
   const quoted = fromStore && fromStore[key];
   if (quoted) {
-    // Play answers in the money of the account, not of the phone: the same app
-    // showed dollars on one phone and riyals on the next. Show the phone's own
-    // money, converting Play's amount with the same rates.
-    const local = COUNTRY_CURRENCY[code] || BASE.currency;
-    let currency = quoted.currency;
-    let amount = quoted.value;
-    if (currency !== local && RATES[currency] && RATES[local]) {
-      amount = niceAmount((amount * RATES[local]) / RATES[currency]);
-      currency = local;
-    }
+    // Shown exactly as Play quoted it — same money, same amount. Any conversion
+    // here made one phone say riyals and another dollars, and a price that is
+    // not what the store charges is a price nobody can trust.
     return {
       region: code,
-      currency,
-      amount,
-      label: money(amount, currency),
+      currency: quoted.currency,
+      amount: quoted.value,
+      label: money(quoted.value, quoted.currency),
       store: true,
     };
   }
@@ -447,6 +440,11 @@ export function launchOffer(planId) {
     if (isFinite(end.getTime()) && Date.now() > end.getTime()) return null;
   }
   const regular = priceFor('monthly');
+  // Inside Play the card shows Play's own price and nothing else: the store does
+  // not tell us its introductory price, so an offer drawn here would be a number
+  // the payment sheet may not match. The offer is only for the browser build,
+  // where it is this app's own text.
+  if (regular.store) return null;
   if (LAUNCH_OFFER.off.includes(regular.region)) return null;
   const fixed = LAUNCH_OFFER.prices[regular.region];
   const amount = fixed
