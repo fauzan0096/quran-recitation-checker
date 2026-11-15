@@ -221,18 +221,21 @@ subscription **publish/activate nahi hoti** (draft ban jati hai). Ek dafa ka kaa
 5. **Set price** → India: **₹299**. Baqi mulkon ke liye:
    - chahein to "Set prices automatically" (Play khud convert karega), ya
    - manual: Pakistan 899 PKR, Bangladesh 419 BDT, Nepal 479 NPR, Sri Lanka 1079 LKR.
-6. **Introductory offer** (base plan ke andar): **3 months**, "New subscribers only",
-   ek dafa per user — price ₹99 (baqi mulkon me $3.33 ke barabar).
-   - **Offer type: "Auto-applying" rakhein.** Auto offer har naye subscriber ko
-     khud Play ki sheet me dikhti hai, bina app me kuch pass kiye.
-   - "Developer-determined" (offer ID `bayyin-launch`) ka offer Play khud nahi
-     dikhata; uske liye purchase karte waqt **offer token** pass karna padta hai.
-     App ab offer id aur (jab API de) token dono bhejti hai, lekin **TWA
-     (Digital Goods API) me token milta hi nahi** — is liye Play wali app me
-     **Auto-applying** offer hi asal me chalta hai. Developer-determined rakhna
-     ho to native Billing library wali build chahiye.
-   - Offer ko **Activate** karein aur changes **Publish** karein; warna test
-     purchases me offer nazar nahi aata.
+6. **Introductory offer** (base plan ke andar): **3 months**, ek dafa per user —
+   price ₹99 (baqi mulkon me $3.33 ke barabar).
+   - **Eligibility: "New customer acquisition" → "Never had this subscription"
+     rakhein.** Yehi wo setting hai jo offer ko Play ki sheet me khud-ba-khud
+     dikhati hai (Play Console me "auto-applying" naam ki koi cheez nahi hoti —
+     yehi uska asal rasta hai).
+   - **"Developer determined" na rakhein.** Us me Play offer khud nahi dikhata;
+     app ko `getSubscriptionOfferDetails()` se offer token lena aur purchase me
+     pass karna padta hai — wo sirf **native Billing library** me mumkin hai, aur
+     **TWA (Digital Goods API) me offer token milta hi nahi**. Is liye Play wali
+     app me "New customer acquisition" offer hi chalta hai.
+   - Offer ko **Activate** karein, phir upar **Publish changes** dabayein; warna
+     test purchases me offer nazar nahi aata.
+   - Test **naye Google account** se karein jis ne ye subscription kabhi na li ho
+     (purana subscriber offer ka haqdar nahi hota).
 7. **Activate base plan** → phir upar **Activate subscription** dabayein.
    (Draft rehne par testers ko price nahi milegi.)
 
