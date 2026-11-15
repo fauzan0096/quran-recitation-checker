@@ -75,14 +75,14 @@ export const PLANS = {
 // the country the phone is in, so nobody is shown dollars in a country that does
 // not use them. Play's own payment sheet always shows the exact price it charges.
 const SOUTH_ASIA = {
-  IN: { currency: 'INR', monthly: 299, yearly: 2699 },
-  PK: { currency: 'PKR', monthly: 899, yearly: 8099 },
-  BD: { currency: 'BDT', monthly: 419, yearly: 3779 },
-  NP: { currency: 'NPR', monthly: 479, yearly: 4319 },
-  LK: { currency: 'LKR', monthly: 1079, yearly: 9759 },
+  IN: { currency: 'INR', monthly: 99, yearly: 799 },
+  PK: { currency: 'PKR', monthly: 299, yearly: 2400 },
+  BD: { currency: 'BDT', monthly: 139, yearly: 1120 },
+  NP: { currency: 'NPR', monthly: 159, yearly: 1280 },
+  LK: { currency: 'LKR', monthly: 359, yearly: 2900 },
 };
 
-const BASE = { currency: 'USD', monthly: 6.66, yearly: 59.99 };
+const BASE = { currency: 'USD', monthly: 3.33, yearly: 26.66 };
 
 // Country → currency (ISO 4217), so the paywall speaks the money of the place.
 const COUNTRY_CURRENCY = {

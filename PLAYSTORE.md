@@ -195,8 +195,8 @@ subscription disclosure) → `STORE-LISTING.md`. Feature graphic aur screenshots
 
 | Product ID | Base plan | Price (IN) | PK | BD | NP | LK | Rest |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `bayyin_premium` | `monthly` (P1M) | ₹299 | 899 | 419 | 479 | 1079 | $6.66 |
-| `premium_yearly` | `yearly` (P1Y) | ₹2699 | 8099 | 3779 | 4319 | 9759 | $59.99 |
+| `bayyin_premium` | `monthly` (P1M) | ₹99 | 299 | 139 | 159 | 359 | $3.33 |
+| `premium_yearly` | `yearly` (P1Y) | ₹799 | 2400 | 1120 | 1280 | 2900 | $26.66 |
 
 Launch price (ab ka rasta, TWA ke sath): monthly **base plan ka price hi ₹99**
 (Pakistan 299, Bangladesh 139, Nepal 159, Sri Lanka 359, baqi mulk $3.33 ke

@@ -1878,7 +1878,11 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page {
   flex-direction: column;
   gap: 6px;
   width: 100%;
+  /* iOS before 15.4 has no dvh: the vh fallback keeps the page sized (a missing
+     height is what left the page blank on an iPhone). */
+  height: 100vh;
   height: 100dvh;
+  max-height: 100vh;
   max-height: 100dvh;
   margin: 0;
   padding: max(10px, env(safe-area-inset-top)) 12px max(10px, env(safe-area-inset-bottom));
@@ -2595,4 +2599,17 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.mf-indopak .mush
   color: #8a5a28;
   word-break: break-word;
   max-width: 34ch;
+}
+
+
+/* iPhone: never let a settling layout leave the page with no height, and keep
+   the Arabic text selectable/normal (Safari can otherwise paint nothing while
+   the size is being measured). */
+body[data-mode='page'] #view-reader .mushaf-page .page-text {
+  min-height: 40vh;
+}
+body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .page-text {
+  min-height: 0;
+  -webkit-user-select: text;
+  user-select: text;
 }

@@ -1723,6 +1723,19 @@ function toggleMushafFull(page) {
  * on a slow phone.
  */
 function fitMushafPage(page) {
+  try {
+    fitMushafPageInner(page);
+  } catch (error) {
+    // A measurement must never leave the page blank: show it readable instead.
+    const text = page && page.querySelector('.page-text');
+    if (text) {
+      text.classList.remove('is-measuring');
+      text.style.fontSize = '18px';
+    }
+  }
+}
+
+function fitMushafPageInner(page) {
   const text = page.querySelector('.page-text');
   if (!text) return;
   if (text.classList.contains('is-lines')) {
@@ -1808,34 +1821,45 @@ function fitMadaniLines(text) {
     return;
   }
 
+  // Measure with the lines laid out left-aligned (justify would stretch them).
+  // Everything here is guarded: iOS sometimes reports a zero width while the
+  // page is still settling, and a thrown Range must never leave a blank page.
   text.classList.add('is-measuring');
-  const range = document.createRange();
-  const widest = () => {
-    let max = 0;
-    for (const line of lines) {
-      range.selectNodeContents(line);
-      max = Math.max(max, range.getBoundingClientRect().width);
-    }
-    return max;
-  };
+  let size = 18;
+  try {
+    const range = document.createRange();
+    const widest = () => {
+      let max = 0;
+      for (const line of lines) {
+        range.selectNodeContents(line);
+        max = Math.max(max, range.getBoundingClientRect().width);
+      }
+      return max;
+    };
 
-  // Two measurements instead of up to nine: the width of a line is linear in
-  // the font size, so one scale gets very close and one more corrects it.
-  text.style.fontSize = '40px';
-  let natural = widest() || 1;
-  let size = (40 * (width - 2)) / natural;
-  text.style.fontSize = `${Math.floor(size * 10) / 10}px`;
-  if (widest() > width - 1) {
-    natural = widest() || 1;
-    size *= (width - 2) / natural;
-    text.style.fontSize = `${Math.floor(size * 10) / 10}px`;
+    // Two measurements instead of up to nine: the width of a line is linear in
+    // the font size, so one scale gets very close and one more corrects it.
+    text.style.fontSize = '40px';
+    let natural = widest();
+    if (natural > 0) {
+      size = (40 * (width - 2)) / natural;
+      text.style.fontSize = `${Math.floor(size * 10) / 10}px`;
+      if (widest() > width - 1) {
+        natural = widest();
+        if (natural > 0) {
+          size *= (width - 2) / natural;
+          text.style.fontSize = `${Math.floor(size * 10) / 10}px`;
+        }
+      }
+    }
+  } catch (error) {
+    size = 18;
+  } finally {
+    text.classList.remove('is-measuring');
   }
-  // Size the page by its width only, so every line fills the frame and no gaps
-  // are left between the words. If those fifteen lines are taller than the frame
-  // on a short screen, the page scrolls (is-tall) instead of shrinking the text —
-  // a smaller text is what used to leave big holes in the lines.
-  size = Math.max(12, Math.min(size, 64));
-  let finalSize = Math.floor(size * 10) / 10;
+
+  if (!Number.isFinite(size) || size <= 0) size = 18;
+  let finalSize = Math.floor(Math.max(12, Math.min(size, 64)) * 10) / 10;
   text.style.fontSize = `${finalSize}px`;
 
   // Inside the reader (not the full-screen page) the frame is much shorter. The
@@ -1867,25 +1891,32 @@ function fitMadaniLines(text) {
 function spreadMushafLines(text) {
   const lines = Array.from(text.querySelectorAll('.mline-in'));
   if (!lines.length) return;
-  const range = document.createRange();
+  try {
+    const range = document.createRange();
 
-  // Read every line first, then write every gap: measuring after each write
-  // forced a fresh layout fifteen times per fit, which is what made the page
-  // feel slow to open and to swipe.
-  const plans = [];
-  for (const line of lines) {
-    line.style.wordSpacing = '0px';
-    if (line.classList.contains('is-end')) continue;
-    const gaps = (line.textContent.match(/ /g) || []).length;
-    if (!gaps) continue;
-    range.selectNodeContents(line);
-    const natural = range.getBoundingClientRect().width;
-    plans.push([line, (line.clientWidth - natural - 0.5) / gaps]);
-  }
-  for (const [line, extra] of plans) {
-    // Only the spaces between words are widened, and the line is `nowrap`, so no
-    // word is ever pushed onto another line and no gap is left at the edge.
-    if (extra > 0) line.style.wordSpacing = `${extra.toFixed(2)}px`;
+    // Read every line first, then write every gap: measuring after each write
+    // forced a fresh layout fifteen times per fit, which is what made the page
+    // feel slow to open and to swipe.
+    const plans = [];
+    for (const line of lines) {
+      line.style.wordSpacing = '0px';
+      if (line.classList.contains('is-end')) continue;
+      const gaps = (line.textContent.match(/ /g) || []).length;
+      if (!gaps) continue;
+      range.selectNodeContents(line);
+      const natural = range.getBoundingClientRect().width;
+      const extra = (line.clientWidth - natural - 0.5) / gaps;
+      // A sane range only: a wrong measurement (iOS before layout settles) must
+      // not pull the words into each other or throw them off the page.
+      plans.push([line, Number.isFinite(extra) ? Math.max(0, Math.min(extra, 48)) : 0]);
+    }
+    for (const [line, extra] of plans) {
+      // Only the spaces between words are widened, and the line is `nowrap`, so no
+      // word is ever pushed onto another line and no gap is left at the edge.
+      if (extra > 0) line.style.wordSpacing = `${extra.toFixed(2)}px`;
+    }
+  } catch (error) {
+    /* leave the lines as they are: readable without the stretch */
   }
 }
 
