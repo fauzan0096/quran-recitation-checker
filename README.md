@@ -430,11 +430,12 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   (`regionName`) aur local price likha aata hai.
 - **Launch offer** (`premium.js` → `LAUNCH_OFFER`): monthly ke **pehle 3 mahine**
   sasta — South Asia me apne numbers (IN ₹99, PK 299, BD 139, NP 159, LK 359),
-  aur **baqi har mulk me $3.33** ka local conversion (Saudi ~SAR 12, UAE ~12,
-  Euro ~3.06 waghera), takay kisi ko price nihayat kam na lage. Offer `endsAt`
-  se band hota hai, `on: false` se poora. Jo mulk me offer Play ke price se kam
-  na ho, wahan app offer nahi dikhati. **Play Console me introductory offer
-  bilkul yahi** hona chahiye (3 mahine, wahi price).
+  aur **baqi har mulk me $3.33** ka local conversion (UAE ~AED 12, Euro ~€3.06
+  waghera), takay kisi ko price nihayat kam na lage. **Saudi me offer nahi**
+  (`off: ['SA']`) — wahan Play ka apna price (SAR 13.99) hi dikhta hai. Offer
+  `endsAt` se band hota hai, `on: false` se poora. Jo mulk me offer Play ke price
+  se kam na ho, wahan app offer nahi dikhati. **Play Console me introductory
+  offer bilkul yahi** hona chahiye (3 mahine, wahi price).
 - **Sab kuch device par**: `tc.premium`, `tc.premiumSince`, `tc.premiumExpires`,
   `tc.premiumPlan`, `tc.premiumChecks` — koi account, koi server, koi audio upload
   nahi. (Browser/OS ka data clear karna "restore purchase" se hoga.)

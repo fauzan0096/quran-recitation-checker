@@ -1809,7 +1809,10 @@ body[data-theme='dark'] .chip[data-mark='redo'] {
 .cp-face {
   position: absolute;
   inset: 0;
-  transition: transform 0.12s linear;
+  /* A short transition hides the sensor's 5° steps; longer than this and the
+     needle starts to feel like it is following the phone late. */
+  transition: transform 0.06s linear;
+  will-change: transform;
 }
 
 .cp-tick {

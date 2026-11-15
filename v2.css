@@ -1278,7 +1278,27 @@ body[data-theme='dark'] {
   color: var(--muted);
 }
 
-.premium-plan-price { font-size: 22px; color: var(--green-dark); }
+.premium-plan-price {
+  font-size: 22px;
+  color: var(--green-dark);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 6px;
+  min-width: 0;
+  line-height: 1.15;
+}
+/* A launch offer: the crossed-out regular price sits beside the offer price and
+   both stay inside the card, however long the currency label is. */
+.premium-plan-price.is-offer {
+  font-size: 19px;
+}
+.premium-plan-price .was {
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.55;
+  white-space: nowrap;
+}
 .premium-plan-note { font-size: 12px; color: var(--muted); }
 
 .premium-badge {

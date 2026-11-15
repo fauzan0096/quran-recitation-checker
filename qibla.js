@@ -41,6 +41,41 @@ export function mountQibla(root) {
   let status = 'idle'; // idle | waiting | live | denied | error
   let message = '';
   let timer = null;
+  // The needle is moved by two transforms and one line of text, not by
+  // rebuilding the dial. Rebuilding it on every sensor reading is what made the
+  // compass feel a step behind the phone.
+  let faceEl = null;
+  let dialEl = null;
+  let readEl = null;
+  let infoEl = null;
+  let rafId = 0;
+
+  function readText() {
+    if (status === 'live' && bearing !== null && heading !== null) {
+      const delta = ((bearing - heading + 540) % 360) - 180;
+      if (Math.abs(delta) <= 6) return t('qibla.aligned');
+      return t('qibla.turn', {
+        deg: Math.round(Math.abs(delta)),
+        side: t(delta > 0 ? 'qibla.right' : 'qibla.left'),
+      });
+    }
+    if (bearing !== null) {
+      const base = t('qibla.static', { deg: Math.round(bearing) });
+      return message ? `${base} · ${message}` : base;
+    }
+    if (message) return message;
+    if (status === 'waiting') return t('qibla.waiting');
+    return t('qibla.hint');
+  }
+
+  function paint() {
+    if (heading !== null && bearing !== null) {
+      if (faceEl) faceEl.style.transform = `rotate(${-heading}deg)`;
+      const delta = Math.abs(((bearing - heading + 540) % 360) - 180);
+      if (dialEl) dialEl.classList.toggle('is-aligned', delta <= 6);
+    }
+    if (readEl) readEl.textContent = readText();
+  }
 
   function build() {
     root.innerHTML = '';
@@ -48,9 +83,11 @@ export function mountQibla(root) {
 
     const dial = document.createElement('div');
     dial.className = 'compass';
+    dialEl = dial;
 
     const face = document.createElement('div');
     face.className = 'cp-face';
+    faceEl = face;
 
     for (let angle = 0; angle < 360; angle += 15) {
       const tick = document.createElement('span');
@@ -86,45 +123,23 @@ export function mountQibla(root) {
     hub.textContent = '🕋';
     dial.appendChild(hub);
 
-    if (heading !== null && bearing !== null) {
-      face.style.transform = `rotate(${-heading}deg)`;
-      const delta = Math.abs(((bearing - heading + 540) % 360) - 180);
-      if (delta <= 6) dial.classList.add('is-aligned');
-    }
-
     root.appendChild(dial);
 
     const read = document.createElement('p');
     read.className = 'qibla-read';
-    if (status === 'live' && bearing !== null && heading !== null) {
-      const delta = ((bearing - heading + 540) % 360) - 180;
-      read.textContent =
-        Math.abs(delta) <= 6
-          ? t('qibla.aligned')
-          : t('qibla.turn', {
-              deg: Math.round(Math.abs(delta)),
-              side: t(delta > 0 ? 'qibla.right' : 'qibla.left'),
-            });
-    } else if (bearing !== null) {
-      const base = t('qibla.static', { deg: Math.round(bearing) });
-      read.textContent = message ? `${base} · ${message}` : base;
-    } else if (message) {
-      read.textContent = message;
-    } else if (status === 'waiting') {
-      read.textContent = t('qibla.waiting');
-    } else {
-      read.textContent = t('qibla.hint');
-    }
+    readEl = read;
     root.appendChild(read);
 
+    infoEl = document.createElement('p');
+    infoEl.className = 'hint';
+    infoEl.hidden = true;
+    root.appendChild(infoEl);
     if (bearing !== null && distance !== null) {
-      const info = document.createElement('p');
-      info.className = 'hint';
-      info.textContent = `${t('qibla.bearing', { deg: Math.round(bearing) })} · ${t(
+      infoEl.hidden = false;
+      infoEl.textContent = `${t('qibla.bearing', { deg: Math.round(bearing) })} · ${t(
         'qibla.distance',
         { km: distance.toLocaleString() }
       )}`;
-      root.appendChild(info);
     }
 
     const actions = document.createElement('div');
@@ -142,6 +157,8 @@ export function mountQibla(root) {
     note.textContent = t('qibla.calibrate');
     actions.appendChild(note);
     root.appendChild(actions);
+
+    paint();
   }
 
   async function begin() {
@@ -211,10 +228,31 @@ export function mountQibla(root) {
     const onChange = (event) => {
       const next = headingOf(event);
       if (next === null) return;
-      if (heading !== null && Math.abs(next - heading) < 1) return;
-      heading = next;
-      status = 'live';
-      build();
+
+      if (heading === null) {
+        heading = next;
+      } else {
+        // A light smoothing: the needle follows the phone instead of jumping on
+        // every sensor jitter, which is what made it look "laggy" before.
+        const diff = ((next - heading + 540) % 360) - 180;
+        if (Math.abs(diff) < 0.4) return;
+        heading = (heading + diff * 0.28 + 360) % 360;
+      }
+
+      if (status !== 'live') {
+        status = 'live';
+        build();
+        return;
+      }
+      if (!faceEl) {
+        build();
+        return;
+      }
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(() => {
+        rafId = 0;
+        paint();
+      });
     };
     window.addEventListener('deviceorientationabsolute', onChange, true);
     window.addEventListener('deviceorientation', onChange, true);
@@ -238,6 +276,8 @@ export function mountQibla(root) {
     watchStop = null;
     if (timer) window.clearTimeout(timer);
     timer = null;
+    if (rafId) window.cancelAnimationFrame(rafId);
+    rafId = 0;
   }
 
   build();

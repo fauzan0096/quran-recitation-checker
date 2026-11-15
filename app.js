@@ -3325,9 +3325,13 @@ function renderPremium() {
       amount.textContent = price.label;
       const offer = id === 'monthly' ? s.prices.monthlyOffer : null;
       if (offer) {
+        // The crossed-out price stays on the same line and wraps inside the card
+        // instead of pushing the offer price out of it (see .premium-plan-price
+        // in v2.css, which sizes this one).
         const was = document.createElement('s');
+        was.className = 'was';
         was.textContent = price.label;
-        was.style.cssText = 'font-weight:400;opacity:.6;font-size:.7em;margin-inline-end:.45em';
+        amount.classList.add('is-offer');
         amount.textContent = offer.label;
         amount.prepend(was);
       }

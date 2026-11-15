@@ -409,7 +409,8 @@ export function priceFor(planId) {
 // (price, how many months, last day), because Play's own payment sheet is what
 // charges it. South Asia uses the numbers below; every other country uses the
 // $3.33 price converted into its own money, so nobody is shown a price that
-// looks suspiciously cheap for their country.
+// looks suspiciously cheap for their country. A country in `off` keeps Play's
+// regular price and shows no offer at all.
 // Turn the whole thing off with `on: false` when it ends.
 export const LAUNCH_OFFER = {
   on: true,
@@ -417,6 +418,8 @@ export const LAUNCH_OFFER = {
   endsAt: '', // last day, 'YYYY-MM-DD'; '' = no end date stated in the app
   usd: 3.33, // the offer price for every country not listed in `prices`
   prices: { IN: 99, PK: 299, BD: 139, NP: 159, LK: 359 },
+  // Countries that keep Play's own regular price and show no launch offer.
+  off: ['SA'],
 };
 
 /**
@@ -434,6 +437,7 @@ export function launchOffer(planId) {
     if (isFinite(end.getTime()) && Date.now() > end.getTime()) return null;
   }
   const regular = priceFor('monthly');
+  if (LAUNCH_OFFER.off.includes(regular.region)) return null;
   const fixed = LAUNCH_OFFER.prices[regular.region];
   const amount = fixed
     ? fixed

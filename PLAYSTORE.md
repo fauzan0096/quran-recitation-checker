@@ -200,7 +200,8 @@ subscription disclosure) → `STORE-LISTING.md`. Feature graphic aur screenshots
 
 Launch offer (monthly ke pehle **3 mahine**): South Asia me apne numbers — IN ₹99,
 PK 299, BD 139, NP 159, LK 359 (`premium.js` → `LAUNCH_OFFER.prices`) — aur baqi
-har mulk me **$3.33** ka local conversion (Saudi ~SAR 12, UAE ~12, Euro ~3.06).
+har mulk me **$3.33** ka local conversion (UAE ~AED 12, Euro ~€3.06). **Saudi me
+offer nahi** (`off: ['SA']`) — wahan Play ka regular SAR 13.99 hi chalta hai.
 Play Console me **introductory offer bhi wahi** banayein: 3 mahine, usi price par
 (warna app kuch dikhayegi aur Play kuch katega).
 
