@@ -820,7 +820,7 @@ let qariQueue = null;
 function paintQariAll() {
   if (!els.qariAll) return;
   const on = Boolean(qariQueue);
-  els.qariAll.textContent = on ? t('qari.stopAll') : t('qari.playAll');
+  els.qariAll.textContent = on ? t('qari.stopAll') : `${t('qari.playAll')} ▾`;
   els.qariAll.classList.toggle('is-on', on);
 }
 
@@ -829,32 +829,24 @@ function stopAyaAudio() {
   stopQari();
   stopMyAudio();
   paintQariAll();
+  closeQariMenu();
 }
 
 /**
- * ▶ Qari: from the aya on screen to the end of its surah, one aya after another.
- * The audio keeps going when the app goes to the background (qari.js holds one
- * media session), and the lock-screen next/previous buttons walk the surah too.
+ * ▶ Qari: a queue of ayaat, one after another. The audio keeps going when the
+ * app goes to the background (qari.js holds one media session), and the
+ * lock-screen next/previous buttons walk the queue too.
  */
-function playAll() {
-  if (qariQueue) {
-    stopAyaAudio();
-    return;
-  }
-  const first = state.verses[0];
-  if (!first) return;
-
-  const times = repeatCount();
-  const surah = first.surah;
-  const total = Math.max(first.aya, ayaCount(surah) || first.aya);
-
-  const list = [];
-  for (let aya = first.aya; aya <= total; aya += 1) {
-    for (let r = 0; r < times; r += 1) list.push([surah, aya]);
-  }
+function startQueue(list) {
   if (!list.length) return;
+  const times = Math.max(1, repeatCount());
+  const expanded = [];
+  for (const [surah, aya] of list) {
+    for (let r = 0; r < times; r += 1) expanded.push([surah, aya]);
+  }
+  if (!expanded.length) return;
 
-  qariQueue = { list, index: 0 };
+  qariQueue = { list: expanded, index: 0 };
   paintQariAll();
 
   const next = () => {
@@ -882,6 +874,95 @@ function playAll() {
   };
 
   next();
+}
+
+/** The whole surah, from the aya on screen to its end. */
+function playSurahFromHere() {
+  const first = state.verses[0];
+  if (!first) return;
+  const total = Math.max(first.aya, ayaCount(first.surah) || first.aya);
+  const list = [];
+  for (let aya = first.aya; aya <= total; aya += 1) list.push([first.surah, aya]);
+  startQueue(list);
+}
+
+/** Everything on the page that is open right now. */
+function playThisPage() {
+  const list = state.verses.map((verse) => [verse.surah, verse.aya]);
+  startQueue(list);
+}
+
+/** One ayaat that the person picked on the page. */
+function playPickedAya() {
+  const key = state.selectedKey;
+  if (!key) {
+    toast(t('qari.pickAya'));
+    return;
+  }
+  const [surah, aya] = String(key).split(':').map(Number);
+  if (!surah || !aya) {
+    toast(t('qari.pickAya'));
+    return;
+  }
+  startQueue([[surah, aya]]);
+}
+
+let qariMenu = null;
+
+function closeQariMenu() {
+  if (qariMenu) qariMenu.hidden = true;
+}
+
+/** A small menu under the Qari button: whole surah, this page, or one aya. */
+function openQariMenu() {
+  if (!els.qariAll) return;
+  if (!qariMenu || !qariMenu.isConnected) {
+    const box = document.createElement('div');
+    box.className = 'qari-menu';
+    box.setAttribute('role', 'menu');
+    const items = [
+      ['surah', 'qari.optSurah', playSurahFromHere],
+      ['page', 'qari.optPage', playThisPage],
+      ['aya', 'qari.optAya', playPickedAya],
+    ];
+    for (const [kind, label, run] of items) {
+      const button = document.createElement('button');
+      button.type = 'button';
+      button.className = 'qari-menu-item';
+      button.dataset.kind = kind;
+      button.setAttribute('role', 'menuitem');
+      button.textContent = t(label);
+      button.addEventListener('click', () => {
+        closeQariMenu();
+        run();
+      });
+      box.appendChild(button);
+    }
+    document.body.appendChild(box);
+    qariMenu = box;
+  }
+
+  // Fresh labels every time: the language may have changed since it was built.
+  qariMenu.querySelector('[data-kind="surah"]').textContent = t('qari.optSurah');
+  qariMenu.querySelector('[data-kind="page"]').textContent = t('qari.optPage');
+  qariMenu.querySelector('[data-kind="aya"]').textContent = t('qari.optAya');
+
+  const rect = els.qariAll.getBoundingClientRect();
+  qariMenu.hidden = false;
+  const width = qariMenu.offsetWidth;
+  const left = Math.min(Math.max(8, rect.left), Math.max(8, window.innerWidth - width - 8));
+  qariMenu.style.left = `${left}px`;
+  qariMenu.style.top = `${Math.round(rect.bottom + 6)}px`;
+}
+
+function toggleQariMenu() {
+  if (qariQueue) {
+    stopAyaAudio();
+    closeQariMenu();
+    return;
+  }
+  if (qariMenu && !qariMenu.hidden) closeQariMenu();
+  else openQariMenu();
 }
 
 function restoreSelection() {
@@ -1667,8 +1748,11 @@ function markTall(page, text, tall) {
  */
 function fitMadaniLines(text) {
   const width = text.clientWidth;
-  const room = text.clientHeight;
-  if (!width || !room) return;
+  let room = text.clientHeight;
+  // A frame that has not been measured yet (still hidden, or a very short
+  // screen) must not leave the page unsized: use the window as a stand-in.
+  if (!room) room = Math.max(200, Math.round(window.innerHeight * 0.5));
+  if (!width) return;
   const lines = Array.from(text.querySelectorAll('.mline-in'));
   if (!lines.length) return;
 
@@ -1676,11 +1760,13 @@ function fitMadaniLines(text) {
   // re-flow the page and move the ayaat around. Only a new page or a new width
   // (rotation, keyboard) measures again.
   const remembered = state.mushafFit;
+  const full = document.body.classList.contains('is-mushaf-full');
   if (
     remembered &&
     remembered.page === state.page &&
     remembered.mushaf === state.mushaf &&
     remembered.width === width &&
+    remembered.full === full &&
     remembered.size
   ) {
     text.style.fontSize = `${remembered.size}px`;
@@ -1716,14 +1802,27 @@ function fitMadaniLines(text) {
   // on a short screen, the page scrolls (is-tall) instead of shrinking the text —
   // a smaller text is what used to leave big holes in the lines.
   size = Math.max(12, Math.min(size, 64));
-  const finalSize = Math.floor(size * 10) / 10;
+  let finalSize = Math.floor(size * 10) / 10;
   text.style.fontSize = `${finalSize}px`;
+
+  // Inside the reader (not the full-screen page) the frame is much shorter. The
+  // page is then shrunk until those fifteen lines fit, so no word is pushed out
+  // of the frame and no line is cut off at the bottom.
+  if (!document.body.classList.contains('is-mushaf-full')) {
+    let guard = 0;
+    while (text.scrollHeight > room + 1 && finalSize > 12 && guard < 8) {
+      finalSize = Math.max(12, Math.floor(finalSize * 0.92 * 10) / 10);
+      text.style.fontSize = `${finalSize}px`;
+      guard += 1;
+    }
+  }
+
   text.classList.remove('is-measuring');
   spreadMushafLines(text);
   // 15 printed lines can still be taller than the frame on a short screen: let the
   // page scroll rather than cut the last line off.
   markTall(text.closest('.mushaf-page'), text, text.scrollHeight > room + 1);
-  state.mushafFit = { page: state.page, mushaf: state.mushaf, width, size: finalSize };
+  state.mushafFit = { page: state.page, mushaf: state.mushaf, width, full, size: finalSize };
 }
 
 /**
@@ -3854,7 +3953,14 @@ function wireEvents() {
   });
 
   els.searchGo.addEventListener('click', runSearch);
-  if (els.qariAll) els.qariAll.addEventListener('click', playAll);
+  if (els.qariAll) els.qariAll.addEventListener('click', toggleQariMenu);
+  // Anywhere else on the screen closes the Qari menu.
+  document.addEventListener('click', (event) => {
+    if (!qariMenu || qariMenu.hidden) return;
+    if (qariMenu.contains(event.target)) return;
+    if (els.qariAll && els.qariAll.contains(event.target)) return;
+    closeQariMenu();
+  });
   window.addEventListener('resize', () => {
     if (state.mode !== 'page') return;
     if (state.fitFrame) window.cancelAnimationFrame(state.fitFrame);
