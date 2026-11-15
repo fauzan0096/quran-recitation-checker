@@ -2602,10 +2602,9 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.mf-indopak .mush
 }
 
 
-/* iPhone: never let a settling layout leave the page with no height, and keep
-   the Arabic text selectable/normal (Safari can otherwise paint nothing while
-   the size is being measured). */
-body[data-mode='page'] #view-reader .mushaf-page .page-text {
+/* iPhone only (body.is-ios is added in app.js): never let a settling layout
+   leave the page with no height. Android layout stays exactly as it was. */
+body.is-ios[data-mode='page'] #view-reader .mushaf-page .page-text {
   min-height: 40vh;
 }
 body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page .page-text {

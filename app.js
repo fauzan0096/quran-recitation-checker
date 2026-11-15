@@ -237,6 +237,16 @@ async function init() {
   cacheElements();
   initLanguage();
 
+  // iPhone/iPad layouts differ in a few measured places (see body.is-ios in
+  // v2.css); Android is left exactly as it is.
+  try {
+    const ua = navigator.userAgent || '';
+    const touchMac = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+    if (/iphone|ipad|ipod/i.test(ua) || touchMac) document.body.classList.add('is-ios');
+  } catch (error) {
+    /* no navigator: leave the default */
+  }
+
   // A Play build has no in-app trial any more (there the trial is Play's own
   // free-trial offer), so the comparison chart must not promise one.
   if (isPlayBuild()) {
