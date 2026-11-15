@@ -632,12 +632,15 @@ function mountReminderCardUI() {
   if (els.remindRoot) mountReminderCard(els.remindRoot);
 }
 
-/** Azaan: the app's own recording (or the person's own file), on or off. */
-function fillAdhans() {
-  // The muazzin picker is gone with the borrowed recordings; if one is ever put
-  // back, this keeps working.
+/** Azaan: the app's own recordings, the person's own file, on or off. */
+async function fillAdhans() {
   if (els.adhanSelect) {
     const items = adhanList();
+    // A file the person picked is a choice of its own: before this it silently
+    // replaced BOTH recordings, so both options played the same azaan.
+    const own = await hasAdhanFile().catch(() => false);
+    if (own) items.unshift({ id: 'own', name: t('adhan.ownFile'), credit: '' });
+
     const ids = items.map((item) => item.id);
     els.adhanSelect.textContent = '';
     for (const item of items) {
@@ -646,9 +649,7 @@ function fillAdhans() {
       option.textContent = item.name;
       els.adhanSelect.appendChild(option);
     }
-    els.adhanSelect.value = ids.includes(adhanState().id)
-      ? adhanState().id
-      : ids[0] || 'own';
+    els.adhanSelect.value = ids.includes(adhanState().id) ? adhanState().id : ids[0] || 'one';
     els.adhanSelect.addEventListener('change', () => {
       setAdhanId(els.adhanSelect.value);
       paintAdhan();
@@ -798,7 +799,9 @@ function paintAdhan() {
     els.adhanToggle.textContent = on ? t('adhan.on') : t('adhan.off');
     els.adhanToggle.className = `btn small ${on ? 'ghost' : 'primary'}`;
   }
-  if (els.adhanCredit) els.adhanCredit.textContent = currentAdhan().credit;
+  if (els.adhanCredit) {
+    els.adhanCredit.textContent = currentAdhan().credit || currentAdhan().name || '';
+  }
   if (els.adhanTest) {
     els.adhanTest.textContent = isAdhanPlaying() ? t('adhan.stop') : t('adhan.test');
   }

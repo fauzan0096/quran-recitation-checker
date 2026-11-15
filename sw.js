@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v112';
+const CACHE = 'bayyin-v114';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -150,6 +150,13 @@ self.addEventListener('fetch', (event) => {
     return;
   }
   if (url.origin !== self.location.origin) return;
+
+  // Sound and video are left to the browser. A media element asks for its file
+  // in byte ranges, and a worker answering those from a whole-file cache entry
+  // is exactly what made the azaan stall with no sound and no error. The
+  // azaan player handles its own retries and its own offline behaviour.
+  if (request.destination === 'audio' || request.destination === 'video') return;
+  if (request.headers.has('range')) return;
 
   // Opening the app: the cached page is shown at once — with no network at all,
   // and without waiting for a slow one — and a fresh copy is fetched quietly for

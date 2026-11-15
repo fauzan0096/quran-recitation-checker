@@ -587,6 +587,16 @@ aur us ke baad hi **high accuracy**. Jo bhi na chale to neeche latitude/longitud
 ka dabba khud khul jata hai. Play/TWA app me is ke liye Android manifest me
 `ACCESS_FINE_LOCATION` chahiye — Play Console steps me likha hai.
 
+## Azaan — `adhan.js`
+
+- Teen choice hain: **Adhan by Mohammad Duste 1**, **2**, aur (file chunne par)
+  **Apni azaan file**. Jo chuni hai **wahi** bajti hai. Pehle ek recording fail hone
+  par doosri chal jati thi — isi liye "Adhan 2" chunne par bhi "Adhan 1" sunai deti
+  thi. Ab ghalati par saaf message aata hai, galat azaan nahi bajti.
+- Audio/video service worker se nahi guzarta: media element byte-ranges mangta hai,
+  aur worker ka poora-file cache in javabon ko kharab kar deta tha (azaan atak jati thi).
+- Test button dabane par disable hota hai; chalte waqt "Azaan band karein" ban jata hai.
+
 ## Offline — `sw.js`
 
 App ek dafa internet ke sath khul jaye to uske baad **bina internet** chalti hai.

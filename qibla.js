@@ -16,9 +16,17 @@ const COMPASS_POINTS = [
 ];
 
 function headingOf(event) {
-  if (typeof event.webkitCompassHeading === 'number') return event.webkitCompassHeading;
+  // iPhone: the compass heading, already measured clockwise from north.
+  if (
+    typeof event.webkitCompassHeading === 'number' &&
+    Number.isFinite(event.webkitCompassHeading)
+  ) {
+    return ((event.webkitCompassHeading % 360) + 360) % 360;
+  }
+  if (typeof event.alpha !== 'number' || !Number.isFinite(event.alpha)) return null;
+  // A relative event (absolute === false) is measured from where the phone
+  // happened to start, not from north: it cannot point at the Kaaba.
   if (event.absolute === false) return null;
-  if (typeof event.alpha !== 'number') return null;
   return (360 - event.alpha + 360) % 360;
 }
 
@@ -98,7 +106,8 @@ export function mountQibla(root) {
               side: t(delta > 0 ? 'qibla.right' : 'qibla.left'),
             });
     } else if (bearing !== null) {
-      read.textContent = t('qibla.static', { deg: Math.round(bearing) });
+      const base = t('qibla.static', { deg: Math.round(bearing) });
+      read.textContent = message ? `${base} · ${message}` : base;
     } else if (message) {
       read.textContent = message;
     } else if (status === 'waiting') {
@@ -163,6 +172,10 @@ export function mountQibla(root) {
       return;
     }
 
+    // The compass is started before the place is worked out, so it keeps
+    // listening while a GPS fix is being waited for.
+    listen();
+
     try {
       // A place the person already set (a city, or latitude/longitude) needs no
       // permission at all — that is what makes the Qibla work on a phone whose
@@ -172,8 +185,18 @@ export function mountQibla(root) {
       bearing = qiblaBearing(spot.lat, spot.lon);
       distance = distanceToKaaba(spot.lat, spot.lon);
       status = 'live';
+      message = '';
       build();
-      listen();
+      // The place is known: if the compass has still said nothing, tell the
+      // person plainly instead of leaving the needle frozen.
+      if (heading === null) {
+        if (timer) window.clearTimeout(timer);
+        timer = window.setTimeout(() => {
+          if (heading !== null) return;
+          message = t('qibla.noCompass');
+          build();
+        }, 6000);
+      }
     } catch (error) {
       started = false;
       status = 'error';
@@ -201,12 +224,13 @@ export function mountQibla(root) {
     };
     if (timer) window.clearTimeout(timer);
     timer = window.setTimeout(() => {
-      if (heading === null) {
-        status = 'error';
-        message = t('qibla.noCompass');
-        build();
-      }
-    }, 4000);
+      // Only worth saying once the place is known: before that the phone is
+      // still waiting for a fix, not for a compass.
+      if (heading !== null || bearing === null) return;
+      status = 'live';
+      message = t('qibla.noCompass');
+      build();
+    }, 6000);
   }
 
   function stop() {
