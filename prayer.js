@@ -10,6 +10,7 @@
 
 import { t } from './i18n.js';
 import { locate } from './geo.js';
+import { CITIES } from './cities.js';
 
 const STORE = 'tc.prayer';
 const DEG = Math.PI / 180;
@@ -232,7 +233,7 @@ export function mountPrayer(root) {
       const locateButton = el('button', 'btn primary', t('prayer.locate'));
       locateButton.type = 'button';
       locateButton.addEventListener('click', () => locateMe(build, status, manual));
-      root.append(locateButton, status, manual);
+      root.append(locateButton, status, cityPicker(state, build), manual);
       return;
     }
 
@@ -277,6 +278,7 @@ export function mountPrayer(root) {
 
     root.appendChild(tools);
     root.appendChild(status);
+    root.appendChild(cityPicker(state, build));
     root.appendChild(manual);
   }
 
@@ -367,6 +369,52 @@ function manualForm(state, after) {
 
   form.append(lat, lon, save);
   box.appendChild(form);
+  return box;
+}
+
+/**
+ * A city from the built-in list: for a phone that refuses (or cannot get) a
+ * location, this still gives real times and a real Qibla direction.
+ */
+function cityPicker(state, after) {
+  const box = el('label', 'field');
+  box.appendChild(el('span', '', t('prayer.city')));
+
+  const select = document.createElement('select');
+  const blank = document.createElement('option');
+  blank.value = '';
+  blank.textContent = t('prayer.cityPick');
+  select.appendChild(blank);
+
+  const groups = [];
+  for (let i = 0; i < CITIES.length; i += 1) {
+    const [country, city, lat, lon] = CITIES[i];
+    let group = groups.find((item) => item.country === country);
+    if (!group) {
+      const node = document.createElement('optgroup');
+      node.label = country;
+      group = { country, node };
+      groups.push(group);
+      select.appendChild(node);
+    }
+    const option = document.createElement('option');
+    option.value = String(i);
+    option.textContent = city;
+    option.dataset.lat = String(lat);
+    option.dataset.lon = String(lon);
+    group.node.appendChild(option);
+  }
+
+  select.addEventListener('change', () => {
+    const picked = CITIES[Number(select.value)];
+    if (!picked) return;
+    state.lat = picked[2];
+    state.lon = picked[3];
+    write(state);
+    after();
+  });
+
+  box.appendChild(select);
   return box;
 }
 

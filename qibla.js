@@ -6,6 +6,7 @@
 import { t } from './i18n.js';
 import { qiblaBearing, distanceToKaaba } from './hijri.js';
 import { locate } from './geo.js';
+import { location as savedPlace } from './prayer.js';
 
 const COMPASS_POINTS = [
   [0, 'N'],
@@ -163,7 +164,11 @@ export function mountQibla(root) {
     }
 
     try {
-      const spot = await locate();
+      // A place the person already set (a city, or latitude/longitude) needs no
+      // permission at all — that is what makes the Qibla work on a phone whose
+      // location is refused.
+      const saved = savedPlace();
+      const spot = saved.lat && saved.lon ? saved : await locate();
       bearing = qiblaBearing(spot.lat, spot.lon);
       distance = distanceToKaaba(spot.lat, spot.lon);
       status = 'live';
@@ -172,7 +177,8 @@ export function mountQibla(root) {
     } catch (error) {
       started = false;
       status = 'error';
-      message = t((error && error.code) === 'denied' ? 'qibla.denied' : 'qibla.noGeo');
+      const denied = (error && error.code) === 'denied';
+      message = `${t(denied ? 'qibla.denied' : 'qibla.noGeo')} ${t('qibla.setPlace')}`;
       build();
     }
   }

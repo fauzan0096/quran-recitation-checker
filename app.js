@@ -336,6 +336,7 @@ function watchForUpdate() {
     // update and must not reload the page.
     if (!hadController || updateReloaded) return;
     if (state.recording) return;
+    if (!navigator.onLine) return;
     updateReloaded = true;
     window.location.reload();
   });

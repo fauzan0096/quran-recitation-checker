@@ -29,7 +29,16 @@ import { t } from './i18n.js';
       if (!hadWorker || refreshing) return;
       refreshing = true;
 
-      const reload = () => window.location.reload();
+      const reload = () => {
+        // Offline a reload is only worth it when the page itself is cached — and
+        // it is, after one online visit. Without this a bad moment on the network
+        // could leave the person on the browser's error page.
+        if (!navigator.onLine) {
+          window.bayyinReloadPending = reload;
+          return;
+        }
+        window.location.reload();
+      };
       // Never cut a recording or a model download in half.
       if (document.body.dataset.busy === '1') {
         window.bayyinReloadPending = reload;

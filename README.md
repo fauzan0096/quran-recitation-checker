@@ -587,6 +587,32 @@ aur us ke baad hi **high accuracy**. Jo bhi na chale to neeche latitude/longitud
 ka dabba khud khul jata hai. Play/TWA app me is ke liye Android manifest me
 `ACCESS_FINE_LOCATION` chahiye — Play Console steps me likha hai.
 
+## Offline — `sw.js`
+
+App ek dafa internet ke sath khul jaye to uske baad **bina internet** chalti hai.
+
+- `index.html` **cache se foran** khulta hai (pehle network ka intezar hota tha, jo
+  slow ya band network par app ko "na khulne" jaisa bana deta tha); nayi copy peeche
+  chupke se cache ho jati hai.
+- Har update naye worker ke sath aata hai (`CACHE = 'bayyin-vNNN'`), is liye cache-first
+  hone se app purane version par nahi atakti.
+- Cache bilkul khali ho (pehli dafa aur internet na ho) to ek saaf page batata hai ke
+  app ko ek dafa online khol lein — browser ka error page nahi.
+- Offline hone par app khud reload nahi karti (`install.js`, `app.js`), warna cache ke
+  baghair page khali reh jata.
+
+## Location aur Qibla — `geo.js`, `cities.js`
+
+- `geo.js` pehle permission dekhta hai, phir network wali tez location, phir high
+  accuracy — aur jo na chale to latitude/longitude ka dabba khud khul jata hai.
+- `cities.js` me **~180 shehar** hain (Pakistan, India, Bangladesh, Saudi, UAE,
+  Europe, America waghera). Namaz screen par **"Ya apna shehar chunein"** se ek tap me
+  jagah set ho jati hai — koi permission nahi chahiye.
+- Qibla pehle **save ki hui jagah** use karta hai (shehar ya lat/long), sirf us ke baad
+  GPS maangta hai, is liye location band hone par bhi Qibla ka rukh milta hai.
+- Play wali app me location ke liye Android manifest me `ACCESS_FINE_LOCATION` chahiye
+  (PLAY-CONSOLE-STEPS.md §5.8).
+
 ## Screens, back button aur reload
 
 - Har screen ek asli history entry hai, aur us entry me apna **trail** bhi hai
