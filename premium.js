@@ -408,12 +408,10 @@ export function priceFor(planId) {
 }
 
 // Launch offer on the monthly plan: the first three months at a low price, then
-// the regular one. It must match the introductory offer set in Play Console
-// (price, how many months, last day), because Play's own payment sheet is what
-// charges it. South Asia uses the numbers below; every other country uses the
-// $3.33 price converted into its own money, so nobody is shown a price that
-// looks suspiciously cheap for their country. A country in `off` keeps Play's
-// regular price and shows no offer at all.
+// the regular one, for every country. It must match the introductory offer set
+// in Play Console (price, how many months, last day), because Play's own payment
+// sheet is what charges it. South Asia uses the numbers below; every other
+// country uses the $3.33 price converted into its own money.
 // Turn the whole thing off with `on: false` when it ends.
 export const LAUNCH_OFFER = {
   on: true,
@@ -421,17 +419,16 @@ export const LAUNCH_OFFER = {
   endsAt: '', // last day, 'YYYY-MM-DD'; '' = no end date stated in the app
   usd: 3.33, // the offer price for every country not listed in `prices`
   prices: { IN: 99, PK: 299, BD: 139, NP: 159, LK: 359 },
-  // Countries that keep Play's own regular price and show no launch offer.
-  off: ['SA'],
 };
 
 /**
  * The offer for a plan, or null when there is none (or it has ended).
  *
- * South Asia uses its own numbers; everywhere else the $3.33 offer price is
- * converted into the local money. The offer must still be lower than what Play
- * charges that month, otherwise it is not shown at all — Play's price is what
- * the person really pays.
+ * The owner set the same launch offer for every country in Play Console: the
+ * first three months at ₹99 (South Asia's own numbers) or the $3.33 equivalent
+ * everywhere else. Play's `getDetails()` does not return an introductory price,
+ * so the card prints these numbers itself — they must be kept in step with the
+ * offer in Play Console, which is what actually charges.
  */
 export function launchOffer(planId) {
   if (!LAUNCH_OFFER.on || planId !== 'monthly') return null;
@@ -440,12 +437,6 @@ export function launchOffer(planId) {
     if (isFinite(end.getTime()) && Date.now() > end.getTime()) return null;
   }
   const regular = priceFor('monthly');
-  // Inside Play the card shows Play's own price and nothing else: the store does
-  // not tell us its introductory price, so an offer drawn here would be a number
-  // the payment sheet may not match. The offer is only for the browser build,
-  // where it is this app's own text.
-  if (regular.store) return null;
-  if (LAUNCH_OFFER.off.includes(regular.region)) return null;
   const fixed = LAUNCH_OFFER.prices[regular.region];
   const amount = fixed
     ? fixed
