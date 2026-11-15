@@ -428,13 +428,13 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   ₹299 tier (IN ₹299/₹2699, PK 899/8099, BD 419/3779, NP 479/4319, LK 1079/9759),
   baqi mulkon me $6.66 / $59.99 ka local conversion. Paywall par mulk ka naam
   (`regionName`) aur local price likha aata hai.
-- **Launch offer** (`premium.js` → `LAUNCH_OFFER`): sirf un mulkon me jahan
-  `LAUNCH_OFFER.prices` me number likha hai (IN ₹99, PK 299, BD 139, NP 159,
-  LK 359). Kisi aur mulk me offer **nahi** dikhaya jata — wahan Play ka regular
-  price hi chalta hai, warna app aisi price dikha deti thi jo Play leta hi nahi
-  (Saudi me pehle mahine ke liye SAR 7 bana kar dikha rahi thi jab ke Play 13.99
-  leta hai). Kisi mulk ka offer chahiye to usi map me `SA: 7` jaisa ek entry
-  daal dein — aur **Play Console ka introductory offer bhi bilkul wahi** rakhein.
+- **Launch offer** (`premium.js` → `LAUNCH_OFFER`): monthly ke **pehle 3 mahine**
+  sasta — South Asia me apne numbers (IN ₹99, PK 299, BD 139, NP 159, LK 359),
+  aur **baqi har mulk me $3.33** ka local conversion (Saudi ~SAR 12, UAE ~12,
+  Euro ~3.06 waghera), takay kisi ko price nihayat kam na lage. Offer `endsAt`
+  se band hota hai, `on: false` se poora. Jo mulk me offer Play ke price se kam
+  na ho, wahan app offer nahi dikhati. **Play Console me introductory offer
+  bilkul yahi** hona chahiye (3 mahine, wahi price).
 - **Sab kuch device par**: `tc.premium`, `tc.premiumSince`, `tc.premiumExpires`,
   `tc.premiumPlan`, `tc.premiumChecks` — koi account, koi server, koi audio upload
   nahi. (Browser/OS ka data clear karna "restore purchase" se hoga.)

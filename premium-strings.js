@@ -180,7 +180,7 @@ addStrings('en', {
   'premium.monthly': 'Monthly',
   'premium.yearly': 'Yearly',
   'premium.monthlyNote': 'Renews monthly — cancel any time.',
-  'premium.offerNote': 'Launch offer — {offer} for the first {n} month(s), then {regular} a month.',
+  'premium.offerNote': 'Launch offer — {offer} for the first {n} months, then {regular} a month.',
   'premium.offerUntil': 'Offer ends {date}.',
   'premium.yearlyNote': 'Save 25% — best value.',
   'premium.bestValue': 'Best value',
