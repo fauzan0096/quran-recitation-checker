@@ -195,12 +195,17 @@ subscription disclosure) → `STORE-LISTING.md`. Feature graphic aur screenshots
 
 | Product ID | Base plan | Price (IN) | PK | BD | NP | LK | Rest |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| `bayyin_premium` | `monthly` (P1M) | ₹99 | 330 | 140 | 160 | 340 | $3.33 |
-| `premium_yearly` | `yearly` (P1Y) | ₹799 | 2640 | 1120 | 1280 | 2720 | $29.99 |
+| `bayyin_premium` | `monthly` (P1M) | ₹299 | 899 | 419 | 479 | 1079 | $6.66 |
+| `premium_yearly` | `yearly` (P1Y) | ₹2699 | 8099 | 3779 | 4319 | 9759 | $59.99 |
+
+Launch offer (monthly ka pehla mahina): IN ₹99, PK 299, BD 139, NP 159, LK 359,
+baqi jagah $3.33 ka local conversion. App me `LAUNCH_OFFER` se aata hai — **Play
+Console me introductory offer isi price/muddat ka lagayein**, warna app kuch aur
+dikhayegi aur Play kuch aur katega.
 
 - Play Console → Monetize → Products → **Subscriptions** → dono product banayein.
 - **Set prices per country** (auto-convert band kar ke manual: India, Pakistan,
-  Bangladesh, Nepal, Sri Lanka ke amounts upar; baqi duniya $3.33 / $29.99).
+  Bangladesh, Nepal, Sri Lanka ke amounts upar; baqi duniya $6.66 / $59.99).
 - App **Play ka apna price** dikhati hai (`getDetails()` se, `tc.storePrices` me
   30 din cache) — jo card par likha hai wohi payment sheet me aata hai. Browser me
   (jahan kuch bikta nahi) `premium.js` ka country → currency table chalta hai:

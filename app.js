@@ -71,6 +71,8 @@ import {
   state as adhanState,
   setOn as setAdhanOn,
   play as playAdhan,
+  playing as isAdhanPlaying,
+  onChange as onAdhanChange,
   stop as stopAdhan,
   check as checkAdhan,
   prime as primeAdhan,
@@ -254,20 +256,27 @@ async function init() {
     logError(String(event.reason || 'unhandled rejection'));
   });
 
-  // Quran is the app's first page. Roz ki Naiki opens over it on every launch,
-  // so Back simply closes it and the reader is waiting behind.
+  // Quran is the app's first page, and Roz ki Naiki opens over it on a first
+  // visit. A reload must not throw the person back to the first page: the screen
+  // they were last on comes back instead.
   paintHomeDate();
   const params = new URLSearchParams(window.location.search);
   const go = params.get('go');
-  setView('reader');
-  if (go) setView(go);
-  else if (!params.get('adhan')) setView('daily');
+  const wantAdhan = params.get('adhan');
+
+  if (wantAdhan) {
+    setView('prayer');
+  } else if (go) {
+    setView(go);
+  } else {
+    const last = storedView() || 'reader';
+    setView(last);
+    if (last === 'reader') setView('daily');
+  }
 
   // A prayer notification opens the app with ?adhan=fajr: the person tapped it,
   // so the sound is allowed and the azaan starts straight away.
-  const wantAdhan = params.get('adhan');
   if (wantAdhan) {
-    setView('prayer');
     window.setTimeout(() => {
       playAdhan().then((ok) => {
         if (!ok) toast(t('adhan.failed'));
@@ -327,6 +336,7 @@ function watchForUpdate() {
     // update and must not reload the page.
     if (!hadController || updateReloaded) return;
     if (state.recording) return;
+    if (!navigator.onLine) return;
     updateReloaded = true;
     window.location.reload();
   });
@@ -622,12 +632,15 @@ function mountReminderCardUI() {
   if (els.remindRoot) mountReminderCard(els.remindRoot);
 }
 
-/** Azaan: the app's own recording (or the person's own file), on or off. */
-function fillAdhans() {
-  // The muazzin picker is gone with the borrowed recordings; if one is ever put
-  // back, this keeps working.
+/** Azaan: the app's own recordings, the person's own file, on or off. */
+async function fillAdhans() {
   if (els.adhanSelect) {
     const items = adhanList();
+    // A file the person picked is a choice of its own: before this it silently
+    // replaced BOTH recordings, so both options played the same azaan.
+    const own = await hasAdhanFile().catch(() => false);
+    if (own) items.unshift({ id: 'own', name: t('adhan.ownFile'), credit: '' });
+
     const ids = items.map((item) => item.id);
     els.adhanSelect.textContent = '';
     for (const item of items) {
@@ -636,9 +649,7 @@ function fillAdhans() {
       option.textContent = item.name;
       els.adhanSelect.appendChild(option);
     }
-    els.adhanSelect.value = ids.includes(adhanState().id)
-      ? adhanState().id
-      : ids[0] || 'own';
+    els.adhanSelect.value = ids.includes(adhanState().id) ? adhanState().id : ids[0] || 'one';
     els.adhanSelect.addEventListener('change', () => {
       setAdhanId(els.adhanSelect.value);
       paintAdhan();
@@ -662,11 +673,24 @@ function fillAdhans() {
   }
   if (els.adhanTest) {
     els.adhanTest.addEventListener('click', async () => {
+      // A second tap stops it; the button says which one it will do.
+      if (isAdhanPlaying()) {
+        stopAdhan();
+        paintAdhan();
+        return;
+      }
+      els.adhanTest.disabled = true;
       primeAdhan();
-      const ok = await playAdhan();
+      let ok = false;
+      try {
+        ok = await playAdhan();
+      } finally {
+        els.adhanTest.disabled = false;
+      }
       if (!els.adhanCredit) return;
       if (ok) {
-        els.adhanCredit.textContent = currentAdhan().credit || '';
+        els.adhanCredit.textContent = currentAdhan().credit || currentAdhan().name || '';
+        paintAdhan();
         return;
       }
       const own = await hasAdhanFile().catch(() => false);
@@ -695,6 +719,7 @@ function fillAdhans() {
     });
   }
 
+  onAdhanChange(paintAdhan);
   paintAdhan();
   primeAdhan();
   armAdhanNow();
@@ -774,7 +799,12 @@ function paintAdhan() {
     els.adhanToggle.textContent = on ? t('adhan.on') : t('adhan.off');
     els.adhanToggle.className = `btn small ${on ? 'ghost' : 'primary'}`;
   }
-  if (els.adhanCredit) els.adhanCredit.textContent = currentAdhan().credit;
+  if (els.adhanCredit) {
+    els.adhanCredit.textContent = currentAdhan().credit || currentAdhan().name || '';
+  }
+  if (els.adhanTest) {
+    els.adhanTest.textContent = isAdhanPlaying() ? t('adhan.stop') : t('adhan.test');
+  }
 
   hasAdhanFile()
     .then((has) => {
@@ -2745,34 +2775,90 @@ function setNamazTab(tab) {
 }
 
 // ------------------------------------------------------------- back button
-// Screens are kept in a small trail, so the phone's back button (and the
-// left-edge swipe on a new iPhone) goes back one screen — never straight to the
-// first page.
+// Every screen is a real history entry, and each entry carries the trail that
+// led to it. So the phone's back button (and the left-edge swipe on a new
+// iPhone) always goes exactly one screen back, and at the first page it leaves
+// the app instead of silently doing nothing.
 const navStack = [];
 let navSkipPush = false;
+let navBooted = false;
+const VIEW_KEY = 'tc.view';
 
-function pushHistory() {
+function navState(view) {
+  return { bayyin: true, view, trail: navStack.slice() };
+}
+
+function pushHistory(view) {
   try {
-    history.pushState({ bayyin: true }, '');
+    history.pushState(navState(view), '');
+  } catch (error) {
+    /* some in-app browsers refuse */
+  }
+}
+
+function replaceHistory(view) {
+  try {
+    history.replaceState(navState(view), '');
   } catch (error) {
     /* some in-app browsers refuse */
   }
 }
 
 function rememberNav(name) {
+  // The screen is kept, so a reload — a pull down, an update, a crash — comes
+  // back to it instead of throwing the person to the first page. Roz ki Naiki
+  // is a layer over the reader, so the reader is what gets kept.
+  try {
+    localStorage.setItem(VIEW_KEY, name === 'daily' ? 'reader' : name);
+  } catch (error) {
+    /* private mode */
+  }
+
   if (navSkipPush) return;
   if (navStack[navStack.length - 1] === name) return;
   navStack.push(name);
   if (navStack.length > 30) navStack.shift();
-  pushHistory();
+
+  // The very first screen replaces the entry the page loaded with instead of
+  // adding one, so the first back at the first page goes out of the app.
+  if (!navBooted) {
+    navBooted = true;
+    replaceHistory(name);
+    return;
+  }
+  pushHistory(name);
+}
+
+/** The screen a reload should come back to, when it is one we know. */
+function storedView() {
+  try {
+    const saved = localStorage.getItem(VIEW_KEY) || '';
+    const known = [
+      'reader',
+      'more',
+      'dua',
+      'tasbeeh',
+      'namaz',
+      'calendar',
+      'khatam',
+      'badges',
+      'premium',
+      'settings',
+    ];
+    return known.includes(saved) ? saved : '';
+  } catch (error) {
+    return '';
+  }
 }
 
 /**
- * Work the back out here, then leave a fresh history entry behind so that the
- * NEXT back is caught the same way. Without that, a web view with a single
- * history entry sends the person straight to the start.
+ * The browser has already moved: show the screen the entry it landed on names.
+ * Nothing is pushed here, so the history and the screens cannot drift apart.
  */
-function handleBack() {
+function handleBack(event) {
+  const data = event && event.state;
+  if (!data || !data.bayyin || !data.view) return; // not ours: the app is leaving
+
   // The full-screen mushaf is a layer over the reader: back leaves it first.
   if (state.mushafFull && state.mode === 'page') {
     state.mushafFull = false;
@@ -2782,19 +2868,19 @@ function handleBack() {
       paintMushafToggle(page.querySelector('.mushaf-toggle'));
       refitMushafSoon();
     }
-    pushHistory();
+    // Put an entry back, so this press only closed the page.
+    pushHistory(currentView);
     return;
   }
 
-  const had = navStack.length > 1;
-  if (had) navStack.pop();
-  const target = navStack[navStack.length - 1] || 'home';
+  const trail = Array.isArray(data.trail) && data.trail.length ? data.trail : [data.view];
+  navStack.length = 0;
+  navStack.push(...trail);
+
+  navBooted = true;
   navSkipPush = true;
-  setView(target);
+  setView(data.view);
   navSkipPush = false;
-  // Keep one entry behind us while there is a trail, so the phone's back goes
-  // home first and only a second press at home leaves the app.
-  if (had) pushHistory();
 }
 
 /** One step back, through the browser so both stay in step. */
@@ -2802,7 +2888,9 @@ function navigateBack() {
   try {
     history.back();
   } catch (error) {
-    handleBack();
+    navSkipPush = true;
+    setView('reader');
+    navSkipPush = false;
   }
 }
 

@@ -425,9 +425,14 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
   phone ki language ke region tag se. **Time zone pehle** is liye dekha jata hai
   ke India me bohat phone English (US) par set hote hain aur unhein dollar price
   dikh rahi thi. Currency `Intl.NumberFormat` se banti hai — South Asia me
-  ₹99 tier (IN ₹99/₹799, PK 330/2640, BD 140/1120, NP 160/1280, LK 340/2720),
-  baqi mulkon me $3.33 / $29.99 ka local conversion. Paywall par mulk ka naam
+  ₹299 tier (IN ₹299/₹2699, PK 899/8099, BD 419/3779, NP 479/4319, LK 1079/9759),
+  baqi mulkon me $6.66 / $59.99 ka local conversion. Paywall par mulk ka naam
   (`regionName`) aur local price likha aata hai.
+- **Launch offer** (`premium.js` → `LAUNCH_OFFER`): monthly ka pehla mahina sasta
+  (IN ₹99, PK 299, BD 139, NP 159, LK 359, baqi jagah $3.33 ka local conversion).
+  Paywall par regular price kata hua aur offer price dikhti hai. Ye **Play Console
+  ke introductory offer se match karna chahiye** (warna Play jo katega wo aur app jo
+  dikhayegi wo alag honge); offer khatam ho to `on: false` kar dein.
 - **Sab kuch device par**: `tc.premium`, `tc.premiumSince`, `tc.premiumExpires`,
   `tc.premiumPlan`, `tc.premiumChecks` — koi account, koi server, koi audio upload
   nahi. (Browser/OS ka data clear karna "restore purchase" se hoga.)
