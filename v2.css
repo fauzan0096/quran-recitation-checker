@@ -1288,15 +1288,24 @@ body[data-theme='dark'] {
   min-width: 0;
   line-height: 1.15;
 }
-/* A launch offer: the crossed-out regular price sits beside the offer price and
-   both stay inside the card, however long the currency label is. */
+/* A launch offer, stacked: the real price struck through and small, the offer
+   price underneath it big. Both stay inside the card whatever the label is. */
 .premium-plan-price.is-offer {
-  font-size: 19px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
 }
 .premium-plan-price .was {
   font-size: 12px;
   font-weight: 500;
   opacity: 0.55;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.premium-plan-price .now {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.1;
   white-space: nowrap;
 }
 .premium-plan-note { font-size: 12px; color: var(--muted); }

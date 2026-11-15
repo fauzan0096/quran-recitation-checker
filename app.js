@@ -3322,18 +3322,20 @@ function renderPremium() {
 
       const amount = document.createElement('strong');
       amount.className = 'premium-plan-price';
-      amount.textContent = price.label;
       const offer = id === 'monthly' ? s.prices.monthlyOffer : null;
       if (offer) {
-        // The crossed-out price stays on the same line and wraps inside the card
-        // instead of pushing the offer price out of it (see .premium-plan-price
-        // in v2.css, which sizes this one).
+        // The real price is crossed out small on top; the offer price is the big
+        // line under it (see .premium-plan-price in v2.css).
         const was = document.createElement('s');
         was.className = 'was';
         was.textContent = price.label;
+        const now = document.createElement('span');
+        now.className = 'now';
+        now.textContent = offer.label;
         amount.classList.add('is-offer');
-        amount.textContent = offer.label;
-        amount.prepend(was);
+        amount.append(was, now);
+      } else {
+        amount.textContent = price.label;
       }
 
       const note = document.createElement('span');
