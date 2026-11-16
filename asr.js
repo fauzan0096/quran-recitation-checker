@@ -34,6 +34,88 @@ export const MODELS = [
 let libPromise = null;
 let libVersion = '';
 
+// ---------------------------------------------- the model on its own thread
+// Whisper decoding is heavy. On the page's main thread it froze the whole app
+// while an aya was checked; in a Web Worker the same model (and the same
+// Transformers.js) runs beside the page, which keeps drawing. If a worker cannot
+// be created, everything falls back to the code below, exactly as before.
+let asrWorker = null;
+let asrWorkerBroken = false;
+let asrSeq = 0;
+const asrPending = new Map();
+
+function worker() {
+  if (asrWorker) return asrWorker;
+  if (asrWorkerBroken || typeof Worker === 'undefined') return null;
+  try {
+    asrWorker = new Worker('asr-worker.js', { type: 'module' });
+  } catch (error) {
+    asrWorkerBroken = true;
+    asrWorker = null;
+    return null;
+  }
+  asrWorker.onmessage = (event) => {
+    const msg = event.data || {};
+    const entry = asrPending.get(msg.id);
+    if (!entry) return;
+    if (msg.type === 'progress') {
+      if (entry.onProgress) {
+        try {
+          entry.onProgress(msg.data || {});
+        } catch (error) {
+          /* a broken progress line must not stop the model */
+        }
+      }
+      return;
+    }
+    asrPending.delete(msg.id);
+    if (msg.type === 'failed') entry.reject(new Error(msg.message || 'Model worker error'));
+    else {
+      if (msg.type === 'loaded' && msg.version) libVersion = String(msg.version);
+      entry.resolve(msg.text !== undefined ? msg.text : true);
+    }
+  };
+  asrWorker.onerror = (event) => {
+    asrWorkerBroken = true;
+    asrWorker = null;
+    const error = new Error('Model worker fail ho gaya');
+    for (const [, entry] of asrPending) entry.reject(error);
+    asrPending.clear();
+    console.warn('asr worker failed', event && event.message ? event.message : event);
+  };
+  return asrWorker;
+}
+
+function askWorker(message, timeoutMs, onProgress, transfer) {
+  const target = worker();
+  if (!target) return Promise.reject(new Error('no worker'));
+  const id = (asrSeq += 1);
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      asrPending.delete(id);
+      reject(new Error('Model worker ne jawab nahi diya'));
+    }, timeoutMs || 180000);
+    asrPending.set(id, {
+      onProgress,
+      resolve: (value) => {
+        clearTimeout(timer);
+        resolve(value);
+      },
+      reject: (error) => {
+        clearTimeout(timer);
+        reject(error);
+      },
+    });
+    try {
+      target.postMessage({ ...message, id }, transfer || []);
+    } catch (error) {
+      asrPending.delete(id);
+      clearTimeout(timer);
+      reject(error);
+    }
+  });
+}
+
 async function loadLibrary() {
   if (!libPromise) {
     libPromise = (async () => {
@@ -84,6 +166,16 @@ export function libraryVersion() {
  * @param {(progress: object) => void} onProgress Transformers.js progress event.
  */
 export async function loadModel(modelId, onProgress = () => {}) {
+  // Prefer the worker: the model and the decoding stay off the page's thread.
+  if (worker()) {
+    try {
+      await askWorker({ type: 'load', modelId }, 360000, onProgress);
+      return { worker: true };
+    } catch (error) {
+      console.warn('worker could not load the model, using this thread', error);
+    }
+  }
+
   const lib = await loadLibrary();
   const options = {
     device: 'wasm',
@@ -171,6 +263,16 @@ export async function transcribe(instance, audioFloat32, options = {}) {
   if (seconds > 30) {
     args.chunk_length_s = 30;
     args.stride_length_s = 5;
+  }
+
+  // The model loaded into the worker: hand it the samples and wait. The page
+  // stays responsive while Whisper decodes.
+  if (instance && instance.worker && worker()) {
+    const copy = new Float32Array(audio);
+    const text = await askWorker({ type: 'transcribe', audio: copy, args }, 180000, null, [
+      copy.buffer,
+    ]);
+    return collapseRunaways(String(text || ''));
   }
 
   let timer = null;

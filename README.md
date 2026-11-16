@@ -645,6 +645,15 @@ App ek dafa internet ke sath khul jaye to uske baad **bina internet** chalti hai
 - Galti se pull-to-refresh se page reload na ho, `v2.css` me
   `overscroll-behavior-y: contain` laga hua hai.
 
+## Speech model — `asr.js`, `asr-worker.js`
+
+Model wohi hai (Whisper Quran, ONNX), badla kuch nahi — bas ab **Web Worker**
+(`asr-worker.js`) me chalta hai. Pehle decoding page ke main thread par hoti thi,
+is liye check ke doran app lag karti / freeze hoti thi. Ab page aaram se chalta
+rehta hai, worker text wapas bhejta hai (`loadModel()` → `{ worker: true }`,
+`transcribe()` worker ko samples bhejta hai). Worker na ban paye to purana
+main-thread rasta khud chal jata hai.
+
 ## Backup — `backup.js`
 
 Settings → **Backup**: ek JSON file me saara `tc.*` data (progress, report, settings,
