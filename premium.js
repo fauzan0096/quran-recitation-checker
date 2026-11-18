@@ -383,20 +383,14 @@ export function priceFor(planId) {
   const fromStore = storePrices();
   const quoted = fromStore && fromStore[key];
   if (quoted) {
-    // Play answers in the money of the Play account. The card shows the price of
-    // the place the phone is in, so both phones in a house read the same money.
-    const local = COUNTRY_CURRENCY[code] || BASE.currency;
-    let currency = quoted.currency;
-    let amount = quoted.value;
-    if (currency !== local && RATES[currency] && RATES[local]) {
-      amount = niceAmount((amount * RATES[local]) / RATES[currency]);
-      currency = local;
-    }
+    // Shown exactly as Play quoted it — same money, same amount. Converting it
+    // into the phone's currency made a ₹99 plan read as "SAR 4" on a phone whose
+    // Play account is Indian, which is not what the payment sheet charges.
     return {
       region: code,
-      currency,
-      amount,
-      label: money(amount, currency),
+      currency: quoted.currency,
+      amount: quoted.value,
+      label: money(quoted.value, quoted.currency),
       store: true,
     };
   }
@@ -480,11 +474,15 @@ const REGULAR_USD = 6.66;
 
 function wasPrice(now) {
   if (!now || !(now.amount > 0)) return null;
-  const fixed = REGULAR_PRICES[now.region];
-  const amount = fixed
-    ? fixed
-    : niceAmount(REGULAR_USD * (RATES[now.currency] || 1));
-  if (!(amount > now.amount)) return null;
+  // A hand-set regular price is in the money of its own country: it is only used
+  // when the price shown is in that same money.
+  const localCurrency = COUNTRY_CURRENCY[now.region] || BASE.currency;
+  const fixed = now.currency === localCurrency ? REGULAR_PRICES[now.region] : 0;
+  // With a Play price only a regular price set by hand is ever crossed out: a
+  // computed one (SAR 25 out of $6.66) was never charged anywhere.
+  if (now.store && !fixed) return null;
+  const amount = fixed ? fixed : niceAmount(REGULAR_USD * (RATES[now.currency] || 1));
+  if (!amount || !(amount > now.amount)) return null;
   return { currency: now.currency, amount, label: money(amount, now.currency) };
 }
 

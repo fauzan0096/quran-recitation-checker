@@ -2522,6 +2522,10 @@ async function checkTarget(id, keys, blob) {
         fast: !accurate,
         prompt: verses.map((verse) => verse.ayaText || verse.text).join(' '),
       });
+    } catch (error) {
+      // A model whose worker died must be loaded again, not reused.
+      if (state.model && state.model.worker) state.model = null;
+      throw error;
     } finally {
       window.clearInterval(ticker);
       setGlobalStatus('');

@@ -267,12 +267,21 @@ export async function transcribe(instance, audioFloat32, options = {}) {
 
   // The model loaded into the worker: hand it the samples and wait. The page
   // stays responsive while Whisper decodes.
-  if (instance && instance.worker && worker()) {
+  if (instance && instance.worker) {
     const copy = new Float32Array(audio);
-    const text = await askWorker({ type: 'transcribe', audio: copy, args }, 180000, null, [
-      copy.buffer,
-    ]);
-    return collapseRunaways(String(text || ''));
+    try {
+      const text = await askWorker({ type: 'transcribe', audio: copy, args }, 180000, null, [
+        copy.buffer,
+      ]);
+      return collapseRunaways(String(text || ''));
+    } catch (error) {
+      // The worker died (phone memory, tab suspended): say so plainly instead of
+      // failing with a JavaScript error nobody can act on.
+      if (!worker()) {
+        throw new Error('Model band ho gaya — Settings me "Model load karein" dabaein.');
+      }
+      throw error;
+    }
   }
 
   let timer = null;

@@ -419,15 +419,13 @@ App ka **code, design, icon aur naam** kisi open-source licence par nahi hai:
 - **Plans aur SKUs** (`premium.js` me `PLANS`): `bayyin_premium` (30 din),
   `premium_yearly` (365 din).
 - **Price**: Play build me paywall wohi price dikhata hai jo **Play khud lega** —
-  `getDetails()` ka `price`, `tc.storePrices` me 30 din cache. Browser me (jahan
-  kuch bikta hi nahi) `region()` phone ke **time zone** se mulk nikalta hai
+  `getDetails()` ka `price`, `tc.storePrices` me 30 din cache, **bina kisi
+  conversion ke** (warna ₹99 kisi phone par SAR 4 jaisa dikh sakta tha). Browser me
+  (jahan kuch bikta nahi) `region()` phone ke **time zone** se mulk nikalta hai
   (Kolkata → IN, Karachi → PK, Dhaka → BD, Kathmandu → NP, Colombo → LK), warna
-  phone ki language ke region tag se. **Time zone pehle** is liye dekha jata hai
-  ke India me bohat phone English (US) par set hote hain aur unhein dollar price
-  dikh rahi thi. Currency `Intl.NumberFormat` se banti hai — South Asia me
-  ₹299 tier (IN ₹299/₹2699, PK 899/8099, BD 419/3779, NP 479/4319, LK 1079/9759),
-  baqi mulkon me $6.66 / $59.99 ka local conversion. Paywall par mulk ka naam
-  (`regionName`) aur local price likha aata hai.
+  phone ki language ke region tag se. Currency `Intl.NumberFormat` se banti hai —
+  South Asia me ₹99 tier (IN ₹99/₹799, PK 299/2400, BD 139/1120, NP 159/1280,
+  LK 359/2900), baqi mulkon me $3.33 / $26.66 ka local conversion.
 - **Price aur "regular" price** (`premium.js`): card par **Play jo leta hai wohi**
   bara number hota hai, aur uske upar chhota **kata hua regular price**
   (`REGULAR_PRICES`: IN ₹299, PK 899, BD 419, NP 479, LK 1079, baqi mulkon me
