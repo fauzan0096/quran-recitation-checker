@@ -7,6 +7,10 @@
 import { addStrings } from './i18n.js';
 
 addStrings('roman', {
+  'count.vowel': 'harakat',
+  'note.correctForm': 'Mushaf ka sahi lafz (harakat ke sath)',
+  'mistake.harakatHint':
+    'Harakat (fatha/zamma/kasra) engine khud nahi jaanchta — sahi lafz harakat ke sath upar likha hai, us se milaein.',
   'premium.notAvailable':
     'Subscription sirf Play Store wali app me milti hai — browser me nahi. Play se install kar ke wahin se lein.',
   'premium.purchaseFailed': 'Khareedari mukammal nahi hui. Dobara koshish karein.',
@@ -214,6 +218,10 @@ addStrings('roman', {
 });
 
 addStrings('ur', {
+  'count.vowel': 'حرکات',
+  'note.correctForm': 'مصحف کا صحیح لفظ (حرکات کے ساتھ)',
+  'mistake.harakatHint':
+    'حرکات (فتحہ/ضمہ/کسرہ) انجن خود نہیں جانچتا — صحیح لفظ حرکات کے ساتھ اوپر لکھا ہے، اُس سے ملائیں۔',
   'premium.notAvailable':
     'سبسکرپشن صرف پلے اسٹور والی ایپ میں ملتی ہے — براؤزر میں نہیں۔ پلے سے انسٹال کر کے وہیں سے لیں۔',
   'premium.purchaseFailed': 'خریداری مکمل نہیں ہوئی۔ دوبارہ کوشش کریں۔',
@@ -420,6 +428,10 @@ addStrings('ur', {
 });
 
 addStrings('en', {
+  'count.vowel': 'vowel',
+  'note.correctForm': 'The mushaf word, with its harakat',
+  'mistake.harakatHint':
+    'The engine does not judge harakat (fatha/damma/kasra) — the correct word is printed with them above; compare it.',
   'premium.notAvailable':
     'Subscriptions are sold only in the Play Store app, not in a browser. Install from Play and buy there.',
   'premium.purchaseFailed': 'Purchase did not finish. Please try again.',

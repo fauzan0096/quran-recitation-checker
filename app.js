@@ -2141,8 +2141,9 @@ function mistakeBlock(key, problems) {
 
     const tag = document.createElement('span');
     tag.className = 'tag';
-    tag.textContent =
-      r.status === WORD_STATUS.CLOSE
+    tag.textContent = r.vowel
+      ? t('count.vowel')
+      : r.status === WORD_STATUS.CLOSE
         ? t('count.close')
         : r.status === WORD_STATUS.UNSURE
           ? t('count.unsure')
@@ -2153,6 +2154,11 @@ function mistakeBlock(key, problems) {
     const expected = document.createElement('span');
     expected.className = 'aya-word';
     expected.textContent = r.expected;
+    // The correct word is shown exactly as the mushaf has it — with harakat — so
+    // the person can compare by eye what the model cannot judge.
+    expected.title = t('note.correctForm');
+    expected.lang = 'ar';
+    expected.dir = 'rtl';
 
     const arrow = document.createElement('span');
     arrow.className = 'arrow';
@@ -2181,6 +2187,14 @@ function mistakeBlock(key, problems) {
   }
   block.appendChild(list);
   block.appendChild(explainLine(problems));
+  // Harakat are not judged (the model returns bare letters); the correct word is
+  // printed with them above, so this says what to do instead of guessing.
+  if (problems.some((r) => r.status !== WORD_STATUS.CORRECT)) {
+    const hint = document.createElement('p');
+    hint.className = 'hint';
+    hint.textContent = t('mistake.harakatHint');
+    block.appendChild(hint);
+  }
   if (key && String(key).includes(':')) block.appendChild(qariRow(key));
   return block;
 }
