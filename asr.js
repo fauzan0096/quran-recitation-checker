@@ -22,14 +22,24 @@ const TARGET_RATE = 16000;
 
 export const MODELS = [
   {
-    id: 'nael239/tasme3-whisper-base-ar-quran-web',
-    label: 'Bayyin Base — behtar accuracy (~105 MB)',
+    // Bundled in this repository (`models/bayyin-tiny/`), so the app never
+    // depends on another person's Hugging Face repo for the model it uses.
+    id: 'bayyin-tiny',
+    label: 'Bayyin Tiny — app ke sath (bina internet)',
+    // Used only if the bundled copy cannot be read on a device.
+    fallback: 'Sharjeelbaig/whisper-tiny-ar-quran-onnx',
   },
   {
-    id: 'Sharjeelbaig/whisper-tiny-ar-quran-onnx',
-    label: 'Bayyin Tiny — tez aur halka (~40 MB)',
+    id: 'nael239/tasme3-whisper-base-ar-quran-web',
+    label: 'Bayyin Base — behtar accuracy (~105 MB, internet)',
   },
 ];
+
+/** The id to try when a model will not load, or '' when there is none. */
+function fallbackOf(modelId) {
+  const entry = MODELS.find((model) => model.id === modelId);
+  return (entry && entry.fallback) || '';
+}
 
 let libPromise = null;
 let libVersion = '';
@@ -125,7 +135,10 @@ async function loadLibrary() {
           const lib = await import(/* webpackIgnore: true */ url);
           if (lib && typeof lib.pipeline === 'function') {
             if (lib.env) {
-              lib.env.allowLocalModels = false;
+              // The default model is bundled in this app (`models/bayyin-tiny`).
+              lib.env.allowLocalModels = true;
+              lib.env.allowRemoteModels = true;
+              lib.env.localModelPath = 'models/';
               lib.env.useBrowserCache = true;
               // Use the phone's cores: on Android the default single thread is
               // what makes the first check feel so slow.
@@ -166,13 +179,23 @@ export function libraryVersion() {
  * @param {(progress: object) => void} onProgress Transformers.js progress event.
  */
 export async function loadModel(modelId, onProgress = () => {}) {
+  const alt = fallbackOf(modelId);
+
   // Prefer the worker: the model and the decoding stay off the page's thread.
   if (worker()) {
     try {
       await askWorker({ type: 'load', modelId }, 360000, onProgress);
       return { worker: true };
     } catch (error) {
-      console.warn('worker could not load the model, using this thread', error);
+      console.warn('worker could not load the model', error);
+      if (alt) {
+        try {
+          await askWorker({ type: 'load', modelId: alt }, 360000, onProgress);
+          return { worker: true };
+        } catch (inner) {
+          console.warn('fallback model failed too', inner);
+        }
+      }
     }
   }
 
@@ -191,27 +214,34 @@ export async function loadModel(modelId, onProgress = () => {}) {
   if (lib.env && lib.env.backends) options.dtype = 'q8';
   else options.quantized = true;
 
-  // A stalled download or a model too big for the phone must end with a message,
-  // not an endless "load ho raha hai".
-  let timer = null;
-  const timeout = new Promise((_, reject) => {
-    timer = setTimeout(
-      () =>
-        reject(
-          new Error(
-            'Model 6 minute me tayyar nahi hua — internet slow hai ya model is phone ke liye bara hai. Chhota (Tiny) model chunein.'
-          )
-        ),
-      360000
+  // A stalled load must end with a message, not an endless "load ho raha hai".
+  // Each attempt gets its own timer, so a failed first try cannot make the
+  // second one reject at once.
+  const build = (id) => {
+    let timer = null;
+    const timeout = new Promise((_, reject) => {
+      timer = setTimeout(
+        () =>
+          reject(
+            new Error(
+              'Model 6 minute me tayyar nahi hua — internet slow hai ya model is phone ke liye bara hai.'
+            )
+          ),
+        360000
+      );
+    });
+    return Promise.race([lib.pipeline('automatic-speech-recognition', id, options), timeout]).finally(
+      () => {
+        if (timer) clearTimeout(timer);
+      }
     );
-  });
+  };
+
   try {
-    return await Promise.race([
-      lib.pipeline('automatic-speech-recognition', modelId, options),
-      timeout,
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
+    return await build(modelId);
+  } catch (error) {
+    if (!alt) throw error;
+    return build(alt);
   }
 }
 

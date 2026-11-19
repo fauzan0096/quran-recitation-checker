@@ -217,12 +217,14 @@ aur nateeja **usi aya ke andar** aata hai:
 
 ## Models
 
-`asr.js` me do options hain (dono Transformers.js ke liye ONNX, same Tarteel
-Quran fine-tune ke base se):
+Do options hain (`asr.js` → `MODELS`, dono Transformers.js ke liye ONNX, same
+Tarteel Quran fine-tune ke base se):
 
-- `nael239/tasme3-whisper-base-ar-quran-web` — behtar accuracy, ~105 MB
-  (23 MB encoder + 80 MB decoder).
-- `Sharjeelbaig/whisper-tiny-ar-quran-onnx` — chhota/tez, ~40 MB.
+- **`bayyin-tiny`** — app ke sath bundle (`models/bayyin-tiny/`, ~39 MB),
+  bina internet. Agar koi device local copy na parh sake to remote
+  `Sharjeelbaig/whisper-tiny-ar-quran-onnx` se fallback.
+- **`nael239/tasme3-whisper-base-ar-quran-web`** — behtar accuracy, ~105 MB
+  (23 MB encoder + 80 MB decoder), internet se.
 
 Library **Transformers.js v4** (v4.3.2) se aati hai — yeh Quran ONNX exports
 isi version ke saath test kiye gaye hain; purana v3 in models ko load nahi kar pata
@@ -652,12 +654,18 @@ rehta hai, worker text wapas bhejta hai (`loadModel()` → `{ worker: true }`,
 `transcribe()` worker ko samples bhejta hai). Worker na ban paye to purana
 main-thread rasta khud chal jata hai.
 
-Model ke naam app me **Bayyin Base** (~105 MB, behtar accuracy) aur **Bayyin
-Tiny** (~40 MB, tez) hain — asal Hugging Face repo id wahi hai, sirf dikhne wala
-naam badla gaya hai. Pehli dafa model **background me khud download** ho jata hai
-(`autoLoadModel()`), magar sirf jab network theek ho: `saveData` on ho ya
-connection 2G/3G ho to nahi, aur app background me ho to bhi nahi — us waqt
-Settings se "Model load karein" dabana hota hai.
+Model **ab app ke andar hi hai** (`models/bayyin-tiny/`, ~39 MB: encoder 9.7 MB +
+decoder 28.8 MB, 8-bit). Kisi doosre ke Hugging Face repo par depend nahi — agar
+wo repo delete ho jaye ya Hugging Face band ho, app phir bhi chalti hai; sirf us
+soorat me fallback remote copy se aata hai jab koi device local files na parh
+sake (`MODELS[].fallback`). Files pehli use par cache hoti hain (`sw.js` →
+`IMMUTABLE` me `onnx`), us ke baad bina internet bhi chal jati hain.
+
+Naam app me **Bayyin Tiny** (bundled, bina internet) aur **Bayyin Base** (~105 MB,
+internet se) hain. Pehli dafa chhota model **background me khud download** ho jata
+hai (`autoLoadModel()`), magar sirf jab network theek ho: `saveData` on ho ya
+connection 2G/3G ho to nahi. Licence/credit: `models/README.md` aur `LICENSES.md`
+§3a (Apache-2.0, Tarteel AI + ONNX conversion, Whisper MIT).
 
 ## Backup — `backup.js`
 

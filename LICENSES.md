@@ -67,6 +67,15 @@ CONDITIONS OF ANY KIND, either express or implied.
 Model architecture aur original weights: OpenAI Whisper
 (<https://github.com/openai/whisper>).
 
+## 3a. Model app ke sath bundle hai
+
+`models/bayyin-tiny/` me **tarteel-ai/whisper-tiny-ar-quran** ka ONNX export
+(`Sharjeelbaig/whisper-tiny-ar-quran-onnx`) rakha gaya hai, Apache-2.0 ke tehat,
+poore license text ke sath (`models/bayyin-tiny/LICENSE`). Ye app ke apne repo se
+load hota hai — kisi doosre ke Hugging Face repo par depend nahi; agar koi device
+local copy na parh sake to app usi model ki remote copy se fallback karti hai.
+Tafseel: `models/README.md`.
+
 ## 4. Transformers.js — Apache License 2.0
 
 &copy; Hugging Face (<https://github.com/huggingface/transformers.js>).

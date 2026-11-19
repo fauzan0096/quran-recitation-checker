@@ -29,7 +29,11 @@ async function loadLibrary() {
           if (lib && typeof lib.pipeline === 'function') {
             libVersion = (lib.env && lib.env.version) || '';
             if (lib.env) {
-              lib.env.allowLocalModels = false;
+              // The bundled model lives in this app (`models/bayyin-tiny`), so the
+              // weights are ours: nothing is fetched from anyone else's repo.
+              lib.env.allowLocalModels = true;
+              lib.env.allowRemoteModels = true;
+              lib.env.localModelPath = 'models/';
               lib.env.useBrowserCache = true;
               try {
                 const cores = Math.min(4, Math.max(1, navigator.hardwareConcurrency || 2));
@@ -42,7 +46,8 @@ async function loadLibrary() {
             }
             return lib;
           }
-          errors.push(`${url}: pipeline export nahi mila`);        } catch (error) {
+          errors.push(`${url}: pipeline export nahi mila`);
+        } catch (error) {
           errors.push(`${url}: ${error && error.message ? error.message : error}`);
         }
       }
