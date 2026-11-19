@@ -80,9 +80,17 @@ Tafseel: `models/README.md`.
 
 &copy; Hugging Face (<https://github.com/huggingface/transformers.js>).
 
+App me `@huggingface/transformers` **4.3.2** (pinned) istemal hoti hai; poora
+licence text `vendor/LICENSE-transformers.txt` me hai. Tafseel: `vendor/README.md`.
+
 ## 5. ONNX Runtime Web — MIT License
 
 &copy; Microsoft Corporation (<https://github.com/microsoft/onnxruntime>).
+
+Runtime ki `.mjs` aur `.wasm` (wahi build jo transformers 4.3.2 istemal karta hai)
+domain ke root par hain: `https://fauzan0096.github.io/vendor/ort/` — wahi malik,
+wahi domain. In ke baghair bhi app CDN se fallback kar leti hai. Tafseel:
+`vendor/README.md`.
 
 ## MIT License text (Whisper, ONNX Runtime)
 

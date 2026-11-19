@@ -11,12 +11,19 @@
 
 // The community Quran ONNX exports are validated against Transformers.js v4
 // (v4.3.2 was verified loading this model and running inference on iPhone
-// Safari). v3 is only kept as a last resort.
+// Safari). v3 is only kept as a last resort. The version is pinned on purpose.
 const CDN_CANDIDATES = [
-  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4/dist/transformers.min.js',
+  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/dist/transformers.min.js',
   'https://esm.sh/@huggingface/transformers@4',
   'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js',
 ];
+
+/**
+ * Where the ONNX runtime's own `.wasm` lives: the root of this domain
+ * (`fauzan0096.github.io/vendor/ort/`, the user-site repo) — same origin, ours.
+ * A device that cannot read it retries once with the library's default path.
+ */
+const WASM_DIR = '/vendor/ort/';
 
 const TARGET_RATE = 16000;
 
@@ -146,6 +153,7 @@ async function loadLibrary() {
                 const cores = Math.min(4, Math.max(1, navigator.hardwareConcurrency || 2));
                 if (lib.env.backends && lib.env.backends.onnx && lib.env.backends.onnx.wasm) {
                   lib.env.backends.onnx.wasm.numThreads = cores;
+                  lib.env.backends.onnx.wasm.wasmPaths = WASM_DIR;
                 }
               } catch (error) {
                 /* older build without the setting */

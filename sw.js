@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v137';
+const CACHE = 'bayyin-v138';
 // Speech library (Transformers.js + ONNX runtime wasm) from the CDN: kept for good so
 // the model starts offline and the library is not downloaded again each launch.
 const LIB_CACHE = 'bayyin-lib-v1';
@@ -88,7 +88,7 @@ const SHELL = [
 
 // The bundled speech model files (`.onnx`, 10–30 MB each) are cached as soon as
 // they are read, so a second check — even offline — never downloads them again.
-const IMMUTABLE = /\.(?:png|ico|woff2|ttf|xml|txt|json|onnx)$/i;
+const IMMUTABLE = /\.(?:png|ico|woff2|ttf|xml|txt|json|onnx|wasm)$/i;
 
 // Shown only when the page itself is not in the cache yet — a first visit that
 // never reached the internet. Everything the person can see is on the phone
