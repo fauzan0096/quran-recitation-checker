@@ -215,6 +215,22 @@ aur nateeja **usi aya ke andar** aata hai:
 - Page https (ya localhost) se khulna chahiye; `index.html` ko seedha file se kholne par
   Quran text aur mic dono kaam nahi karte.
 
+## Pehla khulna halka — kya kab aata hai
+
+App ka pehla page **~1.5 MB** ka hai (code, font, icons) — `sw.js` ka `SHELL`.
+Baqi cheezein waqt par, apni zaroorat par aati hain aur phir cache rehti hain:
+
+| Cheez | Size | Kab |
+| --- | --- | --- |
+| Code + font + icons | ~1.5 MB | app khulte hi (precache) |
+| Quran text + page map | 1.3 + 1.5 MB | Quran/reader khulte hi |
+| Speech model (`models/`) | ~39 MB | 12 s idle ke baad background me, ya pehli check par |
+| Azaan recordings | 6 MB | jab azaan bajti hai |
+
+Model ka background download **save-data, 2G/3G aur cellular** par nahi hota —
+mobile data par pehli dafa woh tab aata hai jab khud Record dabaya jaye; Wi-Fi par
+app khulne ke 12 second baad chupke se aa jata hai.
+
 ## Models
 
 Do options hain (`asr.js` → `MODELS`, dono Transformers.js ke liye ONNX, same

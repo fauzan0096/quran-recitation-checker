@@ -2698,11 +2698,14 @@ function keepStorage() {
 /**
  * Bring the speech model in quietly, without waiting for a tap.
  *
- * - Already on this phone: it is loaded again in the background (weights come
- *   from the browser cache), so Record answers at once.
- * - Not on the phone yet: it is downloaded in the background too, but only on a
- *   network that can take it — never on save-data or a slow 2G/3G connection,
- *   and never while the app is in the background.
+ * The app itself stays light: the first screen downloads about 1.5 MB (code,
+ * fonts, icons), the Quran text comes when the reader opens, and this 39 MB
+ * model comes last, in the background, so nobody waits for it.
+ *
+ * - Already on this phone: it is loaded again soon (weights come from the
+ *   browser cache), so Record answers at once.
+ * - Not on the phone yet: it is downloaded later — never on save-data, never on
+ *   2G/3G, and never on a mobile (cellular) connection on the first run.
  */
 function autoLoadModel() {
   let ready = '';
@@ -2722,12 +2725,18 @@ function autoLoadModel() {
     if (state.model || state.modelLoading) return;
     handleLoadModel();
   };
-  // Let the first screen paint first.
-  if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 4000 });
-  else window.setTimeout(run, 2500);
+
+  // Cached weights start soon; a first 39 MB download waits until the app has
+  // been open a while (and the mind is on reading, not on waiting).
+  const delay = known ? 2500 : 12000;
+  if ('requestIdleCallback' in window) {
+    window.setTimeout(() => window.requestIdleCallback(run, { timeout: 4000 }), delay);
+  } else {
+    window.setTimeout(run, delay);
+  }
 }
 
-/** Is this network fit for a ~40–105 MB download nobody asked for? */
+/** Is this network fit for a ~39 MB download nobody asked for? */
 function canDownloadModel() {
   try {
     if (navigator.onLine === false) return false;
@@ -2737,6 +2746,9 @@ function canDownloadModel() {
       if (connection.saveData) return false;
       const type = String(connection.effectiveType || '');
       if (['slow-2g', '2g', '3g'].includes(type)) return false;
+      // A first download on mobile data is the person's money: wait for Wi-Fi or
+      // for them to press Record themselves.
+      if (String(connection.type || '') === 'cellular') return false;
     }
   } catch (error) {
     return false;
