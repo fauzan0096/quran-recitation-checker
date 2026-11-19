@@ -33,35 +33,31 @@ export const MODELS = [
     // depends on another person's Hugging Face repo for the model it uses.
     id: 'bayyin-tiny',
     label: 'Bayyin Tiny — app ke sath (bina internet)',
-    files: 'models/bayyin-tiny/',
+    localPath: 'models/',
     // Used only if the bundled copy cannot be read on a device.
     fallback: 'Sharjeelbaig/whisper-tiny-ar-quran-onnx',
   },
   {
     // The high-accuracy model, bundled in the same domain's user-site repo
     // (`/vendor/bayyin-base/`) by the "Bundle the Base model" workflow. It is
-    // loaded from there and nowhere else — never from Hugging Face — so the
-    // model that runs is exactly the copy in our own repository.
+    // loaded from there and nowhere else — never from Hugging Face.
     id: 'bayyin-base',
     label: 'Bayyin Base — behtar accuracy (app ke sath)',
-    files: '/vendor/bayyin-base/',
+    localPath: '/vendor/',
     ownOnly: true,
   },
 ];
 
 /**
- * What to hand to `pipeline()`. A bundled model is given as its full URL, which
- * Transformers.js fetches directly — that avoids depending on how it joins
- * `localModelPath`, which is what left the page stuck on "load ho raha hai".
+ * Where a model's files sit, as the prefix Transformers.js joins with the model
+ * id and file name. It fetches that relative path from this origin.
+ *
+ * (Handing the library a full URL does not work in 4.3.2: a URL is not a valid
+ * model id, so it aborts with "local file missing … invalid model ID".)
  */
-function sourceOf(modelId) {
+function localPathOf(modelId) {
   const entry = MODELS.find((model) => model.id === modelId);
-  if (!entry || !entry.files) return modelId;
-  try {
-    return new URL(entry.files, location.href).href;
-  } catch (error) {
-    return entry.files;
-  }
+  return (entry && entry.localPath) || 'models/';
 }
 
 /** The id to try when a model will not load; '' when it must stay on our own copy. */
@@ -165,11 +161,11 @@ async function loadLibrary() {
           const lib = await import(/* webpackIgnore: true */ url);
           if (lib && typeof lib.pipeline === 'function') {
             if (lib.env) {
-              // Bundled models are handed to the library as full URLs (see
-              // sourceOf), so its own "local model" resolution is never used —
-              // that path is what reported "local file missing".
-              lib.env.allowLocalModels = false;
+              // The model files are served by this app's own origin: the library
+              // joins env.localModelPath + model id and fetches that path.
+              lib.env.allowLocalModels = true;
               lib.env.allowRemoteModels = true;
+              lib.env.localModelPath = 'models/';
               lib.env.useBrowserCache = true;
               // Use the phone's cores: on Android the default single thread is
               // what makes the first check feel so slow.
@@ -212,12 +208,12 @@ export function libraryVersion() {
  */
 export async function loadModel(modelId, onProgress = () => {}) {
   const alt = fallbackOf(modelId);
-  const source = sourceOf(modelId);
+  const localPath = localPathOf(modelId);
 
   // Prefer the worker: the model and the decoding stay off the page's thread.
   if (worker()) {
     try {
-      await askWorker({ type: 'load', modelId: source }, 360000, onProgress);
+      await askWorker({ type: 'load', modelId, localPath }, 360000, onProgress);
       return { worker: true };
     } catch (error) {
       console.warn('worker could not load the model', error);
@@ -233,6 +229,7 @@ export async function loadModel(modelId, onProgress = () => {}) {
   }
 
   const lib = await loadLibrary();
+  if (lib.env) lib.env.localModelPath = localPath;
   const options = {
     device: 'wasm',
     progress_callback: (progress) => {
@@ -271,7 +268,7 @@ export async function loadModel(modelId, onProgress = () => {}) {
   };
 
   try {
-    return await build(source);
+    return await build(modelId);
   } catch (error) {
     if (!alt) throw error;
     return build(alt);

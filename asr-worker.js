@@ -33,11 +33,11 @@ async function loadLibrary() {
           if (lib && typeof lib.pipeline === 'function') {
             libVersion = (lib.env && lib.env.version) || '';
             if (lib.env) {
-              // The model is given as a full URL by asr.js, so the library's
-              // own local-file resolution is turned off: it was the source of
-              // "local file missing".
-              lib.env.allowLocalModels = false;
+              // Model files are served by this app's own origin: the library
+              // joins env.localModelPath + model id and fetches that path.
+              lib.env.allowLocalModels = true;
               lib.env.allowRemoteModels = true;
+              lib.env.localModelPath = 'models/';
               lib.env.useBrowserCache = true;
               try {
                 const cores = Math.min(4, Math.max(1, navigator.hardwareConcurrency || 2));
@@ -87,13 +87,18 @@ self.onmessage = async (event) => {
 
   if (msg.type === 'load') {
     loadId = msg.id;
-    const key = String(msg.modelId || '');
-    try {
-      if (!pipePromise || pipeKey !== key) {
-        pipeKey = key;
-        pipePromise = loadPipeline(key);
-      }
+    const localPath = msg.localPath || 'models/';
+    const key = `${localPath}|${msg.modelId}`;
+    const start = async () => {
+      const lib = await loadLibrary();
+      if (lib.env) lib.env.localModelPath = localPath;
+      pipeKey = key;
+      pipePromise = loadPipeline(msg.modelId);
       await pipePromise;
+    };
+    try {
+      if (!pipePromise || pipeKey !== key) await start();
+      else await pipePromise;
       self.postMessage({ type: 'loaded', id: msg.id, version: libVersion });
       return;
     } catch (error) {
@@ -106,7 +111,8 @@ self.onmessage = async (event) => {
         if (lib.env && lib.env.backends && lib.env.backends.onnx && lib.env.backends.onnx.wasm) {
           lib.env.backends.onnx.wasm.wasmPaths = undefined;
         }
-        pipePromise = loadPipeline(key);
+        if (lib.env) lib.env.localModelPath = localPath;
+        pipePromise = loadPipeline(msg.modelId);
         await pipePromise;
         self.postMessage({ type: 'loaded', id: msg.id, version: libVersion });
         return;
