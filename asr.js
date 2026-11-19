@@ -33,25 +33,33 @@ export const MODELS = [
     // depends on another person's Hugging Face repo for the model it uses.
     id: 'bayyin-tiny',
     label: 'Bayyin Tiny — app ke sath (bina internet)',
-    localPath: 'models/',
+    files: 'models/bayyin-tiny/',
     // Used only if the bundled copy cannot be read on a device.
     fallback: 'Sharjeelbaig/whisper-tiny-ar-quran-onnx',
   },
   {
     // The high-accuracy model, bundled in the same domain's user-site repo
-    // (`/vendor/bayyin-base/`) by the "Bundle the Base model" workflow. Until
-    // that has run once, it comes from Hugging Face.
+    // (`/vendor/bayyin-base/`) by the "Bundle the Base model" workflow.
     id: 'bayyin-base',
     label: 'Bayyin Base — behtar accuracy (app ke sath)',
-    localPath: '/vendor/',
+    files: '/vendor/bayyin-base/',
     fallback: 'nael239/tasme3-whisper-base-ar-quran-web',
   },
 ];
 
-/** Where a model's files sit locally, as a prefix for `localModelPath`. */
-function localPathOf(modelId) {
+/**
+ * What to hand to `pipeline()`. A bundled model is given as its full URL, which
+ * Transformers.js fetches directly — that avoids depending on how it joins
+ * `localModelPath`, which is what left the page stuck on "load ho raha hai".
+ */
+function sourceOf(modelId) {
   const entry = MODELS.find((model) => model.id === modelId);
-  return (entry && entry.localPath) || 'models/';
+  if (!entry || !entry.files) return modelId;
+  try {
+    return new URL(entry.files, location.href).href;
+  } catch (error) {
+    return entry.files;
+  }
 }
 
 /** The id to try when a model will not load, or '' when there is none. */
@@ -200,12 +208,12 @@ export function libraryVersion() {
  */
 export async function loadModel(modelId, onProgress = () => {}) {
   const alt = fallbackOf(modelId);
-  const localPath = localPathOf(modelId);
+  const source = sourceOf(modelId);
 
   // Prefer the worker: the model and the decoding stay off the page's thread.
   if (worker()) {
     try {
-      await askWorker({ type: 'load', modelId, localPath }, 360000, onProgress);
+      await askWorker({ type: 'load', modelId: source }, 360000, onProgress);
       return { worker: true };
     } catch (error) {
       console.warn('worker could not load the model', error);
@@ -221,7 +229,6 @@ export async function loadModel(modelId, onProgress = () => {}) {
   }
 
   const lib = await loadLibrary();
-  if (lib.env) lib.env.localModelPath = localPath;
   const options = {
     device: 'wasm',
     progress_callback: (progress) => {
@@ -260,7 +267,7 @@ export async function loadModel(modelId, onProgress = () => {}) {
   };
 
   try {
-    return await build(modelId);
+    return await build(source);
   } catch (error) {
     if (!alt) throw error;
     return build(alt);

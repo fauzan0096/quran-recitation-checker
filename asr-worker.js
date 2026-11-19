@@ -87,33 +87,26 @@ self.onmessage = async (event) => {
 
   if (msg.type === 'load') {
     loadId = msg.id;
-    const localPath = msg.localPath || 'models/';
-    const key = `${localPath}|${msg.modelId}`;
-    const start = async () => {
-      const lib = await loadLibrary();
-      if (lib.env) lib.env.localModelPath = localPath;
-      pipeKey = key;
-      pipePromise = loadPipeline(msg.modelId);
-      await pipePromise;
-    };
+    const key = String(msg.modelId || '');
     try {
-      if (!pipePromise || pipeKey !== key) await start();
-      else await pipePromise;
+      if (!pipePromise || pipeKey !== key) {
+        pipeKey = key;
+        pipePromise = loadPipeline(key);
+      }
+      await pipePromise;
       self.postMessage({ type: 'loaded', id: msg.id, version: libVersion });
       return;
     } catch (error) {
       pipePromise = null;
       pipeKey = '';
-      // A device that cannot start the bundled runtime .wasm (or read the
-      // bundled model) gets one more try with the library's defaults, so the
-      // checker still works.
+      // One more try with the library's default runtime path, in case this
+      // device cannot start the bundled .wasm.
       try {
         const lib = await loadLibrary();
         if (lib.env && lib.env.backends && lib.env.backends.onnx && lib.env.backends.onnx.wasm) {
           lib.env.backends.onnx.wasm.wasmPaths = undefined;
         }
-        if (lib.env) lib.env.localModelPath = localPath;
-        pipePromise = loadPipeline(msg.modelId);
+        pipePromise = loadPipeline(key);
         await pipePromise;
         self.postMessage({ type: 'loaded', id: msg.id, version: libVersion });
         return;
