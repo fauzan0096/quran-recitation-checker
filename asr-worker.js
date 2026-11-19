@@ -33,11 +33,11 @@ async function loadLibrary() {
           if (lib && typeof lib.pipeline === 'function') {
             libVersion = (lib.env && lib.env.version) || '';
             if (lib.env) {
-              // The bundled model lives in this app (`models/bayyin-tiny`), so the
-              // weights are ours: nothing is fetched from anyone else's repo.
-              lib.env.allowLocalModels = true;
+              // The model is given as a full URL by asr.js, so the library's
+              // own local-file resolution is turned off: it was the source of
+              // "local file missing".
+              lib.env.allowLocalModels = false;
               lib.env.allowRemoteModels = true;
-              lib.env.localModelPath = 'models/';
               lib.env.useBrowserCache = true;
               try {
                 const cores = Math.min(4, Math.max(1, navigator.hardwareConcurrency || 2));

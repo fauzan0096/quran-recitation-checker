@@ -165,10 +165,11 @@ async function loadLibrary() {
           const lib = await import(/* webpackIgnore: true */ url);
           if (lib && typeof lib.pipeline === 'function') {
             if (lib.env) {
-              // The default model is bundled in this app (`models/bayyin-tiny`).
-              lib.env.allowLocalModels = true;
+              // Bundled models are handed to the library as full URLs (see
+              // sourceOf), so its own "local model" resolution is never used —
+              // that path is what reported "local file missing".
+              lib.env.allowLocalModels = false;
               lib.env.allowRemoteModels = true;
-              lib.env.localModelPath = 'models/';
               lib.env.useBrowserCache = true;
               // Use the phone's cores: on Android the default single thread is
               // what makes the first check feel so slow.
