@@ -233,14 +233,18 @@ app khulne ke 12 second baad chupke se aa jata hai.
 
 ## Models
 
-Do options hain (`asr.js` → `MODELS`, dono Transformers.js ke liye ONNX, same
-Tarteel Quran fine-tune ke base se):
+Do options hain (`asr.js` → `MODELS`), dono Transformers.js ke liye ONNX aur dono
+Tarteel Quran fine-tune ke base se:
 
-- **`bayyin-tiny`** — app ke sath bundle (`models/bayyin-tiny/`, ~39 MB),
-  bina internet. Agar koi device local copy na parh sake to remote
-  `Sharjeelbaig/whisper-tiny-ar-quran-onnx` se fallback.
-- **`nael239/tasme3-whisper-base-ar-quran-web`** — behtar accuracy, ~105 MB
-  (23 MB encoder + 80 MB decoder), internet se.
+- **`bayyin-tiny`** — app repo me bundle (`models/bayyin-tiny/`, ~39 MB), bina
+  internet. Fallback: `Sharjeelbaig/whisper-tiny-ar-quran-onnx`.
+- **`bayyin-base`** — behtar accuracy, domain ke root par
+  (`/vendor/bayyin-base/`, ~105 MB). Wo folder **user-site repo** ke workflow
+  "Bundle the Base model" se banta hai (GitHub → Actions → Run workflow) — uske
+  baad Base bhi apni hosting se aata hai, warna Hugging Face se.
+
+`localPath` har model ke sath likha hai (`models/` ya `/vendor/`), aur worker
+`env.localModelPath` usi hisaab se set karta hai.
 
 Library **Transformers.js v4** (v4.3.2) se aati hai — yeh Quran ONNX exports
 isi version ke saath test kiye gaye hain; purana v3 in models ko load nahi kar pata
