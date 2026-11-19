@@ -239,9 +239,10 @@ Tarteel Quran fine-tune ke base se:
 - **`bayyin-tiny`** — app repo me bundle (`models/bayyin-tiny/`, ~39 MB), bina
   internet. Fallback: `Sharjeelbaig/whisper-tiny-ar-quran-onnx`.
 - **`bayyin-base`** — behtar accuracy, domain ke root par
-  (`/vendor/bayyin-base/`, ~105 MB). Wo folder **user-site repo** ke workflow
-  "Bundle the Base model" se banta hai (GitHub → Actions → Run workflow) — uske
-  baad Base bhi apni hosting se aata hai, warna Hugging Face se.
+  (`/vendor/bayyin-base/`, ~105 MB), aur **sirf wahin se** load hota hai
+  (`ownOnly`) — Hugging Face par kabhi nahi jata. Wo folder **user-site repo** ke
+  workflow "Bundle the Base model" se banta hai (GitHub → Actions → Run
+  workflow).
 
 `localPath` har model ke sath likha hai (`models/` ya `/vendor/`), aur worker
 `env.localModelPath` usi hisaab se set karta hai.

@@ -39,11 +39,13 @@ export const MODELS = [
   },
   {
     // The high-accuracy model, bundled in the same domain's user-site repo
-    // (`/vendor/bayyin-base/`) by the "Bundle the Base model" workflow.
+    // (`/vendor/bayyin-base/`) by the "Bundle the Base model" workflow. It is
+    // loaded from there and nowhere else — never from Hugging Face — so the
+    // model that runs is exactly the copy in our own repository.
     id: 'bayyin-base',
     label: 'Bayyin Base — behtar accuracy (app ke sath)',
     files: '/vendor/bayyin-base/',
-    fallback: 'nael239/tasme3-whisper-base-ar-quran-web',
+    ownOnly: true,
   },
 ];
 
@@ -62,10 +64,11 @@ function sourceOf(modelId) {
   }
 }
 
-/** The id to try when a model will not load, or '' when there is none. */
+/** The id to try when a model will not load; '' when it must stay on our own copy. */
 function fallbackOf(modelId) {
   const entry = MODELS.find((model) => model.id === modelId);
-  return (entry && entry.fallback) || '';
+  if (!entry || entry.ownOnly) return '';
+  return entry.fallback || '';
 }
 
 let libPromise = null;
