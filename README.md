@@ -652,6 +652,13 @@ rehta hai, worker text wapas bhejta hai (`loadModel()` → `{ worker: true }`,
 `transcribe()` worker ko samples bhejta hai). Worker na ban paye to purana
 main-thread rasta khud chal jata hai.
 
+Model ke naam app me **Bayyin Base** (~105 MB, behtar accuracy) aur **Bayyin
+Tiny** (~40 MB, tez) hain — asal Hugging Face repo id wahi hai, sirf dikhne wala
+naam badla gaya hai. Pehli dafa model **background me khud download** ho jata hai
+(`autoLoadModel()`), magar sirf jab network theek ho: `saveData` on ho ya
+connection 2G/3G ho to nahi, aur app background me ho to bhi nahi — us waqt
+Settings se "Model load karein" dabana hota hai.
+
 ## Backup — `backup.js`
 
 Settings → **Backup**: ek JSON file me saara `tc.*` data (progress, report, settings,

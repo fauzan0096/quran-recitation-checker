@@ -23,11 +23,11 @@ const TARGET_RATE = 16000;
 export const MODELS = [
   {
     id: 'nael239/tasme3-whisper-base-ar-quran-web',
-    label: 'Whisper Base — Quran (behtar accuracy, ~105 MB)',
+    label: 'Bayyin Base — behtar accuracy (~105 MB)',
   },
   {
     id: 'Sharjeelbaig/whisper-tiny-ar-quran-onnx',
-    label: 'Whisper Tiny — Quran (chhota aur tez, ~40 MB)',
+    label: 'Bayyin Tiny — tez aur halka (~40 MB)',
   },
 ];
 

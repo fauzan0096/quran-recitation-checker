@@ -2696,25 +2696,52 @@ function keepStorage() {
 }
 
 /**
- * If the model was loaded on this device before, load it again quietly in the
- * background (weights come from the browser cache, nothing is downloaded), so
- * it is ready by the time the person presses Record.
+ * Bring the speech model in quietly, without waiting for a tap.
+ *
+ * - Already on this phone: it is loaded again in the background (weights come
+ *   from the browser cache), so Record answers at once.
+ * - Not on the phone yet: it is downloaded in the background too, but only on a
+ *   network that can take it — never on save-data or a slow 2G/3G connection,
+ *   and never while the app is in the background.
  */
 function autoLoadModel() {
-  let ready = null;
+  let ready = '';
   try {
-    ready = localStorage.getItem(STORAGE.modelReady);
+    ready = localStorage.getItem(STORAGE.modelReady) || '';
   } catch (error) {
-    return;
+    ready = '';
   }
-  if (!ready || !MODELS.some((m) => m.id === ready)) return;
-  els.modelSelect.value = ready;
+  const known = MODELS.some((m) => m.id === ready);
+  const modelId = known ? ready : els.modelSelect.value || MODELS[0].id;
+  els.modelSelect.value = modelId;
+
+  if (!known && !canDownloadModel()) return;
+
   const run = () => {
+    if (document.visibilityState === 'hidden') return;
+    if (state.model || state.modelLoading) return;
     handleLoadModel();
   };
-  // Let the home screen paint first.
-  if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 3000 });
-  else window.setTimeout(run, 1200);
+  // Let the first screen paint first.
+  if ('requestIdleCallback' in window) window.requestIdleCallback(run, { timeout: 4000 });
+  else window.setTimeout(run, 2500);
+}
+
+/** Is this network fit for a ~40–105 MB download nobody asked for? */
+function canDownloadModel() {
+  try {
+    if (navigator.onLine === false) return false;
+    const connection =
+      navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+    if (connection) {
+      if (connection.saveData) return false;
+      const type = String(connection.effectiveType || '');
+      if (['slow-2g', '2g', '3g'].includes(type)) return false;
+    }
+  } catch (error) {
+    return false;
+  }
+  return true;
 }
 
 function onModelProgress(progress) {
