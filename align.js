@@ -11,7 +11,7 @@
 // (one letter off, e.g. ص/س confusion) is reported as "close" rather than
 // "wrong", which is what a learner needs to see.
 
-import { compareDistance, normalizeArabic } from './normalize.js';
+import { compareDistance, levenshtein, normalizeArabic, hasVowels, vowelPattern } from './normalize.js';
 
 export const WORD_STATUS = {
   CORRECT: 'correct',
@@ -96,6 +96,9 @@ export function alignWords(expectedWords, heardWords) {
   // What a diagonal move decided, kept for the traceback.
   const diagStatus = new Uint8Array(n * m); // 0 correct, 1 close, 2 wrong
   const diagDistance = new Int32Array(n * m);
+  // Set when the letters matched but the short vowels did not (only possible when
+  // the recogniser wrote harakat at all).
+  const diagVowel = new Uint8Array(n * m);
 
   for (let j = 1; j <= m; j += 1) {
     dp[j] = dp[j - 1] + COST.extra;
@@ -120,6 +123,22 @@ export function alignWords(expectedWords, heardWords) {
       if (distance === 0) {
         status = 0;
         cost = COST.correct;
+        // Harakat: judged only when the heard word carries them. Most Arabic
+        // speech recognisers return bare letters, and then this cannot be known —
+        // in that case the word stays "correct" instead of being guessed at.
+        if (hasVowels(heard[j - 1])) {
+          const expectedVowels = vowelPattern(expected[i - 1].word);
+          const heardVowels = vowelPattern(heard[j - 1]);
+          if (
+            expectedVowels &&
+            heardVowels &&
+            levenshtein(expectedVowels, heardVowels) > 0
+          ) {
+            status = 1; // near, not wrong: a vowel is off
+            cost = COST.close;
+            diagVowel[(i - 1) * m + (j - 1)] = 1;
+          }
+        }
       } else if (sim >= CLOSE_MIN_SIMILARITY && distance <= CLOSE_MAX_EDITS) {
         status = 1;
         cost = COST.close;
@@ -189,20 +208,26 @@ export function alignWords(expectedWords, heardWords) {
     // A wrong word must look wrong: judge by similarity after the phonetic
     // folding, not by a single edit the recogniser might have mis-heard.
     const sim = a === b ? 1 : 1 - compareDistance(a, b) / longest;
+    const vowelOff = diagVowel[index * m + heardIndex] === 1;
+    let status =
+      sim >= 0.85
+        ? WORD_STATUS.CORRECT
+        : sim >= 0.55
+          ? WORD_STATUS.CLOSE
+          : sim >= 0.3
+            ? WORD_STATUS.UNSURE
+            : WORD_STATUS.WRONG;
+    // Letters right, short vowels wrong (only known when the heard word has
+    // harakat): a near-miss with a note, never a red mistake.
+    if (vowelOff && status === WORD_STATUS.CORRECT) status = WORD_STATUS.CLOSE;
     return {
       index,
       expected: item.word,
       expectedNormalized: a,
       heard: heard[heardIndex],
       heardIndex,
-      status:
-        sim >= 0.85
-          ? WORD_STATUS.CORRECT
-          : sim >= 0.55
-            ? WORD_STATUS.CLOSE
-            : sim >= 0.3
-              ? WORD_STATUS.UNSURE
-              : WORD_STATUS.WRONG,
+      status,
+      vowel: vowelOff,
       distance,
       similarity: sim,
       optional: item.optional,

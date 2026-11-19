@@ -2226,6 +2226,7 @@ function renderAyaText(target, verse, alignment) {
 function noteFor(result) {
   if (result.status === WORD_STATUS.MISSING || !result.heard) return t('note.missing');
   if (result.status === WORD_STATUS.UNSURE) return t('note.unsure');
+  if (result.vowel) return t('note.vowel', { word: result.heard });
   if (result.status === WORD_STATUS.CLOSE) return t('note.closeHeard', { word: result.heard });
   return t('note.readHeard', { word: result.heard });
 }

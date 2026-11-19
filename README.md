@@ -688,6 +688,20 @@ hai (`autoLoadModel()`), magar sirf jab network theek ho: `saveData` on ho ya
 connection 2G/3G ho to nahi. Licence/credit: `models/README.md` aur `LICENSES.md`
 §3a (Apache-2.0, Tarteel AI + ONNX conversion, Whisper MIT).
 
+## Harakat (fatha/zamma/kasra) — kya check hota hai
+
+- Tashkeel harf nahi hai, is liye `normalizeArabic()` fatha/damma/kasra aur saari
+  Quranic marks hata kar lafz ka muqabla karta hai — isi se harf ka check pakka
+  rehta hai.
+- Aam Arabic ASR (jo model app chalti hai) **harakat likh kar nahi deta**; us ka
+  output bina tashkeel hota hai, is liye "fatha ki jagah kasra" ka signal hi nahi
+  bachta.
+- Jahan model harakat de deta hai, app un ka bhi muqabla karti hai (`align.js` →
+  `diagVowel`, `normalize.js` → `vowelPattern`): lafz sahi magar harakat mukhtalif
+  ho to wo **red mistake nahi**, "qareeb" (close) hota hai aur tooltip me "harakat
+  ka farq" likha aata hai. Jahan heard text me harakat nahi, wahan lafz jhooti
+  ghalti nahi banta.
+
 ## Backup — `backup.js`
 
 Settings → **Backup**: ek JSON file me saara `tc.*` data (progress, report, settings,

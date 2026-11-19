@@ -76,6 +76,26 @@ export function normalizeToWords(input) {
   return normalised ? normalised.split(' ') : [];
 }
 
+/**
+ * The three short vowels (fatha, damma, kasra) as a plain string: "a u i".
+ * Only used when the recogniser actually wrote them — most Arabic ASR output has
+ * no harakat at all, and then there is nothing to compare.
+ */
+const VOWEL_MARKS = { '\u064E': 'a', '\u064F': 'u', '\u0650': 'i' };
+
+export function vowelPattern(input) {
+  let out = '';
+  for (const char of String(input || '')) {
+    if (VOWEL_MARKS[char]) out += VOWEL_MARKS[char];
+  }
+  return out;
+}
+
+/** Does this word carry fatha/damma/kasra? */
+export function hasVowels(input) {
+  return /[\u064E\u064F\u0650]/.test(String(input || ''));
+}
+
 /** Levenshtein edit distance over code units. */
 export function levenshtein(a, b) {
   if (a === b) return 0;

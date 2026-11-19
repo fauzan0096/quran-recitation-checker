@@ -234,6 +234,7 @@ const DICT = {
     'note.close': 'qareeb',
     'note.read': 'padha',
     'note.closeHeard': 'qareeb: {word}',
+    'note.vowel': 'harakat ka farq: {word}',
     'note.readHeard': 'padha: {word}',
     'extra.line': 'aya me nahi: {words}',
     'hint.allWords':
@@ -468,6 +469,7 @@ const DICT = {
     'note.close': 'قریب',
     'note.read': 'پڑھا',
     'note.closeHeard': 'قریب: {word}',
+    'note.vowel': 'حرکات کا فرق: {word}',
     'note.readHeard': 'پڑھا: {word}',
     'extra.line': 'آیت میں نہیں: {words}',
     'hint.allWords': 'سب الفاظ آیت کے مطابق سنے گئے۔ (تجوید کی باریک غلطی ASR سے نہیں پکڑی جاتی۔)',
@@ -701,6 +703,7 @@ const DICT = {
     'note.close': 'close',
     'note.read': 'you said',
     'note.closeHeard': 'close: {word}',
+    'note.vowel': 'vowel differs: {word}',
     'note.readHeard': 'you said: {word}',
     'extra.line': 'not in the aya: {words}',
     'hint.allWords':
