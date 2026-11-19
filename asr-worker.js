@@ -14,9 +14,6 @@ const CDN_CANDIDATES = [
   'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js',
 ];
 
-// The runtime's .wasm (27 MB) is served from the root of this domain.
-const WASM_DIR = '/vendor/ort/';
-
 let libPromise = null;
 let pipePromise = null;
 let pipeKey = '';
@@ -43,7 +40,6 @@ async function loadLibrary() {
                 const cores = Math.min(4, Math.max(1, navigator.hardwareConcurrency || 2));
                 if (lib.env.backends && lib.env.backends.onnx && lib.env.backends.onnx.wasm) {
                   lib.env.backends.onnx.wasm.numThreads = cores;
-                  lib.env.backends.onnx.wasm.wasmPaths = WASM_DIR;
                 }
               } catch (error) {
                 /* older build without the setting */
@@ -89,41 +85,23 @@ self.onmessage = async (event) => {
     loadId = msg.id;
     const localPath = msg.localPath || 'models/';
     const key = `${localPath}|${msg.modelId}`;
-    const start = async () => {
-      const lib = await loadLibrary();
-      if (lib.env) lib.env.localModelPath = localPath;
-      pipeKey = key;
-      pipePromise = loadPipeline(msg.modelId);
-      await pipePromise;
-    };
     try {
-      if (!pipePromise || pipeKey !== key) await start();
-      else await pipePromise;
+      if (!pipePromise || pipeKey !== key) {
+        const lib = await loadLibrary();
+        if (lib.env) lib.env.localModelPath = localPath;
+        pipeKey = key;
+        pipePromise = loadPipeline(msg.modelId);
+      }
+      await pipePromise;
       self.postMessage({ type: 'loaded', id: msg.id, version: libVersion });
-      return;
     } catch (error) {
       pipePromise = null;
       pipeKey = '';
-      // One more try with the library's default runtime path, in case this
-      // device cannot start the bundled .wasm.
-      try {
-        const lib = await loadLibrary();
-        if (lib.env && lib.env.backends && lib.env.backends.onnx && lib.env.backends.onnx.wasm) {
-          lib.env.backends.onnx.wasm.wasmPaths = undefined;
-        }
-        if (lib.env) lib.env.localModelPath = localPath;
-        pipePromise = loadPipeline(msg.modelId);
-        await pipePromise;
-        self.postMessage({ type: 'loaded', id: msg.id, version: libVersion });
-        return;
-      } catch (inner) {
-        pipePromise = null;
-        self.postMessage({
-          type: 'failed',
-          id: msg.id,
-          message: String((inner && inner.message) || inner || (error && error.message) || error),
-        });
-      }
+      self.postMessage({
+        type: 'failed',
+        id: msg.id,
+        message: String((error && error.message) || error),
+      });
     }
     return;
   }
