@@ -37,7 +37,6 @@ import {
   micSupport,
   micPermissionState,
   peakOf,
-  libraryVersion,
 } from './asr.js';
 import './strings-v2.js';
 import './premium-strings.js';
@@ -2287,7 +2286,7 @@ function renderAyaResult(target, alignment, key) {
   strip.append(score, verdict, counts);
   target.appendChild(strip);
 
-  // Whisper hears words, not tajweed: say so where the result is read, so
+  // The engine hears words, not tajweed: say so where the result is read, so
   // nobody expects a madd or ghunnah to be judged here.
   const scope = document.createElement('p');
   scope.className = 'hint result-scope';
@@ -2681,9 +2680,8 @@ async function doLoadModel(modelId) {
   try {
     state.model = await loadModel(modelId, onModelProgress);
     state.modelId = modelId;
-    els.modelStatus.textContent = `${t('model.ready')}${
-      libraryVersion() ? ` (transformers ${libraryVersion()})` : ''
-    }`;
+    // Our own name, never the library's: the engine is part of Bayyin.
+    els.modelStatus.textContent = `${t('model.ready')} — Bayyin`;
     setProgress(100);
     try {
       localStorage.setItem(STORAGE.model, modelId);
