@@ -3,11 +3,25 @@
 // Daily content: 60 ayat (references only — the text comes from Tanzil),
 // 30 short ahadith and 60 beloved sunnahs.
 //
-// Takhreej note: the 30 ahadith are well-known ones with Bukhari / Muslim /
-// Tirmidhi / Nasa'i numbers. The 60 sunnahs carry collection-level references —
-// one of them ("give gifts") pointed at Bayhaqi, whose chain is weak, and now
-// cites the Bukhari narration instead (2585). A scholar should still read the
-// whole list once before release.
+// Takhreej note: the 30 ahadith were checked one by one against the Shamela
+// library (Bukhari — al-Sultaniyya and Ta al-Bugha, Muslim — Abd al-Baqi,
+// Tirmidhi — Shakir). Every matn was found in the collection it is credited to,
+// and every number was read from the printed edition. One was wrong and is
+// fixed: "the best charity is what is given out of wealth you can spare" is
+// Bukhari 1426, not 1429.
+//
+// The 60 sunnahs carry collection-level references, and the ones checked against
+// Shamela are correct. Four numbers were wrong and are fixed:
+//   * "Alhamdulillah after eating"        Tirmidhi 1815 -> 3458
+//   * "three Quls after the fard prayer"  Nasa'i 992    -> 1336
+//   * "feed people and greet them"        Bukhari 5273  -> 12
+//   * "fast on Mondays and Thursdays"     Muslim 1144   -> Tirmidhi 745
+// One wording was matched to its narration: Bukhari 6114 is "the strong one
+// controls himself when angry", not the silence report (which is not in the four
+// Sunan), so that item now reads that way.
+// "Give gifts" used to point at Bayhaqi, whose chain is weak; it now cites the
+// Bukhari narration (2585 — "he accepted gifts and gave back more"), which was
+// checked too. A scholar should still read the whole list once before release.
 
 /** [surah, aya] — text is read from the bundled Tanzil mushaf, never retyped. */
 export const AYAT = [
@@ -253,7 +267,7 @@ export const AHADITH = [
     ar: 'خَيْرُ الصَّدَقَةِ مَا كَانَ عَنْ ظَهْرِ غِنًى',
     rm: 'Behtareen sadqa woh hai jo apni zaroorat poora karke, baaqi maal se diya jaye.',
     en: 'The best charity is what is given out of wealth that you can spare.',
-    ref: 'Bukhari 1429',
+    ref: 'Bukhari 1426',
   },
 ];
 
@@ -261,7 +275,7 @@ export const SUNNAHS = [
   { rm: 'Miswak karna — nabi ﷺ khud karte aur ummat ko talqeen farmate.', en: 'Use the miswak.', ref: 'Bukhari 887' },
   { rm: 'Khane se pehle "Bismillah" kehna.', en: 'Say Bismillah before eating.', ref: 'Bukhari 5376' },
   { rm: 'Dayen haath se khana aur peena.', en: 'Eat and drink with the right hand.', ref: 'Bukhari 5376' },
-  { rm: 'Khane ke baad "Alhamdulillah" kehna.', en: 'Say Alhamdulillah after eating.', ref: 'Tirmidhi 1815' },
+  { rm: 'Khane ke baad "Alhamdulillah" kehna.', en: 'Say Alhamdulillah after eating.', ref: 'Tirmidhi 3458' },
   { rm: 'Paani teen saans me peena.', en: 'Drink water in three breaths.', ref: 'Muslim 2028' },
   { rm: 'Baith kar paani peena.', en: 'Sit while drinking water.', ref: 'Muslim 2024' },
   { rm: 'Aapas me salaam karna aur phelana.', en: 'Spread the greeting of salam.', ref: 'Muslim 54' },
@@ -286,12 +300,12 @@ export const SUNNAHS = [
   { rm: 'Safed kapde pehnna.', en: 'Wear white clothes.', ref: 'Tirmidhi 994' },
   { rm: 'Azan ke baad du\u2019a parhna.', en: 'Recite the du\u2019a after the adhan.', ref: 'Bukhari 614' },
   { rm: 'Namaz ke baad 33 tasbeeh, 33 tahmeed, 34 takbeer.', en: 'After prayer: 33 tasbeeh, 33 tahmeed, 34 takbeer.', ref: 'Muslim 596' },
-  { rm: 'Farz namaz ke baad Ayat al-Kursi.', en: 'Recite Ayat al-Kursi after the obligatory prayer.', ref: 'Nasa\u2019i 992' },
+  { rm: 'Farz namaz ke baad teen Quls (Mu\u2019awwidhat) parhna.', en: 'Recite the three Quls after the obligatory prayer.', ref: 'Nasa\u2019i 1336' },
   { rm: 'Witr parhna, chahe ek rak\u2019ah.', en: 'Pray witr, even one rak\u2019ah.', ref: 'Bukhari 990' },
   { rm: 'Duha ki namaz parhna.', en: 'Pray the duha prayer.', ref: 'Muslim 720' },
   { rm: 'Farz ke sath 12 rawatib sunnatein.', en: 'Keep the twelve sunnah rak\u2019ah around the obligatory prayers.', ref: 'Tirmidhi 415' },
   { rm: 'Raat ko tahajjud ke liye uthna.', en: 'Rise for tahajjud at night.', ref: 'Bukhari 1145' },
-  { rm: 'Peer aur jumerat ke rozay.', en: 'Fast on Mondays and Thursdays.', ref: 'Muslim 1144' },
+  { rm: 'Peer aur jumerat ke rozay.', en: 'Fast on Mondays and Thursdays.', ref: 'Tirmidhi 745' },
   { rm: 'Shaban me zyada rozay rakhna.', en: 'Fast more in Shaban.', ref: 'Muslim 1156' },
   { rm: 'Sahri khana, chahe thora sa.', en: 'Eat suhoor, even a little.', ref: 'Bukhari 1923' },
   { rm: 'Iftar me jaldi karna.', en: 'Break the fast promptly.', ref: 'Bukhari 1957' },
@@ -306,12 +320,12 @@ export const SUNNAHS = [
   { rm: 'Rishtedari jodna.', en: 'Keep the ties of kinship.', ref: 'Bukhari 5985' },
   { rm: 'Walidain ki khidmat karna.', en: 'Serve your parents.', ref: 'Bukhari 5971' },
   { rm: 'Yateem ki dekh-bhal karna.', en: 'Care for the orphan.', ref: 'Bukhari 5304' },
-  { rm: 'Kisi ko khana khilana aur salaam karna.', en: 'Feed people and greet them.', ref: 'Bukhari 5273' },
+  { rm: 'Kisi ko khana khilana aur salaam karna.', en: 'Feed people and greet them.', ref: 'Bukhari 12' },
   { rm: 'Pyaase ko — janwar ko bhi — paani pilana.', en: 'Give water to the thirsty, even an animal.', ref: 'Bukhari 2466' },
   { rm: 'Darakht lagana ya kheti karna.', en: 'Plant a tree or sow a crop.', ref: 'Bukhari 2320' },
   { rm: 'Apne bhai ke samne muskurana.', en: 'Smile at your brother.', ref: 'Tirmidhi 1956' },
   { rm: 'Parosi ka haq ada karna.', en: 'Fulfil the rights of the neighbour.', ref: 'Bukhari 6014' },
-  { rm: 'Ghusse ke waqt khamosh ho jana.', en: 'Stay silent when angry.', ref: 'Bukhari 6114' },
+  { rm: 'Ghusse ke waqt apne aap par qabu rakhna.', en: 'Control yourself when angry.', ref: 'Bukhari 6114' },
   { rm: 'Maaf karna aur islaah karna.', en: 'Forgive and reconcile.', ref: 'Bukhari 6598' },
   { rm: 'Kalima-e-tayyibah ki kasrat karna.', en: 'Repeat the good word often.', ref: 'Muslim 2691' },
   { rm: 'Rozana Quran ki kuch ayaat parhna.', en: 'Recite some Quran every day.', ref: 'Tirmidhi 2910' },
