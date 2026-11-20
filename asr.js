@@ -9,13 +9,23 @@
 // is the one-time download of the model weights, which the browser keeps in the
 // Cache API / IndexedDB and reuses afterwards.
 
-// The community Quran ONNX exports are validated against Transformers.js v4
-// (v4.3.2 was verified loading this model and running inference on iPhone
-// Safari). v3 is only kept as a last resort. The version is pinned on purpose.
-const CDN_CANDIDATES = [
-  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/dist/transformers.min.js',
-  'https://esm.sh/@huggingface/transformers@4',
-  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js',
+// The library that runs the model is served from our own Cloudflare Worker, so a
+// check asks no other company for the code that does the work. The CDN copies
+// stay behind it as a fallback: if the Worker is down or the asset is missing,
+// the app does exactly what it did before.
+const LOCAL_LIB = 'https://bayyin-push.anbiyawarsatul.workers.dev/ort/transformers.min.js';
+
+const CANDIDATES = [
+  { url: LOCAL_LIB, local: true },
+  {
+    url: 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/dist/transformers.min.js',
+    local: false,
+  },
+  { url: 'https://esm.sh/@huggingface/transformers@4', local: false },
+  {
+    url: 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js',
+    local: false,
+  },
 ];
 
 const TARGET_RATE = 16000;
@@ -61,6 +71,7 @@ function fallbackOf(modelId) {
 }
 
 let libPromise = null;
+let libIsLocal = false;
 let libVersion = '';
 
 // ---------------------------------------------- the model on its own thread
@@ -145,14 +156,17 @@ function askWorker(message, timeoutMs, onProgress, transfer) {
   });
 }
 
-async function loadLibrary() {
+async function loadLibrary(options = {}) {
+  const remoteOnly = Boolean(options.remoteOnly);
   if (!libPromise) {
     libPromise = (async () => {
       const errors = [];
-      for (const url of CDN_CANDIDATES) {
+      for (const candidate of CANDIDATES) {
+        if (remoteOnly && candidate.local) continue;
         try {
-          const lib = await import(/* webpackIgnore: true */ url);
+          const lib = await import(/* webpackIgnore: true */ candidate.url);
           if (lib && typeof lib.pipeline === 'function') {
+            libIsLocal = candidate.local;
             if (lib.env) {
               // The model files are served by this app's own origin: the library
               // joins env.localModelPath + model id and fetches that path.
@@ -165,9 +179,6 @@ async function loadLibrary() {
               try {
                 const cores = Math.min(4, Math.max(1, navigator.hardwareConcurrency || 2));
                 if (lib.env.backends && lib.env.backends.onnx && lib.env.backends.onnx.wasm) {
-                  // Use the phone's cores (this is what made checks fast before).
-                  // The runtime's own wasm comes from the library itself: the copy
-                  // we served from this domain raised a WebAssembly TypeError.
                   lib.env.backends.onnx.wasm.numThreads = cores;
                 }
               } catch (error) {
@@ -177,12 +188,12 @@ async function loadLibrary() {
             libVersion = (lib.env && lib.env.version) || '';
             return lib;
           }
-          errors.push(`${url}: pipeline export nahi mila`);
+          errors.push(`${candidate.url}: pipeline export nahi mila`);
         } catch (error) {
-          errors.push(`${url}: ${error && error.message ? error.message : error}`);
+          errors.push(`${candidate.url}: ${error && error.message ? error.message : error}`);
         }
       }
-      throw new Error(`Speech library load nahi hui (internet chahiye). ${errors.join(' | ')}`);
+      throw new Error(`Speech library load nahi hui. ${errors.join(' | ')}`);
     })().catch((error) => {
       libPromise = null; // next try must retry, not replay the old failure
       throw error;
@@ -223,8 +234,11 @@ export async function loadModel(modelId, onProgress = () => {}) {
     }
   }
 
-  const lib = await loadLibrary();
-  if (lib.env) lib.env.localModelPath = localPath;
+  let lib = await loadLibrary();
+  const applyModel = () => {
+    if (lib.env) lib.env.localModelPath = localPath;
+  };
+  applyModel();
   const options = {
     device: 'wasm',
     progress_callback: (progress) => {
@@ -262,11 +276,27 @@ export async function loadModel(modelId, onProgress = () => {}) {
     );
   };
 
+  const attempt = async () => {
+    try {
+      return await build(modelId);
+    } catch (error) {
+      if (!alt) throw error;
+      return build(alt);
+    }
+  };
+
   try {
-    return await build(modelId);
+    return await attempt();
   } catch (error) {
-    if (!alt) throw error;
-    return build(alt);
+    // Our own copy of the library would not start. Go back to the CDN — the way
+    // the app worked before — rather than leave the person with a model that
+    // cannot load at all.
+    if (!libIsLocal) throw error;
+    libPromise = null;
+    libIsLocal = false;
+    lib = await loadLibrary({ remoteOnly: true });
+    applyModel();
+    return attempt();
   }
 }
 

@@ -1,0 +1,4 @@
+# Served by the Worker at /ort/ — filled at deploy time by
+# .github/workflows/deploy-worker.yml, which downloads the pinned speech library
+# from the upstream package. Nothing large is committed here: the folder is only
+# kept in git so `wrangler deploy` always finds it.

@@ -311,8 +311,26 @@ export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return cors();
 
+    const url = new URL(request.url);
+
+    // Our own static files — today the speech library, so the app never asks a
+    // CDN for the code that runs its model. `env.ASSETS` is the folder wrangler
+    // uploads (`worker/public/`), filled by the deploy workflow from the upstream
+    // package, so nothing large sits in git. The CORS header is what lets the app
+    // `import()` the file from this origin, and the long cache means a phone
+    // downloads it once and keeps it.
+    if (url.pathname.startsWith('/ort/')) {
+      if (!env.ASSETS) {
+        return new Response('assets binding missing', { status: 503 });
+      }
+      const hit = await env.ASSETS.fetch(request);
+      const out = new Response(hit.body, hit);
+      out.headers.set('Access-Control-Allow-Origin', '*');
+      out.headers.set('Cache-Control', 'public, max-age=31536000, immutable');
+      return out;
+    }
+
     if (request.method === 'GET') {
-      const url = new URL(request.url);
       const config = await settings(env);
       if (url.pathname === '/vapid') return json({ key: config.publicKey || '' });
       return json({

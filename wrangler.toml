@@ -21,3 +21,13 @@ id = "11dcc8171f42495280cacd9b4e7ada93"
 #   VAPID_PUBLIC, VAPID_PRIVATE, VAPID_SUBJECT
 # The Worker reads the environment first and then falls back to the KV entries
 # VAPID_PUBLIC / VAPID_PRIVATE / VAPID_SUBJECT in the namespace above.
+
+# Static files served by this Worker — today our own copy of the speech library
+# (`/ort/transformers.min.js`), so the app asks no CDN for the code that runs its
+# model. The folder is filled by the deploy workflow from the upstream package;
+# nothing large is committed to git. `run_worker_first` keeps every request going
+# through the Worker, which is what adds the CORS header the app needs.
+[assets]
+directory = "worker/public"
+binding = "ASSETS"
+run_worker_first = true

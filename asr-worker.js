@@ -8,26 +8,43 @@
 // app while an aya was being checked. The page keeps drawing; this worker does
 // the work and posts the text back.
 
-const CDN_CANDIDATES = [
-  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/dist/transformers.min.js',
-  'https://esm.sh/@huggingface/transformers@4',
-  'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js',
+// The library that runs the model is served from our own Cloudflare Worker, so a
+// check asks no other company for the code that does the work. The CDN copies
+// stay behind it as a fallback: if the Worker is down or the asset is missing,
+// the app does exactly what it did before.
+const LOCAL_LIB = 'https://bayyin-push.anbiyawarsatul.workers.dev/ort/transformers.min.js';
+
+const CANDIDATES = [
+  { url: LOCAL_LIB, local: true },
+  {
+    url: 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/dist/transformers.min.js',
+    local: false,
+  },
+  { url: 'https://esm.sh/@huggingface/transformers@4', local: false },
+  {
+    url: 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3/dist/transformers.min.js',
+    local: false,
+  },
 ];
 
 let libPromise = null;
+let libIsLocal = false;
 let pipePromise = null;
 let pipeKey = '';
 let loadId = 0;
 let libVersion = '';
 
-async function loadLibrary() {
+async function loadLibrary(options = {}) {
+  const remoteOnly = Boolean(options.remoteOnly);
   if (!libPromise) {
     libPromise = (async () => {
       const errors = [];
-      for (const url of CDN_CANDIDATES) {
+      for (const candidate of CANDIDATES) {
+        if (remoteOnly && candidate.local) continue;
         try {
-          const lib = await import(/* webpackIgnore: true */ url);
+          const lib = await import(/* webpackIgnore: true */ candidate.url);
           if (lib && typeof lib.pipeline === 'function') {
+            libIsLocal = candidate.local;
             libVersion = (lib.env && lib.env.version) || '';
             if (lib.env) {
               // Model files are served by this app's own origin: the library
@@ -47,12 +64,12 @@ async function loadLibrary() {
             }
             return lib;
           }
-          errors.push(`${url}: pipeline export nahi mila`);
+          errors.push(`${candidate.url}: pipeline export nahi mila`);
         } catch (error) {
-          errors.push(`${url}: ${error && error.message ? error.message : error}`);
+          errors.push(`${candidate.url}: ${error && error.message ? error.message : error}`);
         }
       }
-      throw new Error(`Speech library load nahi hui (internet chahiye). ${errors.join(' | ')}`);
+      throw new Error(`Speech library load nahi hui. ${errors.join(' | ')}`);
     })().catch((error) => {
       libPromise = null;
       throw error;
@@ -85,16 +102,35 @@ self.onmessage = async (event) => {
     loadId = msg.id;
     const localPath = msg.localPath || 'models/';
     const key = `${localPath}|${msg.modelId}`;
-    try {
-      if (!pipePromise || pipeKey !== key) {
-        const lib = await loadLibrary();
-        if (lib.env) lib.env.localModelPath = localPath;
-        pipeKey = key;
-        pipePromise = loadPipeline(msg.modelId);
-      }
+    const build = async (modelId) => {
+      const lib = await loadLibrary();
+      if (lib.env) lib.env.localModelPath = localPath;
+      pipeKey = key;
+      pipePromise = loadPipeline(modelId);
       await pipePromise;
+    };
+    try {
+      if (!pipePromise || pipeKey !== key) await build(msg.modelId);
+      else await pipePromise;
       self.postMessage({ type: 'loaded', id: msg.id, version: libVersion });
     } catch (error) {
+      // Our own copy of the library would not start. Go back to the CDN — the way
+      // the app worked before — rather than leave the person with a model that
+      // cannot load at all.
+      let recovered = false;
+      if (libIsLocal) {
+        libPromise = null;
+        libIsLocal = false;
+        try {
+          await loadLibrary({ remoteOnly: true });
+          await build(msg.modelId);
+          self.postMessage({ type: 'loaded', id: msg.id, version: libVersion });
+          recovered = true;
+        } catch (inner) {
+          console.warn('CDN fallback failed too', inner);
+        }
+      }
+      if (recovered) return;
       pipePromise = null;
       pipeKey = '';
       self.postMessage({

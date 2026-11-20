@@ -35,6 +35,17 @@ jobs:
           echo "CLOUDFLARE_API_TOKEN ya CLOUDFLARE_ACCOUNT_ID missing hai."
           exit 1
 
+      # The Worker serves our own copy of the speech library from /ort/, so the
+      # app never asks a CDN for the code that runs its model. The file is
+      # fetched here instead of being committed: it is third-party code, it is
+      # big, and a pinned version is all we need.
+      - name: Fetch the speech library for the assets folder
+        run: |
+          mkdir -p worker/public/ort
+          curl -fsSL --retry 3 -o worker/public/ort/transformers.min.js \
+            https://cdn.jsdelivr.net/npm/@huggingface/transformers@4.3.2/dist/transformers.min.js
+          ls -l worker/public/ort
+
       - name: Deploy
         uses: cloudflare/wrangler-action@v3
         with:

@@ -16,7 +16,7 @@ audio) — woh neeche saaf likhi hain.
 | --- | --- | --- |
 | App ka code, design, icon, naam | **Bayyin** | © 2026 F A FS, all rights reserved |
 | Speech engine (normalise, align, vowel/hamza, tajweed hints) | **Bayyin engine** | `normalize.js`, `align.js`, `tajweed.js` |
-| Chalane wali library | pehle apni copy `vendor/ort/`, na mile to CDN | code usi tarteeb se dekhta hai |
+| Chalane wali library | **apna Cloudflare Worker** (`/ort/`), na chale to CDN | free plan, hamara apna deployment |
 | Chhota model | **Bayyin Tiny** — app ke andar (`models/bayyin-tiny/`, ~39 MB) | bina internet |
 | Bara model | **Bayyin Base** — apne domain par (`/vendor/bayyin-base/`, ~105 MB) | sirf wahin se, Hugging Face se kabhi nahi |
 | Quran ka text | **Tanzil** (tanzil.net) | `quran-tanzil.txt`, badalna mana hai |
@@ -243,10 +243,12 @@ gold, hero ring, streak, aur naya badge milne par celebration. Free.
 - **Quran ka text — Tanzil** (tanzil.net), CC BY 3.0: commercial use theek hai,
   magar text badalna mana, copyright block rehna chahiye.
 - **Qari ki tilawat — EveryAyah** (everyayah.com): muft, bina key, stream hoti hai.
-- **Chhoti baat:** ONNX runtime ki wasm file (`ort-wasm-simd-threaded*.wasm`,
-  14–26 MB) abhi CDN se aati hai, kyunke is repo ka GitHub rule itne bade file
-  reject karta hai. Rule hata dein to woh bhi `vendor/ort/` me aa jayegi; code
-  pehle se usi ke liye tayyar hai.
+- **Chhoti baat:** library ki 574 KB file **apne Cloudflare Worker** se aati hai
+  (`/ort/transformers.min.js`) — usay deploy workflow khud upstream package se
+  laata hai, git me kuch bara nahi rehta. ONNX runtime ki wasm (14–26 MB) abhi
+  bhi CDN se aati hai, kyunke Cloudflare ki per-file limit 25 MB hai aur bari
+  build 25.6 MB ki hai; chhoti (13.6 MB) wali bhi maujood hai agar kabhi us par
+  jana ho.
 
 Third-party licences (Apache-2.0 / MIT / CC BY) ki poori tafseel `LICENSES.md` aur
 app ke **Settings → Licenses** me hai — woh notices wahin rehni chahiye.
@@ -257,7 +259,7 @@ Maqsad ye hai ke **koi ek bhi party app ko band na kar sake**. Aaj ki halat:
 
 | Kya band hua | Asar | Kya karna hai |
 | --- | --- | --- |
-| jsDelivr / esm.sh (library) | sirf **pehli** check nahi chalegi; jin ke phone me cache hai unka sab chalta rahega | `asr.js` + `asr-worker.js` ke `CANDIDATES` me koi bhi doosra URL daal dein jo wahi file de — ya file apne Cloudflare Worker se serve karein (574 KB) |
+| jsDelivr / esm.sh (library) | **kuch nahi** — library apne Worker se aati hai; sirf ONNX runtime ki wasm pehli dafa wahin se aati hai | Worker down ho to `asr.js` ke `CANDIDATES` me CDN khud chal jata hai; wasm ke liye `vendor/ort/` me chhoti build rakh dein |
 | GitHub (ye repo / Pages) | nayi installs band, app khulna band | site static hai — repo ko kahin aur upload kar dein (Cloudflare Pages, Netlify, koi bhi host), phir `assetlinks.json` + domain set karein |
 | EveryAyah (qari audio) | qari ki awaaz band | `qari.js` me `MIRROR` (cdn.islamic.network) khud chal jata hai; teesra source wahin add ho jata hai |
 | quran.com API (IndoPak) | IndoPak pages band, **Madani chalta rahega** | text bundle kar ke `indopak.js` me daal dein |
