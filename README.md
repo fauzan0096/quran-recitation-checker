@@ -251,6 +251,29 @@ gold, hero ring, streak, aur naya badge milne par celebration. Free.
 Third-party licences (Apache-2.0 / MIT / CC BY) ki poori tafseel `LICENSES.md` aur
 app ke **Settings → Licenses** me hai — woh notices wahin rehni chahiye.
 
+## Agar kal koi cheez band ho jaye
+
+Maqsad ye hai ke **koi ek bhi party app ko band na kar sake**. Aaj ki halat:
+
+| Kya band hua | Asar | Kya karna hai |
+| --- | --- | --- |
+| jsDelivr / esm.sh (library) | sirf **pehli** check nahi chalegi; jin ke phone me cache hai unka sab chalta rahega | `asr.js` + `asr-worker.js` ke `CANDIDATES` me koi bhi doosra URL daal dein jo wahi file de — ya file apne Cloudflare Worker se serve karein (574 KB) |
+| GitHub (ye repo / Pages) | nayi installs band, app khulna band | site static hai — repo ko kahin aur upload kar dein (Cloudflare Pages, Netlify, koi bhi host), phir `assetlinks.json` + domain set karein |
+| EveryAyah (qari audio) | qari ki awaaz band | `qari.js` me `MIRROR` (cdn.islamic.network) khud chal jata hai; teesra source wahin add ho jata hai |
+| quran.com API (IndoPak) | IndoPak pages band, **Madani chalta rahega** | text bundle kar ke `indopak.js` me daal dein |
+| Hugging Face | **kuch nahi** — Bayyin Tiny app ke andar hai | — |
+| Cloudflare Worker | sirf push notifications band | app par koi asar nahi |
+| Google Play | nayi installs band; purani app chalti rahegi | — |
+
+**Jo kabhi nahi ja sakta** (sab phone ke andar / repo ke andar): Bayyin engine,
+Bayyin Tiny model, Quran ka poora text, duaein, tasbeeh, auqaat, calendar, aur
+user ka apna data. Server, account ya API key ki zaroorat kisi bhi core kaam me
+nahi hai.
+
+**Sab se mazboot insurance:** har do-teen mahine me repo ka ek zip apne paas
+(Drive ya laptop) rakh lein. Us se app ko kisi bhi host par dobara khara kiya ja
+sakta hai — chahe GitHub, Play ya koi bhi CDN kal na rahe.
+
 ## Copyright
 
 **© 2026 F A FS — Bayyin (بيّن). All rights reserved.** Shartein `LICENSE` me:
