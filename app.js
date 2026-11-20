@@ -2141,15 +2141,17 @@ function mistakeBlock(key, problems) {
 
     const tag = document.createElement('span');
     tag.className = 'tag';
-    tag.textContent = r.vowel
-      ? t('count.vowel')
-      : r.status === WORD_STATUS.CLOSE
-        ? t('count.close')
-        : r.status === WORD_STATUS.UNSURE
-          ? t('count.unsure')
-          : r.status === WORD_STATUS.MISSING
-            ? t('note.missing')
-            : t('count.wrong');
+    tag.textContent = r.hamza
+      ? t('count.hamza')
+      : r.vowel
+        ? t('count.vowel')
+        : r.status === WORD_STATUS.CLOSE
+          ? t('count.close')
+          : r.status === WORD_STATUS.UNSURE
+            ? t('count.unsure')
+            : r.status === WORD_STATUS.MISSING
+              ? t('note.missing')
+              : t('count.wrong');
 
     const expected = document.createElement('span');
     expected.className = 'aya-word';
@@ -2187,6 +2189,14 @@ function mistakeBlock(key, problems) {
   }
   block.appendChild(list);
   block.appendChild(explainLine(problems));
+  // Hamza and madd are judged (see align.js) when the recogniser wrote them, so
+  // this line says what the two symbols above mean.
+  if (problems.some((r) => r.hamza)) {
+    const hamzaHint = document.createElement('p');
+    hamzaHint.className = 'hint';
+    hamzaHint.textContent = t('mistake.hamzaHint');
+    block.appendChild(hamzaHint);
+  }
   // Harakat are not judged (the model returns bare letters); the correct word is
   // printed with them above, so this says what to do instead of guessing.
   if (problems.some((r) => r.status !== WORD_STATUS.CORRECT)) {

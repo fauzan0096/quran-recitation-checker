@@ -11,7 +11,14 @@
 // (one letter off, e.g. ص/س confusion) is reported as "close" rather than
 // "wrong", which is what a learner needs to see.
 
-import { compareDistance, levenshtein, normalizeArabic, hasVowels, vowelPattern } from './normalize.js';
+import {
+  compareDistance,
+  levenshtein,
+  normalizeArabic,
+  hasVowels,
+  vowelPattern,
+  hamzaSignature,
+} from './normalize.js';
 
 export const WORD_STATUS = {
   CORRECT: 'correct',
@@ -99,6 +106,9 @@ export function alignWords(expectedWords, heardWords) {
   // Set when the letters matched but the short vowels did not (only possible when
   // the recogniser wrote harakat at all).
   const diagVowel = new Uint8Array(n * m);
+  // Set when the letters matched but the hamza/madd seat did not: مئابا heard for
+  // مآبا, or the other way round.
+  const diagHamza = new Uint8Array(n * m);
 
   for (let j = 1; j <= m; j += 1) {
     dp[j] = dp[j - 1] + COST.extra;
@@ -137,6 +147,26 @@ export function alignWords(expectedWords, heardWords) {
             status = 1; // near, not wrong: a vowel is off
             cost = COST.close;
             diagVowel[(i - 1) * m + (j - 1)] = 1;
+          }
+        }
+        // Hamza and madd. مَآبًا and مِئَابًا share every bare letter, so on the
+        // consonants alone they look like the same word — but one is a long a and
+        // the other is a hamza on the yaa, and a reciter who says one for the
+        // other has read a different word. Judged only when BOTH sides write a
+        // hamza/madd and they sit in the same places: if the recogniser dropped
+        // them (its usual output), nothing is known and nothing is claimed.
+        if (status === 0) {
+          const heardHamza = hamzaSignature(heard[j - 1]);
+          const expectedHamza = hamzaSignature(expected[i - 1].word);
+          if (
+            heardHamza &&
+            expectedHamza &&
+            heardHamza.length === expectedHamza.length &&
+            heardHamza !== expectedHamza
+          ) {
+            status = 1; // near, not wrong: the seat is different
+            cost = COST.close;
+            diagHamza[(i - 1) * m + (j - 1)] = 1;
           }
         }
       } else if (sim >= CLOSE_MIN_SIMILARITY && distance <= CLOSE_MAX_EDITS) {
@@ -209,6 +239,7 @@ export function alignWords(expectedWords, heardWords) {
     // folding, not by a single edit the recogniser might have mis-heard.
     const sim = a === b ? 1 : 1 - compareDistance(a, b) / longest;
     const vowelOff = diagVowel[index * m + heardIndex] === 1;
+    const hamzaOff = diagHamza[index * m + heardIndex] === 1;
     let status =
       sim >= 0.85
         ? WORD_STATUS.CORRECT
@@ -217,9 +248,9 @@ export function alignWords(expectedWords, heardWords) {
           : sim >= 0.3
             ? WORD_STATUS.UNSURE
             : WORD_STATUS.WRONG;
-    // Letters right, short vowels wrong (only known when the heard word has
-    // harakat): a near-miss with a note, never a red mistake.
-    if (vowelOff && status === WORD_STATUS.CORRECT) status = WORD_STATUS.CLOSE;
+    // Letters right, hamza/madd or the short vowels wrong (only known when the
+    // heard word carries them): a near-miss with a note, never a red mistake.
+    if ((vowelOff || hamzaOff) && status === WORD_STATUS.CORRECT) status = WORD_STATUS.CLOSE;
     return {
       index,
       expected: item.word,
@@ -228,6 +259,7 @@ export function alignWords(expectedWords, heardWords) {
       heardIndex,
       status,
       vowel: vowelOff,
+      hamza: hamzaOff,
       distance,
       similarity: sim,
       optional: item.optional,

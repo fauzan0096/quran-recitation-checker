@@ -8,9 +8,12 @@ import { addStrings } from './i18n.js';
 
 addStrings('roman', {
   'count.vowel': 'harakat',
+  'count.hamza': 'hamza/madd',
   'note.correctForm': 'Mushaf ka sahi lafz (harakat ke sath)',
   'mistake.harakatHint':
     'Harakat (fatha/zamma/kasra) engine khud nahi jaanchta — sahi lafz harakat ke sath upar likha hai, us se milaein.',
+  'mistake.hamzaHint':
+    'Hamza aur madd ek awaaz nahi hain: madd (آ) lambi "aa" hai, hamza (ئ ؤ ء) alag harf hai. Mushaf ka sahi lafz upar diya hai — us ke nishan se milaein.',
   'premium.notAvailable':
     'Subscription sirf Play Store wali app me milti hai — browser me nahi. Play se install kar ke wahin se lein.',
   'premium.purchaseFailed': 'Khareedari mukammal nahi hui. Dobara koshish karein.',
@@ -219,9 +222,12 @@ addStrings('roman', {
 
 addStrings('ur', {
   'count.vowel': 'حرکات',
+  'count.hamza': 'ہمزہ/مد',
   'note.correctForm': 'مصحف کا صحیح لفظ (حرکات کے ساتھ)',
   'mistake.harakatHint':
     'حرکات (فتحہ/ضمہ/کسرہ) انجن خود نہیں جانچتا — صحیح لفظ حرکات کے ساتھ اوپر لکھا ہے، اُس سے ملائیں۔',
+  'mistake.hamzaHint':
+    'ہمزہ اور مد ایک آواز نہیں ہیں: مد (آ) لمبی "آ" ہے، ہمزہ (ئ ؤ ء) الگ حرف ہے۔ صحیح لفظ اوپر دیا ہے — اُس کے نشان سے ملائیں۔',
   'premium.notAvailable':
     'سبسکرپشن صرف پلے اسٹور والی ایپ میں ملتی ہے — براؤزر میں نہیں۔ پلے سے انسٹال کر کے وہیں سے لیں۔',
   'premium.purchaseFailed': 'خریداری مکمل نہیں ہوئی۔ دوبارہ کوشش کریں۔',
@@ -429,9 +435,12 @@ addStrings('ur', {
 
 addStrings('en', {
   'count.vowel': 'vowel',
+  'count.hamza': 'hamza/madd',
   'note.correctForm': 'The mushaf word, with its harakat',
   'mistake.harakatHint':
     'The engine does not judge harakat (fatha/damma/kasra) — the correct word is printed with them above; compare it.',
+  'mistake.hamzaHint':
+    'Hamza and madd are not the same sound: madd (آ) is a long "aa", a hamza (ئ ؤ ء) is a separate letter. The mushaf word is shown above — compare its signs.',
   'premium.notAvailable':
     'Subscriptions are sold only in the Play Store app, not in a browser. Install from Play and buy there.',
   'premium.purchaseFailed': 'Purchase did not finish. Please try again.',

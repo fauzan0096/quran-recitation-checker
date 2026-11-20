@@ -96,6 +96,45 @@ export function hasVowels(input) {
   return /[\u064E\u064F\u0650]/.test(String(input || ''));
 }
 
+// Hamza and madd are not the same sound, and the two scripts seat the hamza on
+// different letters: مَآبًا (a long a) and مِئَابًا (hamza on the yaa) are two
+// different words, yet normalizeArabic reduces both to the same bare letters.
+// The signature below keeps what was actually written, so the difference can be
+// reported instead of passed over.
+//
+// The seat is what matters, not the vowel: a hamza on alef (آ أ إ ء ٱ) is one
+// seat however it is spelled — آمَنُوا and أمنوا are the same word — while a
+// hamza on waw (ؤ) and a hamza on yaa (ئ) are different seats. They are returned
+// in reading order as digits, "1" alef, "2" waw, "3" yaa.
+const HAMZA_SEATS = {
+  '\u0622': 1, // آ madda on alef: hamza + long alef, so an alef seat
+  '\u0623': 1, // أ
+  '\u0625': 1, // إ
+  '\u0621': 1, // ء
+  '\u0671': 1, // ٱ
+  '\u0624': 2, // ؤ
+  '\u0626': 3, // ئ
+};
+const MADDA_MARK = '\u0653'; // combining maddah, written over a plain alef
+
+/**
+ * The hamza/madd seats of a word, in reading order, as digits — "3" for مئابا,
+ * "1" for مآبا. Empty when the word carries no hamza and no madd at all, which
+ * is the normal case for speech recogniser output: then there is nothing to
+ * compare and the difference cannot be judged.
+ */
+export function hamzaSignature(input) {
+  const s = String(input || '');
+  let out = '';
+  for (let i = 0; i < s.length; i += 1) {
+    const char = s[i];
+    const seat = HAMZA_SEATS[char];
+    if (seat) out += seat;
+    else if (char === MADDA_MARK) out += '1';
+  }
+  return out;
+}
+
 /** Levenshtein edit distance over code units. */
 export function levenshtein(a, b) {
   if (a === b) return 0;
