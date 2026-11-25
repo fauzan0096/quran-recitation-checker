@@ -133,7 +133,7 @@ Status line par sirf **Bayyin** ka naam aata hai.
 ## Offline
 
 - `index.html` **cache se foran** khulta hai; nayi copy peeche se cache hoti hai.
-- Har update naye worker ke saath (`CACHE = 'bayyin-v149'`), is liye app purane
+- Har update naye worker ke saath (`CACHE = 'bayyin-v152'`), is liye app purane
   version par nahi atakti.
 - Cache khali ho aur internet na ho to ek saaf page kehta hai "app ko ek dafa
   online khol lein" — browser ka error page nahi.
@@ -198,9 +198,37 @@ gold, hero ring, streak, aur naya badge milne par celebration. Free.
 
 ## Roz yaad dehani aur push
 
-- `reminder.js` — roz ek notification, waqt chunne ka option.
-- `push.js` + `worker/push-worker.js` — apna Cloudflare Worker, har minute ka cron.
-  iOS par web push sirf iOS 16.4+ aur Home Screen install par.
+- `reminder.js` — roz ek notification, waqt chunne ka option. App khuli ho to
+  waqt aate hi bajti hai; band ho to neeche wala Worker bhejta hai.
+- `push.js` + `worker/push-worker.js` — apna Cloudflare Worker, `wrangler.toml`
+  me `crons = ["* * * * *"]` (har minute).
+- iOS par web push sirf iOS 16.4+ aur Home Screen install par.
+
+### Waqt ka hisaab (kyun kabhi deri hoti hai)
+
+| Notification | Kab bhejti hai | Deri ki gunjaish |
+| --- | --- | --- |
+| Azaan | prayer ke apne minute par | **15 minute** — is ke baad chup rehti hai, guzri hui namaz ka elaan nahi |
+| Roz ki yaad dehani | chune hue waqt se | **3 ghante** — is ke baad aaj ke liye chhod di jati hai, aadhi raat me nahi |
+| Roz ki Naiki | 08:00 se | **12:00 tak** — cron late chale to bhi usi subah mil jati hai |
+
+Deri ki asli wajahon me se ek bhi ho sakti hai, aur app in me se kisi ko badal
+nahi sakti:
+
+- **Cloudflare ka cron** exactly minute par nahi chalta — kabhi 10–60 second,
+  kabhi 2–3 minute late. `wrangler.toml` me har minute ka cron isi liye hai
+  (pehle 10 minute ka tha, is liye 7–8 minute late aati thin).
+- **Phone ka OS** push ko roak leta hai: Android ka Doze/battery saver, iPhone
+  ka Low Power Mode. Isi liye push `Urgency: high` ke saath jati hai.
+- iOS par web push **Home Screen par install** ki hui app me hi kaam karti hai.
+
+### Halat khud dekhein
+
+- App me: **Aur → Settings → Roz yaad dehani** ke neeche ek line likhi hoti hai —
+  "Push: aakhri cron 2 minute pehle chala · 3 phone". Ye seedha Worker se aata hai.
+- Browser me: `https://bayyin-push.anbiyawarsatul.workers.dev/status` — JSON me
+  `lastCron`, `subscribers` aur VAPID ki halat. `lastCron` minute-old hona chahiye;
+  agar ghanton purana ho to cron hi nahi chal raha.
 
 ## Backup aur error report
 

@@ -8,7 +8,10 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v151';
+const CACHE = 'bayyin-v152';
+// The push Worker: the service worker tells it when the browser rotates this
+// phone's push subscription, so the daily reminder keeps coming.
+const PUSH_ENDPOINT = 'https://bayyin-push.anbiyawarsatul.workers.dev';
 // Speech library (Transformers.js + ONNX runtime wasm): kept for good so the
 // model starts offline and the library is not downloaded again each launch. Our
 // own Worker serves the library, the CDN is only the fallback.
@@ -334,9 +337,32 @@ self.addEventListener('push', (event) => {
 });
 
 self.addEventListener('pushsubscriptionchange', (event) => {
-  // Without a server there is nothing to re-send the subscription to; keep the
-  // handler so the browser knows this worker handles it.
-  event.waitUntil(Promise.resolve());
+  // The browser rotated this phone's push subscription (they do expire on their
+  // own). Subscribe again and tell the Worker, keeping the person's time and
+  // schedule, so the reminder does not stop without a word.
+  const old = event.oldSubscription;
+  event.waitUntil(
+    (async () => {
+      try {
+        const key = old && old.options ? old.options.applicationServerKey : null;
+        if (!key) return; // nothing to subscribe with
+        const fresh = await self.registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: key,
+        });
+        await fetch(`${PUSH_ENDPOINT}/moved`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            subscription: fresh.toJSON(),
+            oldEndpoint: (old && old.endpoint) || '',
+          }),
+        });
+      } catch (error) {
+        /* the page subscribes again the next time it is opened */
+      }
+    })()
+  );
 });
 
 self.addEventListener('notificationclick', (event) => {

@@ -13,7 +13,7 @@
 import { t } from './i18n.js';
 import { dueCount } from './murajaa.js';
 import { isPremium } from './premium.js';
-import { enable as pushEnable, disable as pushDisable, refresh as pushRefresh } from './push.js';
+import { enable as pushEnable, disable as pushDisable, refresh as pushRefresh, status as pushStatus } from './push.js';
 import { state as adhanState } from './adhan.js';
 
 const KEY = 'tc.reminder';
@@ -198,6 +198,30 @@ export function mountCard(root) {
     note.id = 'remind-note';
     note.textContent = s.on ? t('remind.onHint', { time: s.time }) : t('remind.offHint');
     root.appendChild(note);
+
+    // Whether the push Worker's cron is actually running — the one thing that
+    // decides if a notification can arrive on its minute at all.
+    const health = document.createElement('p');
+    health.className = 'hint';
+    health.id = 'remind-health';
+    root.appendChild(health);
+    pushStatus()
+      .then((info) => {
+        if (!info) {
+          health.textContent = t('remind.pushUnknown');
+          return;
+        }
+        const when = info.lastCron ? Date.parse(info.lastCron) : 0;
+        if (!when) {
+          health.textContent = t('remind.pushNever');
+          return;
+        }
+        const minutes = Math.max(0, Math.round((Date.now() - when) / 60000));
+        health.textContent = t('remind.pushHealth', { m: minutes, n: info.subscribers });
+      })
+      .catch(() => {
+        /* the line stays empty */
+      });
   }
 
   build();

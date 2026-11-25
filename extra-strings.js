@@ -80,6 +80,9 @@ addStrings('roman', {
   'model.askMobile':
     'Speech model pehli dafa download hona hai, aur ye mobile data par hai. Abhi download karein? (Wi-Fi behtar hai)',
   'model.askMobileNo': 'Model abhi download nahi hua. Wi-Fi par dobara koshish karein.',
+  'remind.pushHealth': 'Push: aakhri cron {m} minute pehle chala · {n} phone',
+  'remind.pushNever': 'Push: cron kabhi chala hi nahi — Cloudflare par worker ka cron check karein.',
+  'remind.pushUnknown': 'Push ki halat nahi mili (internet band ya worker kub nahi chal raha).',
   'badges.heading': 'Inaam',
   'badges.more': 'Inaam',
   'badges.moreHint': 'Badges — aadha Quran, be-ghalti, streak',
@@ -296,6 +299,9 @@ addStrings('ur', {
   'model.askMobile':
     'اسپیچ ماڈل پہلی بار ڈاؤن لوڈ ہونا ہے، اور یہ موبائل ڈیٹا پر ہے۔ ابھی ڈاؤن لوڈ کریں؟ (وائی فائی بہتر ہے)',
   'model.askMobileNo': 'ماڈل ابھی ڈاؤن لوڈ نہیں ہوا۔ وائی فائی پر دوبارہ کوشش کریں۔',
+  'remind.pushHealth': 'پش: آخری کرون {m} منٹ پہلے چلا · {n} فون',
+  'remind.pushNever': 'پش: کرون کبھی چلا ہی نہیں — کلاؤڈ فلیر پر ورکر کا کرون چیک کریں۔',
+  'remind.pushUnknown': 'پش کی حالت نہیں ملی (انٹرنیٹ بند یا ورکر نہیں چل رہا)۔',
   'badges.heading': 'انعام',
   'badges.more': 'انعام',
   'badges.moreHint': 'بیجز — آدھا قرآن، بے غلطی، مسلسل دن',
@@ -512,6 +518,9 @@ addStrings('en', {
   'model.askMobile':
     'The speech model has to download the first time, and this is mobile data. Download it now? (Wi-Fi is better)',
   'model.askMobileNo': 'The model was not downloaded. Try again on Wi-Fi.',
+  'remind.pushHealth': 'Push: the last cron ran {m} minutes ago · {n} phones',
+  'remind.pushNever': 'Push: the cron has never run — check the Worker trigger on Cloudflare.',
+  'remind.pushUnknown': 'Push status unavailable (no internet, or the Worker is not answering).',
   'badges.heading': 'Awards',
   'badges.more': 'Awards',
   'badges.moreHint': 'Badges — half the Quran, perfect ayas, streak',

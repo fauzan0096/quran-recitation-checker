@@ -307,6 +307,165 @@ function naikiPayload(date) {
   };
 }
 
+// ------------------------------------------------------------------- the cron
+
+/**
+ * One phone: the azaan at its own minute, the daily reminder at the chosen time,
+ * Roz ki Naiki in the morning. Kept out of the loop below so that a subscription
+ * that cannot be delivered stops only itself.
+ */
+async function cronFor(env, config, name) {
+  const raw = await env.SUBS.get(name);
+  if (!raw) return;
+
+  let saved;
+  try {
+    saved = JSON.parse(raw);
+  } catch (error) {
+    return;
+  }
+  if (!saved || !saved.subscription) return;
+
+  const local = localNow(saved.timezone);
+  const minute = toMinutes(local.time);
+  let changed = false;
+
+  // 1. The azaan at the prayer's own minute. Fifteen minutes of slack, so a cron
+  //    that runs a few minutes late still announces the prayer — but a Worker
+  //    that was down for an hour does not ring for a prayer that has passed.
+  const prayers = Array.isArray(saved.prayers) ? saved.prayers : [];
+  const done = Array.isArray(saved.sentPrayers) ? saved.sentPrayers : [];
+  const due = prayers.find((prayer) => {
+    if (!prayer || prayer.date !== local.date || !prayer.time) return false;
+    if (done.includes(`${prayer.date} ${prayer.name}`)) return false;
+    const gap = minute - toMinutes(prayer.time);
+    return gap >= 0 && gap <= 15;
+  });
+
+  let sentPrayer = false;
+  if (due) {
+    const sent = await deliver(saved.subscription, config, prayerPayload(due.name));
+    if (sent === 'gone') {
+      await env.SUBS.delete(name);
+      return;
+    }
+    if (sent === 'ok') {
+      saved.sentPrayers = [...done, `${due.date} ${due.name}`].slice(-60);
+      changed = true;
+      sentPrayer = true;
+    }
+  }
+
+  // 2. The daily reminder, once the person's own clock passes their time. Up to
+  //    three hours late is still their evening reminder; after that it is dropped
+  //    for today rather than arriving at midnight.
+  const target = toMinutes(saved.time || '20:00');
+  if (
+    saved.daily !== false &&
+    !sentPrayer &&
+    saved.lastDay !== local.date &&
+    minute >= target &&
+    minute - target <= 180
+  ) {
+    const sent = await deliver(saved.subscription, config, dailyPayload(saved));
+    if (sent === 'gone') {
+      await env.SUBS.delete(name);
+      return;
+    }
+    if (sent === 'ok') {
+      saved.lastDay = local.date;
+      changed = true;
+    }
+  }
+
+  // 3. Roz ki Naiki in the morning (Surah Kahf on Friday). The window is wide
+  //    (08:00–12:00), so a cron run that slips by a few minutes still delivers it
+  //    the same morning instead of losing the day.
+  if (
+    saved.daily !== false &&
+    saved.lastNaiki !== local.date &&
+    minute >= 480 &&
+    minute <= 720
+  ) {
+    const sent = await deliver(saved.subscription, config, naikiPayload(local.date));
+    if (sent === 'gone') {
+      await env.SUBS.delete(name);
+      return;
+    }
+    if (sent === 'ok') {
+      saved.lastNaiki = local.date;
+      changed = true;
+    }
+  }
+
+  if (changed) await env.SUBS.put(name, JSON.stringify(saved));
+}
+
+/**
+ * The cron itself, every minute (see `crons` in wrangler.toml).
+ *
+ * A free-plan Worker may make about 50 outgoing requests per run, and one phone
+ * costs a KV read plus a push. The run stops well before that and picks up from
+ * the same place in the next minute, so nobody at the end of the list is starved.
+ */
+async function runCron(env) {
+  const config = await settings(env);
+  if (!config.publicKey || privateKeyState(config.privateKey) !== 'ok') return;
+  if (!env.SUBS) return;
+
+  // When this run started: `/status` shows it, so a late notification can be
+  // told apart from one that never came.
+  try {
+    await env.SUBS.put('meta:lastCron', new Date().toISOString());
+  } catch (error) {
+    /* status only */
+  }
+
+  let budget = 40;
+  let cursor = '';
+  try {
+    cursor = (await env.SUBS.get('meta:cursor')) || '';
+  } catch (error) {
+    cursor = '';
+  }
+
+  let pages = 0;
+  while (budget > 0 && pages < 10) {
+    pages += 1;
+    let page;
+    try {
+      page = await env.SUBS.list({ prefix: 'sub:', limit: 200, cursor: cursor || undefined });
+    } catch (error) {
+      if (!cursor) return; // nothing to list at all
+      cursor = ''; // a saved cursor can go stale: begin again from the top
+      continue;
+    }
+
+    for (const item of page.keys) {
+      if (budget <= 0) break;
+      budget -= 2; // one KV read, one push
+      try {
+        await cronFor(env, config, item.name);
+      } catch (error) {
+        // One subscription that cannot be delivered must not stop the rest.
+        console.warn('subscriber failed', item.name, String((error && error.message) || error));
+      }
+    }
+
+    if (page.list_complete) {
+      cursor = '';
+      break;
+    }
+    cursor = page.cursor || '';
+  }
+
+  try {
+    await env.SUBS.put('meta:cursor', cursor);
+  } catch (error) {
+    /* status only */
+  }
+}
+
 export default {
   async fetch(request, env) {
     if (request.method === 'OPTIONS') return cors();
@@ -333,6 +492,34 @@ export default {
     if (request.method === 'GET') {
       const config = await settings(env);
       if (url.pathname === '/vapid') return json({ key: config.publicKey || '' });
+
+      // Diagnostics: open this URL in a browser to see whether the cron is
+      // running and how many phones it holds. `lastCron` is the moment the last
+      // run started — if that is minutes old while notifications are late, the
+      // delay is Cloudflare's cron, not the app.
+      if (url.pathname === '/status') {
+        let subscribers = 0;
+        let lastCron = '';
+        let cursor = '';
+        try {
+          lastCron = (await env.SUBS.get('meta:lastCron')) || '';
+          do {
+            const page = await env.SUBS.list({ prefix: 'sub:', limit: 1000, cursor: cursor || undefined });
+            subscribers += page.keys.length;
+            cursor = page.list_complete ? '' : page.cursor || '';
+          } while (cursor);
+        } catch (error) {
+          subscribers = -1; // KV not reachable
+        }
+        return json({
+          ok: true,
+          now: new Date().toISOString(),
+          lastCron,
+          subscribers,
+          vapidPublic: Boolean(config.publicKey),
+          vapidPrivate: privateKeyState(config.privateKey),
+        });
+      }
       return json({
         ok: true,
         service: 'bayyin-push',
@@ -345,7 +532,6 @@ export default {
 
     if (request.method !== 'POST') return json({ ok: false, error: 'POST only' }, 405);
 
-    const url = new URL(request.url);
     let data = {};
     try {
       data = await request.json();
@@ -379,6 +565,44 @@ export default {
           prayers: Array.isArray(data.prayers) ? data.prayers.slice(0, 70) : old.prayers || [],
           // false = this person only wants the azaan, not a daily reminder.
           daily: data.daily !== false,
+          lastDay: old.lastDay || '',
+          lastNaiki: old.lastNaiki || '',
+          sentPrayers: Array.isArray(old.sentPrayers) ? old.sentPrayers : [],
+        })
+      );
+      return json({ ok: true });
+    }
+
+    // The browser rotated this phone's push subscription (they expire on their
+    // own): keep the person's time, time zone and prayer schedule instead of
+    // starting again with the defaults.
+    if (url.pathname === '/moved') {
+      const sub = data.subscription;
+      if (!sub || !sub.endpoint) return json({ ok: false, error: 'no subscription' }, 400);
+      if (!env.SUBS) return json({ ok: false, error: 'no KV' }, 500);
+
+      let old = {};
+      const oldEndpoint = String(data.oldEndpoint || '');
+      if (oldEndpoint) {
+        const oldKey = `sub:${base64url(encoder.encode(oldEndpoint))}`;
+        const raw = await env.SUBS.get(oldKey).catch(() => null);
+        try {
+          old = raw ? JSON.parse(raw) : {};
+        } catch (error) {
+          old = {};
+        }
+        await env.SUBS.delete(oldKey).catch(() => {});
+      }
+
+      await env.SUBS.put(
+        `sub:${base64url(encoder.encode(sub.endpoint))}`,
+        JSON.stringify({
+          subscription: sub,
+          time: old.time || '20:00',
+          timezone: old.timezone || 'UTC',
+          body: old.body || '',
+          prayers: Array.isArray(old.prayers) ? old.prayers : [],
+          daily: old.daily !== false,
           lastDay: old.lastDay || '',
           lastNaiki: old.lastNaiki || '',
           sentPrayers: Array.isArray(old.sentPrayers) ? old.sentPrayers : [],
@@ -421,94 +645,6 @@ export default {
   },
 
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(
-      (async () => {
-        const config = await settings(env);
-        if (!config.publicKey || privateKeyState(config.privateKey) !== 'ok') return;
-        if (!env.SUBS) return;
-
-        const list = await env.SUBS.list({ prefix: 'sub:' });
-        for (const item of list.keys) {
-          const raw = await env.SUBS.get(item.name);
-          if (!raw) continue;
-          let saved;
-          try {
-            saved = JSON.parse(raw);
-          } catch (error) {
-            continue;
-          }
-          if (!saved || !saved.subscription) continue;
-
-          const local = localNow(saved.timezone);
-          const minute = toMinutes(local.time);
-          let changed = false;
-
-          // 1. The azaan at the prayer's own minute. This is the one that must
-          //    not drift, so it is checked first and can hold back the rest.
-          const prayers = Array.isArray(saved.prayers) ? saved.prayers : [];
-          const done = Array.isArray(saved.sentPrayers) ? saved.sentPrayers : [];
-          const due = prayers.find((prayer) => {
-            if (!prayer || prayer.date !== local.date || !prayer.time) return false;
-            if (done.includes(`${prayer.date} ${prayer.name}`)) return false;
-            const gap = minute - toMinutes(prayer.time);
-            return gap >= 0 && gap <= 30;
-          });
-
-          let sentPrayer = false;
-          if (due) {
-            const sent = await deliver(saved.subscription, config, prayerPayload(due.name));
-            if (sent === 'gone') {
-              await env.SUBS.delete(item.name);
-              continue;
-            }
-            if (sent === 'ok') {
-              saved.sentPrayers = [...done, `${due.date} ${due.name}`].slice(-60);
-              changed = true;
-              sentPrayer = true;
-            }
-          }
-
-          // 2. The daily reminder, once the person's own clock passes their time.
-          const target = saved.time || '20:00';
-          if (
-            saved.daily !== false &&
-            !sentPrayer &&
-            saved.lastDay !== local.date &&
-            minute >= toMinutes(target)
-          ) {
-            const sent = await deliver(saved.subscription, config, dailyPayload(saved));
-            if (sent === 'gone') {
-              await env.SUBS.delete(item.name);
-              continue;
-            }
-            if (sent === 'ok') {
-              saved.lastDay = local.date;
-              changed = true;
-            }
-          }
-
-          // 3. Roz ki Naiki at 08:00 local for everyone who wants the daily
-          //    reminders (Surah Kahf on Friday).
-          if (
-            saved.daily !== false &&
-            saved.lastNaiki !== local.date &&
-            minute >= 480 &&
-            minute <= 500
-          ) {
-            const sent = await deliver(saved.subscription, config, naikiPayload(local.date));
-            if (sent === 'gone') {
-              await env.SUBS.delete(item.name);
-              continue;
-            }
-            if (sent === 'ok') {
-              saved.lastNaiki = local.date;
-              changed = true;
-            }
-          }
-
-          if (changed) await env.SUBS.put(item.name, JSON.stringify(saved));
-        }
-      })()
-    );
+    ctx.waitUntil(runCron(env));
   },
 };

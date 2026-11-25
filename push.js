@@ -210,6 +210,18 @@ export async function isSubscribed() {
   }
 }
 
+/** Ask the Worker when its cron last ran, so "late" can be checked from the phone. */
+export async function status() {
+  if (!configured()) return null;
+  try {
+    const response = await fetch(`${config().endpoint}/status`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (error) {
+    return null;
+  }
+}
+
 /** Ask the Worker to send one push right now, so the setup can be checked. */
 export async function test() {
   if (!supported()) return { ok: false, reason: 'unsupported' };
