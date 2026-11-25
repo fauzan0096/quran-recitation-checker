@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v150';
+const CACHE = 'bayyin-v151';
 // Speech library (Transformers.js + ONNX runtime wasm): kept for good so the
 // model starts offline and the library is not downloaded again each launch. Our
 // own Worker serves the library, the CDN is only the fallback.

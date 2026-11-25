@@ -30,6 +30,12 @@ const CANDIDATES = [
 
 const TARGET_RATE = 16000;
 
+// The aya's own text is given to Whisper as a prompt, so it stays inside the verse.
+// It costs decoding time on every check: USE_PROMPT=false turns it off for tests,
+// and PROMPT_MAX keeps it short.
+const USE_PROMPT = true;
+const PROMPT_MAX = 300;
+
 export const MODELS = [
   {
     // Bundled in this repository (`models/bayyin-tiny/`), so the app never
@@ -326,16 +332,15 @@ export async function transcribe(instance, audioFloat32, options = {}) {
   const audio = normalizeLevel(trimSilence(audioFloat32 || new Float32Array(0)));
   const seconds = audio.length / TARGET_RATE;
 
-  // Greedy (num_beams 1) is several times faster than Whisper's default beam
-  // search and is plenty for a short aya; the accurate mode keeps beams.
+  // Fast mode is greedy (one beam): several times quicker than Whisper's default
+  // beam search and plenty for a short aya. Accurate mode keeps 5 beams.
   const args = {
     language: 'ar',
     task: 'transcribe',
     return_timestamps: false,
     temperature: 0,
     condition_on_previous_text: false,
-    // Short clips are cheap to decode, so a small beam search is affordable there.
-    num_beams: fast ? (seconds <= 10 ? 2 : 1) : 5,
+    num_beams: fast ? 1 : 5,
     do_sample: false,
     max_new_tokens: Math.max(96, Math.min(448, Math.round(seconds * 8) + 64)),
   };
@@ -343,7 +348,7 @@ export async function transcribe(instance, audioFloat32, options = {}) {
   // Knowing the aya makes Whisper far more accurate: it stops inventing words
   // and stays inside the verses being recited.
   const prompt = String(options.prompt || '').trim();
-  if (prompt) args.initial_prompt = prompt.slice(0, 900);
+  if (USE_PROMPT && prompt) args.initial_prompt = prompt.slice(0, PROMPT_MAX);
   // Chunking only helps long audio; on a short aya it just adds overlap work.
   if (seconds > 30) {
     args.chunk_length_s = 30;

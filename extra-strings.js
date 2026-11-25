@@ -77,6 +77,9 @@ addStrings('roman', {
   'model.accurate': 'Behtar accuracy (deri zyada)',
   'model.speedHint':
     'Default tez hai. "Behtar accuracy" par har check thoda deri lagta hai, natija behtar ho sakta hai.',
+  'model.askMobile':
+    'Speech model pehli dafa download hona hai, aur ye mobile data par hai. Abhi download karein? (Wi-Fi behtar hai)',
+  'model.askMobileNo': 'Model abhi download nahi hua. Wi-Fi par dobara koshish karein.',
   'badges.heading': 'Inaam',
   'badges.more': 'Inaam',
   'badges.moreHint': 'Badges — aadha Quran, be-ghalti, streak',
@@ -290,6 +293,9 @@ addStrings('ur', {
   'model.accurate': 'بہتر درستگی (دیری زیادہ)',
   'model.speedHint':
     'ڈیفالٹ تیز ہے۔ "بہتر درستگی" پر ہر چیک تھوڑی دیر لیتا ہے، نتیجہ بہتر ہو سکتا ہے۔',
+  'model.askMobile':
+    'اسپیچ ماڈل پہلی بار ڈاؤن لوڈ ہونا ہے، اور یہ موبائل ڈیٹا پر ہے۔ ابھی ڈاؤن لوڈ کریں؟ (وائی فائی بہتر ہے)',
+  'model.askMobileNo': 'ماڈل ابھی ڈاؤن لوڈ نہیں ہوا۔ وائی فائی پر دوبارہ کوشش کریں۔',
   'badges.heading': 'انعام',
   'badges.more': 'انعام',
   'badges.moreHint': 'بیجز — آدھا قرآن، بے غلطی، مسلسل دن',
@@ -503,6 +509,9 @@ addStrings('en', {
   'model.accurate': 'Better accuracy (slower)',
   'model.speedHint':
     'The default is fast. "Better accuracy" makes every check slower but may improve the result.',
+  'model.askMobile':
+    'The speech model has to download the first time, and this is mobile data. Download it now? (Wi-Fi is better)',
+  'model.askMobileNo': 'The model was not downloaded. Try again on Wi-Fi.',
   'badges.heading': 'Awards',
   'badges.more': 'Awards',
   'badges.moreHint': 'Badges — half the Quran, perfect ayas, streak',

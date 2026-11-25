@@ -170,6 +170,7 @@ const state = {
 
 const els = {};
 const ERROR_KEY = 'tc.errors';
+const TIMING_KEY = 'tc.timings';
 
 function readErrors() {
   try {
@@ -192,8 +193,40 @@ function logError(message) {
 
 function paintErrors() {
   if (!els.errorLog) return;
-  const list = readErrors();
+  const list = readErrors().concat(readList(TIMING_KEY));
+  list.sort();
   els.errorLog.textContent = list.length ? list.join('\n') : t('errors.none');
+}
+
+function readList(key) {
+  try {
+    const raw = JSON.parse(localStorage.getItem(key) || '[]');
+    return Array.isArray(raw) ? raw : [];
+  } catch (error) {
+    return [];
+  }
+}
+
+/** One line per check in the error report: where the time went (audio, decode, load, ASR). */
+function logTiming(timing, seconds, accurate) {
+  const line = `${new Date().toISOString()} timing: audio ${seconds}s, decode ${timing.decode}ms, load ${timing.load}ms, asr ${timing.asr}ms, ${accurate ? 'accurate' : 'fast'}, model ${state.modelId || '?'}`;
+  const list = readList(TIMING_KEY);
+  list.push(line);
+  try {
+    localStorage.setItem(TIMING_KEY, JSON.stringify(list.slice(-20)));
+  } catch (error) {
+    /* private mode */
+  }
+}
+
+/** Is a speech model already on this phone (so the next check needs no download)? */
+function modelIsCached() {
+  try {
+    const ready = localStorage.getItem(STORAGE.modelReady) || '';
+    return MODELS.some((m) => m.id === ready);
+  } catch (error) {
+    return false;
+  }
 }
 
 /** After a check or a ✓ mark, tell the person about a badge just earned. */
@@ -2519,13 +2552,22 @@ async function checkTarget(id, keys, blob) {
 
   try {
     setStatus(id, t('status.preparing'));
+    const timing = { decode: 0, load: 0, asr: 0 };
+    let mark = Date.now();
     const audio = await decodeToMono16k(blob);
+    timing.decode = Date.now() - mark;
     if (audio.length < 6400) throw new Error(t('status.short'));
     if (peakOf(audio) < 0.003) throw new Error(t('status.silent'));
 
     if (!state.model) {
+      // The first download is big: on mobile data, ask before it starts. Wi-Fi never asks.
+      if (!modelIsCached() && !canDownloadModel() && navigator.onLine !== false) {
+        if (!window.confirm(t('model.askMobile'))) throw new Error(t('model.askMobileNo'));
+      }
       setGlobalStatus(t('status.modelDownload'));
+      mark = Date.now();
       const loaded = await handleLoadModel();
+      timing.load = Date.now() - mark;
       if (!loaded) throw new Error(t('status.modelFailed'));
       setGlobalStatus('');
     }
@@ -2541,6 +2583,7 @@ async function checkTarget(id, keys, blob) {
     setGlobalStatus(t('status.thinking', { s: 0, audio: seconds }));
 
     let text;
+    mark = Date.now();
     try {
       text = await transcribe(state.model, audio, {
         fast: !accurate,
@@ -2551,10 +2594,12 @@ async function checkTarget(id, keys, blob) {
       if (state.model && state.model.worker) state.model = null;
       throw error;
     } finally {
+      timing.asr = Date.now() - mark;
       window.clearInterval(ticker);
       setGlobalStatus('');
     }
     if (!text) throw new Error(t('status.nothing'));
+    logTiming(timing, seconds, accurate);
 
     const expected = [];
     const wordVerse = [];
