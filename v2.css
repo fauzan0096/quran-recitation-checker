@@ -2188,6 +2188,17 @@ body[data-theme='dark'] .mpage-no { color: var(--green-dark); }
   text-align-last: justify;
 }
 .page-text.is-lines .mline-in.is-end { text-align-last: center; }
+
+/* A hairline under every line, like a printed safha. Drawn with a shadow, not a
+   border, so it takes no height and the fit measurement stays exact. */
+.mf-madani .page-text.is-lines .mline,
+.mf-indopak .page-text.is-lines .mline {
+  box-shadow: inset 0 -1px 0 color-mix(in srgb, var(--mf-outer) 32%, transparent);
+}
+.mf-madani .page-text.is-lines .mline:last-child,
+.mf-indopak .page-text.is-lines .mline:last-child {
+  box-shadow: none;
+}
 .page-text.is-lines.is-measuring .mline-in {
   text-align: right !important;
   text-align-last: right !important;
@@ -2291,12 +2302,21 @@ body[data-theme='dark'] .mline-in .w.is-unsure {
 
 
 /* ================================================================== */
-/* Print-mushaf look: white paper, black text, coloured side border     */
-/* Madani = green frame, IndoPak = blue frame (change --mf to swap).    */
+/* Print-mushaf look: white paper, black text, two-colour page frame.   */
+/* Like a printed safha the frame is green outside and blue inside, on  */
+/* both mushafs; --mf stays the one ink colour of that mushaf.          */
 /* ================================================================== */
 
-.mushaf-page.mf-madani { --mf: #1f7a4d; }
-.mushaf-page.mf-indopak { --mf: #1f56a3; }
+.mushaf-page.mf-madani {
+  --mf: #1f7a4d;
+  --mf-outer: #1f7a4d;
+  --mf-inner: #1f56a3;
+}
+.mushaf-page.mf-indopak {
+  --mf: #1f56a3;
+  --mf-outer: #1f7a4d;
+  --mf-inner: #1f56a3;
+}
 
 body[data-mode='page'] #view-reader .mushaf-page.mf-madani,
 body[data-mode='page'] #view-reader .mushaf-page.mf-indopak,
@@ -2314,7 +2334,7 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.mf-indopak {
   padding-bottom: max(16px, calc(env(safe-area-inset-bottom) + 6px)) !important;
 }
 
-/* the ornamental side border (ring made of a lattice pattern) */
+/* the ornamental side border (ring made of a lattice pattern) — green */
 .mushaf-page.mf-madani::before,
 .mushaf-page.mf-indopak::before {
   content: '';
@@ -2322,23 +2342,24 @@ body[data-mode='page'].is-mushaf-full #view-reader .mushaf-page.mf-indopak {
   inset: 4px;
   box-sizing: border-box;
   padding: 10px;
-  border: 2px solid var(--mf);
+  border: 2px solid var(--mf-outer);
   pointer-events: none;
-  background-color: color-mix(in srgb, var(--mf) 14%, #fff);
+  background-color: color-mix(in srgb, var(--mf-outer) 14%, #fff);
   background-image:
-    repeating-linear-gradient(45deg, var(--mf) 0 1.4px, transparent 1.4px 7px),
-    repeating-linear-gradient(-45deg, var(--mf) 0 1.4px, transparent 1.4px 7px);
+    repeating-linear-gradient(45deg, var(--mf-outer) 0 1.4px, transparent 1.4px 7px),
+    repeating-linear-gradient(-45deg, var(--mf-outer) 0 1.4px, transparent 1.4px 7px);
   -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   -webkit-mask-composite: xor;
   mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
 }
-/* thin inner line, like the printed page */
+/* thin inner line, like the printed page — blue */
 .mushaf-page.mf-madani::after,
 .mushaf-page.mf-indopak::after {
   content: '';
   position: absolute;
   inset: 18px;
-  border: 1.5px solid var(--mf);
+  border: 2px solid var(--mf-inner);
+  border-radius: 2px;
   pointer-events: none;
 }
 
@@ -2474,16 +2495,24 @@ body[data-theme='dark'] #view-reader .mushaf-page.mf-indopak {
   background: #15110f !important;
   color: #f2e7d3;
 }
-body[data-theme='dark'] .mf-madani { --mf: #57b98a; }
-body[data-theme='dark'] .mf-indopak { --mf: #6aa4f0; }
+body[data-theme='dark'] .mf-madani {
+  --mf: #57b98a;
+  --mf-outer: #57b98a;
+  --mf-inner: #6aa4f0;
+}
+body[data-theme='dark'] .mf-indopak {
+  --mf: #6aa4f0;
+  --mf-outer: #57b98a;
+  --mf-inner: #6aa4f0;
+}
 
 body[data-theme='dark'] .mf-madani::before,
 body[data-theme='dark'] .mf-indopak::before {
-  background-color: color-mix(in srgb, var(--mf) 16%, #15110f);
+  background-color: color-mix(in srgb, var(--mf-outer) 16%, #15110f);
 }
 body[data-theme='dark'] .mf-madani::after,
 body[data-theme='dark'] .mf-indopak::after {
-  border-color: var(--mf);
+  border-color: var(--mf-inner);
 }
 
 body[data-theme='dark'] .mf-madani .mpage-top,

@@ -8,7 +8,7 @@
 //    the background, so a new version arrives on the next launch.
 // CDN / network-only hosts (Quran audio, fonts) are left to the network.
 
-const CACHE = 'bayyin-v152';
+const CACHE = 'bayyin-v153';
 // The push Worker: the service worker tells it when the browser rotates this
 // phone's push subscription, so the daily reminder keeps coming.
 const PUSH_ENDPOINT = 'https://bayyin-push.anbiyawarsatul.workers.dev';

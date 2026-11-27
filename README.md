@@ -76,6 +76,9 @@ Premium ke andar bhi tabs hain: **Hifz plan**, **Hifz Test**, **Murajaa**, **Rep
   aya-wise ghaltiyan.
 - Do mushaf: **Madani** (604 pages, bundled Uthmani text) aur **IndoPak** (610
   pages, Haram/Taj 15-line, quran.com se page-wise text, pehli dafa phir cache).
+- **Safha ka frame do rang ka hai** — bahar **hara** (jaali naqsh wali patti) aur
+  andar **neela** line, chhape hue mushaf ki tarah. Rang `v2.css` me
+  `--mf-outer` / `--mf-inner` se badalte hain; har line ke neeche halki lakeer hai.
 - **Basmala alag** line me; bolna ya na bolna dono theek, ghalti nahi ginti.
 - **Talash**: lafz se (bina harakat bhi), `2:255` se, ya juz number se.
 
